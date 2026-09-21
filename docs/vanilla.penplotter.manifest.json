@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "generated": "2026-09-21",
+  "schema": "vanilla.penplotter/document@1",
+  "plan_schema": "vanilla.penplotter/plan@1",
+  "stages": [
+    "Geometry",
+    "Optimizer",
+    "Planner",
+    "Renderer",
+    "Driver"
+  ],
+  "exports": [
+    "SVG",
+    "HPGL",
+    "G-code",
+    "JSON"
+  ],
+  "examples": [
+    "direct_plot",
+    "first_job",
+    "waves_svg"
+  ],
+  "drivers": [
+    "SimulationDriver",
+    "WebSerialTextDriver",
+    "EbbDriver"
+  ],
+  "tested_machines": [
+    "idraw-hse-a2"
+  ],
+  "hardware_status": "one-tested-ebb-profile-otherwise-simulation-and-export"
+}

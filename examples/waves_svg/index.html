@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waves to SVG - vanilla.penplotter</title>
+  <link rel="stylesheet" href="../../docs/style.css">
+  <style>#drawing svg { display:block; width:100%; max-width:520px; height:auto; background:#fffdf6; margin:24px 0; }</style>
+</head>
+<body>
+  <main class="page">
+    <a href="../../docs/examples.html">Examples</a>
+    <h1>Waves to SVG</h1>
+    <p>A fixed-time wave drawing on A4 paper. Download the SVG to use with your plotter software.</p>
+    <p id="status">Loading vanilla.waves...</p>
+    <button id="download" disabled>Download SVG</button>
+    <div id="drawing"></div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
+  <script type="module">
+    import { createWaveDrawing } from "./drawing.js";
+    const status = document.querySelector("#status");
+    try {
+      if (!globalThis.VanillaWaves) throw new Error("Could not load vanilla.waves. Check your connection and reload.");
+      const plot = createWaveDrawing(globalThis.VanillaWaves);
+      const svg = plot.exportSVG();
+      document.querySelector("#drawing").innerHTML = svg;
+      const stats = plot.stats();
+      status.textContent = `${stats.paths} paths · ${stats.drawDistance.toFixed(0)} mm drawn · ${stats.travelDistance.toFixed(0)} mm pen-up travel`;
+      const button = document.querySelector("#download");
+      button.disabled = false;
+      button.addEventListener("click", () => {
+        const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "waves-a4.svg";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "vanilla.penplotter",
+  "version": "0.2.0",
+  "description": "A modular JavaScript planning engine for generative art and pen plotters.",
+  "type": "module",
+  "main": "vanilla.penplotter.js",
+  "exports": {
+    ".": "./vanilla.penplotter.js",
+    "./core": "./src/core/model.js",
+    "./geometry": "./src/geometry/index.js",
+    "./optimizer": "./src/optimizer/index.js",
+    "./planner": "./src/planner/index.js",
+    "./renderer": "./src/renderer/index.js",
+    "./driver": "./src/driver/index.js",
+    "./driver/ebb": "./src/driver/ebb.js",
+    "./plugins": "./src/plugins/index.js"
+  },
+  "files": [
+    "vanilla.penplotter.js",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node tests/snapshot.js && node tests/ebb.js && node tests/regressions.js && node tests/version.js",
+    "manifest": "node tools/gen-manifest.js"
+  },
+  "repository": "github:seb-prjcts-be/vanilla.penplotter",
+  "homepage": "https://seb-prjcts-be.github.io/vanilla.penplotter/",
+  "license": "MIT",
+  "private": true
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direct plot — vanilla.penplotter</title>
+  <link rel="stylesheet" href="../showcase.css">
+  <style>
+    .fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 18px; }
+    .fields label { display:grid; gap:4px; color:var(--muted); font-size:13px; }
+    .fields input { min-height:38px; padding:0 10px; border:1px solid var(--line); background:transparent; color:var(--ink); font:inherit; }
+    button + button { margin-top:10px; }
+    button:disabled { opacity:.35; cursor:not-allowed; }
+    button.stop { background:var(--signal); border-color:var(--signal); }
+    #status { margin:0 0 12px; padding:10px 12px; border-left:3px solid var(--signal); background:rgba(0,0,0,.04); color:var(--ink); font-size:14px; }
+    #log { margin:18px 0 0; max-height:220px; overflow:auto; padding:12px; border:1px solid var(--line); font:12px/1.5 "DM Mono",monospace; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <header><a href="../../index.html"><span>penplotter</span>.engine</a><a href="../../docs/examples.html">All examples</a></header>
+  <main>
+    <div class="canvas-wrap"><canvas id="preview" width="760" height="553" aria-label="Plot plan preview on the A2 bed"></canvas></div>
+    <aside class="panel">
+      <p class="tag">03 · No SVG in between</p>
+      <h1>Direct plot</h1>
+      <p>The plan goes straight from the browser to an iDraw HSE / A2 over Web Serial (Chrome or Edge). Park the carriage in the home corner by hand first: that corner is 0,0.</p>
+      <div class="fields">
+        <label>From home, X (mm)<input id="offset-x" type="number" value="80" min="0" max="550" step="5"></label>
+        <label>From home, Y (mm)<input id="offset-y" type="number" value="110" min="0" max="400" step="5"></label>
+      </div>
+      <dl>
+        <div><dt>Commands</dt><dd id="commands">—</dd></div>
+        <div><dt>Draw</dt><dd id="draw">—</dd></div>
+        <div><dt>Travel</dt><dd id="travel">—</dd></div>
+        <div><dt>Estimate</dt><dd id="time">—</dd></div>
+      </dl>
+      <p id="status" role="status">Not connected.</p>
+      <button id="dry" class="secondary" type="button">Dry run (log only)</button>
+      <button id="connect" type="button">Connect plotter</button>
+      <button id="plot" type="button" disabled>Plot</button>
+      <button id="stop" class="stop" type="button" disabled>Stop — pen up</button>
+      <div id="log" role="log" aria-live="polite">Ready.</div>
+    </aside>
+  </main>
+  <script type="module" src="sketch.js"></script>
+</body>
+</html>

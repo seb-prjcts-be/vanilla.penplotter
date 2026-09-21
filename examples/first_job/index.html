@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>First job — vanilla.penplotter</title>
+  <link rel="stylesheet" href="../showcase.css">
+</head>
+<body>
+  <header><a href="../../index.html"><span>penplotter</span>.engine</a><a href="../../docs/examples.html">All examples</a></header>
+  <main>
+    <div class="canvas-wrap"><canvas id="preview" width="640" height="760" aria-label="Plot plan preview"></canvas></div>
+    <aside class="panel">
+      <p class="tag">01 · Vanilla JavaScript</p>
+      <h1>First job</h1>
+      <p>A direct geometry job with hatch lines, a contour, route optimization and visible pen-up travel.</p>
+      <dl>
+        <div><dt>Paths</dt><dd id="paths">—</dd></div>
+        <div><dt>Draw</dt><dd id="draw">—</dd></div>
+        <div><dt>Travel</dt><dd id="travel">—</dd></div>
+        <div><dt>Estimate</dt><dd id="time">—</dd></div>
+      </dl>
+      <button id="travel-toggle" type="button">Hide pen-up travel</button>
+      <button id="download" class="secondary" type="button">Download planned SVG</button>
+    </aside>
+  </main>
+  <script type="module" src="sketch.js"></script>
+</body>
+</html>

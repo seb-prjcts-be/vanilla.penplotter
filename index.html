@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vanilla.penplotter — from generative geometry to physical motion</title>
+  <meta name="description" content="A modular JavaScript engine for plotter geometry, optimization, planning, preview, export, and hardware drivers.">
+  <link rel="stylesheet" href="docs/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="#top"><span>penplotter</span>.engine</a>
+    <button class="menu" type="button" aria-label="Toggle navigation">Menu</button>
+    <div class="nav-links">
+      <a href="#pipeline">Pipeline</a>
+      <a href="docs/examples.html">Examples</a>
+      <a href="docs/guide.html">Guide</a>
+      <a href="docs/architecture.md">Architecture</a>
+    </div>
+  </nav>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">JavaScript plotter engine · v0.2.0</p>
+        <h1>Code becomes<br><em>motion.</em></h1>
+        <p class="lead">Build geometry, remove wasted travel, plan pens, inspect the route, then render the same job to SVG, HPGL or G-code — or send it straight to the pen.</p>
+        <div class="actions">
+          <a class="button primary" href="docs/guide.html">Start with one line</a>
+          <a class="button" href="docs/architecture.md">Read the blueprint</a>
+        </div>
+      </div>
+      <div class="plot-card">
+        <div class="plot-toolbar">
+          <span>Planned A4 job</span>
+          <button id="travel-toggle" type="button" aria-pressed="true">Pen-up visible</button>
+        </div>
+        <canvas id="hero-plot" width="720" height="780" aria-label="Preview of planned plotter paths and pen-up travel"></canvas>
+        <div class="plot-stats" aria-live="polite">
+          <span><strong id="stat-paths">—</strong> paths</span>
+          <span><strong id="stat-travel">—</strong> mm travel</span>
+          <span><strong id="stat-time">—</strong> estimated</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="pipeline" id="pipeline">
+      <div class="section-intro">
+        <p class="eyebrow">One job, five independent stages</p>
+        <h2>Use the whole engine.<br>Or take one gear.</h2>
+      </div>
+      <ol class="pipeline-list">
+        <li><span>01</span><strong>Geometry</strong><p>Paths, SVG, hatches, stipples, curves and transforms in physical units.</p></li>
+        <li><span>02</span><strong>Optimizer</strong><p>Fuse endpoints, remove duplicate work, simplify and resample.</p></li>
+        <li><span>03</span><strong>Planner</strong><p>Order reversible paths, move closed seams and schedule tools.</p></li>
+        <li><span>04</span><strong>Renderer</strong><p>Preview and export the exact same plan to SVG, HPGL or G-code.</p></li>
+        <li><span>05</span><strong>Driver</strong><p>Dry-run the command list, then stream the plan to a tested machine: the first driver plots an iDraw HSE / A2 over Web Serial. <a href="examples/direct_plot/index.html">Direct plot →</a></p></li>
+      </ol>
+    </section>
+
+    <section class="code-section">
+      <div>
+        <p class="eyebrow">Vanilla first</p>
+        <h2>No canvas capture.<br>No SVG detour.</h2>
+        <p class="lead small">The sketch creates plot geometry directly. p5.js and p5.waves are optional adapters, not foundations the engine depends on.</p>
+      </div>
+      <pre><code>import { PlotterEngine } from "./vanilla.penplotter.js";
+
+const plot = new PlotterEngine({
+  units: "mm",
+  page: { width: 210, height: 297 }
+});
+
+plot.circle(105, 145, 48);
+plot.hatch(polygon, { spacing: 2.4 });
+
+plot.optimize({ mergeTolerance: 0.05 });
+const plan = plot.plan({ strategy: "nearest" });
+
+console.log(plan.stats);
+const hpgl = plot.exportHPGL();</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <span>vanilla.penplotter · modular by design</span>
+    <span>MIT · 2026</span>
+  </footer>
+  <script type="module" src="docs/app.js"></script>
+</body>
+</html>
