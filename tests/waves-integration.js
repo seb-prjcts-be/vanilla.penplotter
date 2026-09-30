@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { createWaveDrawing } from "../examples/waves_svg/drawing.js";
+import { createWaveDrawing } from "../examples/waves_pen/drawing.js";
 
 // Supply a local copy of the pinned waves-core.js used by the browser example.
 // This opt-in integration check keeps npm test independent of the network.

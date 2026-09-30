@@ -18,3 +18,17 @@ dt { color:var(--muted); } dd { margin:0; font-family:"DM Mono",monospace; }
 button { width:100%; min-height:44px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); font-weight:600; cursor:pointer; }
 button.secondary { margin-top:10px; background:transparent; color:var(--ink); }
 @media(max-width:800px){ main{grid-template-columns:1fr}.canvas-wrap{min-height:440px;padding:20px}.panel{border-left:0;border-top:1px solid var(--line)} }
+/* The shared "to the pen" panel (examples/pen.js). */
+.pen { margin-top:28px; padding-top:20px; border-top:1px solid var(--line); }
+.pen-title { margin:0 0 12px; color:var(--signal); font:500 12px "DM Mono",monospace; text-transform:uppercase; letter-spacing:.08em; }
+.pen-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 6px; }
+.pen-fields label { display:grid; gap:4px; color:var(--muted); font-size:13px; }
+.pen-fields input { min-height:38px; padding:0 10px; border:1px solid var(--line); background:transparent; color:var(--ink); font:inherit; }
+.pen-stats { margin:6px 0 14px; }
+.pen-status { margin:0 0 12px; padding:10px 12px; border-left:3px solid var(--signal); background:rgba(0,0,0,.04); color:var(--ink); font-size:14px; }
+.pen button + button { margin-top:10px; }
+.pen button:disabled { opacity:.35; cursor:not-allowed; }
+.pen button.stop { background:var(--signal); border-color:var(--signal); }
+.pen-side { margin:16px 0 0; font-size:13px; }
+.pen-side a { color:var(--ink); }
+.pen-log { margin:14px 0 0; max-height:160px; overflow:auto; padding:12px; border:1px solid var(--line); font:12px/1.5 "DM Mono",monospace; white-space:pre-wrap; }

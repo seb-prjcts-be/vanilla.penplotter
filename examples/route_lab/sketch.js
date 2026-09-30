@@ -1,9 +1,9 @@
 import { buildRouteLab } from "./composition.js";
+import { mountPen } from "../pen.js";
 
 const $ = (selector) => document.querySelector(selector);
 const plot = buildRouteLab();
-const canvas = $("#preview");
-const context = canvas.getContext("2d");
+const context = $("#preview").getContext("2d");
 
 // The raw plan: input order, no optimizer passes. The comparison baseline.
 plot.optimize({ passes: [] });
@@ -36,7 +36,11 @@ function render() {
     const gain = before > 0 ? Math.round((1 - after / before) * 100) : 0;
     return `<div><dt>${label}</dt><dd>${format(before)} → <strong>${format(after)}</strong> <span>${gain > 0 ? `−${gain}%` : ""}</span></dd></div>`;
   }).join("");
+  if (pen) pen.refresh();
 }
 
-for (const control of document.querySelectorAll("input, select")) control.addEventListener("change", render);
+let pen = null;
+for (const control of document.querySelectorAll(".controls input, .controls select")) control.addEventListener("change", render);
 render();
+// An A4 sheet, its top-left corner 100 mm right and 60 mm down from home.
+pen = mountPen($("#pen"), { getPlot: () => plot, name: "route-lab", offset: { x: 100, y: 60 } });

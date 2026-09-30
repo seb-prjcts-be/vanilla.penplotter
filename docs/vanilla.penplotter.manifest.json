@@ -23,7 +23,7 @@
     "svg_to_pen",
     "two_pens",
     "wave_hatch",
-    "waves_svg"
+    "waves_pen"
   ],
   "drivers": [
     "SimulationDriver",

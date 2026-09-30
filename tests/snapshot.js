@@ -248,7 +248,7 @@ async function testSitePreviews() {
   assert.match(possibilities.programs(), /HPGL[\s\S]*G-code[\s\S]*EBB[\s\S]*SM,/);
   const examples = await import("../docs/examples-builders.js");
   for (const [name, build] of Object.entries(examples.builders)) {
-    if (name === "waves_svg" || name === "wave_hatch") continue;
+    if (name === "waves_pen" || name === "wave_hatch") continue;
     const context = recordingContext();
     const plot = tryBuild(build);
     if (!plot) continue;

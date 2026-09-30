@@ -6,34 +6,22 @@
   <title>Two pens — vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../showcase.css">
-  <style>
-    .tabs { display:flex; gap:6px; margin:18px 0 8px; }
-    .tabs button { min-height:36px; background:transparent; color:var(--ink); font-weight:500; font-family:"DM Mono",monospace; font-size:12px; }
-    .tabs button[aria-pressed="true"] { background:var(--ink); color:var(--paper); }
-    #program { margin:0 0 12px; max-height:260px; overflow:auto; padding:12px; border:1px solid var(--line); background:#fffdf6; font:11px/1.5 "DM Mono",monospace; white-space:pre; }
-  </style>
 </head>
 <body>
   <header><a href="../../index.html"><span>penplotter</span>.engine</a><a href="../../docs/examples.html">All examples</a></header>
   <main>
     <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of a two-pen plot: a black fan of arcs and a red hatched wedge"></canvas></div>
     <aside class="panel">
-      <p class="tag">Layers · tools · pen map</p>
+      <p class="tag">Layers · tools · one pen change</p>
       <h1>Two pens</h1>
-      <p>Each layer names its tool. The planner draws everything for one pen before it asks for the next, so the plot stops exactly once for a pen change. The same plan becomes SVG, HPGL (pens 1 and 2) or G-code.</p>
+      <p>Every layer names its pen. The engine draws everything for the black fineliner first, then lifts, holds the motors and waits for you to put in the red brush pen. One stop, no guessing which line was which. If you take the plan to another machine instead, HPGL gets pen 1 and pen 2 and the SVG keeps a group per pen.</p>
       <dl>
         <div><dt>Paths</dt><dd id="paths">—</dd></div>
         <div><dt>Pens</dt><dd id="changes">—</dd></div>
         <div><dt>Draw</dt><dd id="draw">—</dd></div>
         <div><dt>Estimate</dt><dd id="time">—</dd></div>
       </dl>
-      <div class="tabs" role="group" aria-label="Machine program">
-        <button type="button" data-kind="svg" aria-pressed="true">SVG</button>
-        <button type="button" data-kind="hpgl" aria-pressed="false">HPGL</button>
-        <button type="button" data-kind="gcode" aria-pressed="false">G-code</button>
-      </div>
-      <pre id="program" aria-live="polite"></pre>
-      <button id="download" type="button">Download this program</button>
+      <div id="pen"></div>
     </aside>
   </main>
   <script type="module" src="sketch.js"></script>

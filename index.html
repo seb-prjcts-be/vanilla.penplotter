@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>vanilla.penplotter — from generative geometry to physical motion</title>
-  <meta name="description" content="A modular JavaScript engine for plotter geometry, optimization, planning, preview, export, and hardware drivers.">
+  <meta name="description" content="A JavaScript engine that takes a drawing from code to a pen plotter without the detour through files: plan, optimize, and plot straight from the browser.">
   <meta property="og:title" content="vanilla.penplotter — from generative geometry to physical motion">
-  <meta property="og:description" content="Build paths in millimetres, remove wasted travel, plan the pens, then export the job or send it straight to the pen.">
+  <meta property="og:description" content="Build paths in millimetres, let the engine plan the route, then send the drawing straight to the pen.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://seb-prjcts-be.github.io/vanilla.penplotter/">
   <meta property="og:image" content="https://seb-prjcts-be.github.io/vanilla.penplotter/docs/images/og-image.png">
@@ -33,7 +33,7 @@
       <div class="hero-copy">
         <p class="eyebrow">JavaScript plotter engine · v0.2.0</p>
         <h1>Code becomes<br><em>motion.</em></h1>
-        <p class="lead">Build geometry, remove wasted travel, plan pens, inspect the route, then render the same job to SVG, HPGL or G-code — or send it straight to the pen.</p>
+        <p class="lead">You write a drawing in JavaScript. The engine works out the route, lifts the pen as little as it can, and sends the whole thing to your plotter from the browser. No SVG, no vpype, no Inkscape in between. Those stay available for other machines; they are no longer the road.</p>
         <div class="actions">
           <a class="button primary" href="docs/guide.html">Start with one line</a>
           <a class="button" href="docs/possibilities.html">See what a pen can do</a>
@@ -53,17 +53,14 @@
       </div>
     </section>
 
-    <section class="pipeline" id="pipeline">
+    <section class="pipeline" id="which">
       <div class="section-intro">
-        <p class="eyebrow">One job, five independent stages</p>
-        <h2>Use the whole engine.<br>Or take one gear.</h2>
+        <p class="eyebrow">Two libraries, one direction</p>
+        <h2>The engine, or the p5 face on it.</h2>
       </div>
       <ol class="pipeline-list">
-        <li><span>01</span><strong>Geometry</strong><p>Paths, SVG, hatches, stipples, curves and transforms in physical units.</p></li>
-        <li><span>02</span><strong>Optimizer</strong><p>Fuse endpoints, remove duplicate work, simplify and resample.</p></li>
-        <li><span>03</span><strong>Planner</strong><p>Order reversible paths, move closed seams and schedule tools.</p></li>
-        <li><span>04</span><strong>Renderer</strong><p>Preview and export the exact same plan to SVG, HPGL or G-code.</p></li>
-        <li><span>05</span><strong>Driver</strong><p>Dry-run the command list, then stream the plan to a tested machine: the first driver plots an iDraw HSE / A2 over Web Serial. <a href="examples/direct_plot/index.html">Direct plot →</a> · <a href="examples/svg_to_pen/index.html">SVG to pen →</a></p></li>
+        <li><span>this</span><strong>vanilla.penplotter</strong><p>The engine. It holds the geometry, cleans it up, plans the pen's route, estimates the time and drives the machine. Plain JavaScript, no dependencies, no p5.js. Take this if you draw with your own code, with Paper.js, from an SVG, or want to build your own layer on top.</p></li>
+        <li><span>sister</span><strong>p5.penplotter</strong><p>Three methods on p5.js. You draw as you always do, <code>plot.line()</code> instead of <code>line()</code>, and <code>plot.go()</code> sends the last frame to the pen. It contains no engine of its own; it calls this one. Take it if you sketch in p5.js. <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter →</a></p></li>
       </ol>
     </section>
 
@@ -71,28 +68,41 @@
       <div>
         <p class="eyebrow">Vanilla first</p>
         <h2>No canvas capture.<br>No SVG detour.</h2>
-        <p class="lead small">The sketch creates plot geometry directly. p5.js and p5.waves are optional adapters, not foundations the engine depends on.</p>
+        <p class="lead small">The sketch builds plot geometry in millimetres, and the same plan feeds the preview, the statistics and the driver. What you see on screen is what the pen does.</p>
       </div>
       <pre><code>import { PlotterEngine } from "./vanilla.penplotter.js";
+import { EbbDriver, createWebSerialTransport } from "./src/driver/ebb.js";
 
-const plot = new PlotterEngine({
-  units: "mm",
-  page: { width: 210, height: 297 }
-});
-
+const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } });
 plot.circle(105, 145, 48);
 plot.hatch(polygon, { spacing: 2.4 });
 
-plot.optimize({ mergeTolerance: 0.05 });
 const plan = plot.plan({ strategy: "nearest" });
+console.log(plan.stats);              // paths, travel, pen lifts, minutes
 
-console.log(plan.stats);
-const hpgl = plot.exportHPGL();</code></pre>
+const transport = createWebSerialTransport();
+await transport.open();               // from a click
+await new EbbDriver({ transport, profile: "idraw-hse-a2" })
+  .run(plan, { confirmed: true });</code></pre>
+    </section>
+
+    <section class="pipeline" id="pipeline">
+      <div class="section-intro">
+        <p class="eyebrow">One job, five independent stages</p>
+        <h2>Use the whole engine.<br>Or take one gear.</h2>
+      </div>
+      <ol class="pipeline-list">
+        <li><span>01</span><strong>Geometry</strong><p>Paths, SVG, hatches, stipples and transforms, all in physical units.</p></li>
+        <li><span>02</span><strong>Optimizer</strong><p>Join ends that touch, drop what was drawn twice, simplify and resample.</p></li>
+        <li><span>03</span><strong>Planner</strong><p>Order the paths, reverse the ones that allow it, move the seam of closed shapes, schedule the pens.</p></li>
+        <li><span>04</span><strong>Renderer</strong><p>Preview the plan on a canvas; for other machines, write it as SVG, HPGL or G-code.</p></li>
+        <li><span>05</span><strong>Driver</strong><p>Dry-run the command list, then stream the plan to the machine. Tested on one: an iDraw HSE / A2 over Web Serial. <a href="examples/direct_plot/index.html">Direct plot →</a></p></li>
+      </ol>
     </section>
   </main>
 
   <footer>
-    <span>vanilla.penplotter · modular by design · <a href="docs/about.html">About</a> · <a href="docs/roadmap.html">Roadmap</a></span>
+    <span>vanilla.penplotter · <a href="docs/about.html">About</a> · <a href="docs/roadmap.html">Roadmap</a> · <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a></span>
     <span>MIT · 2026 · v0.2.0</span>
   </footer>
   <script type="module" src="docs/app.js"></script>

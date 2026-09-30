@@ -1,30 +1,19 @@
 import { buildFirstJob } from "./composition.js";
+import { mountPen } from "../pen.js";
 
 const plot = buildFirstJob();
 const plan = plot.plan();
-
-const canvas = document.querySelector("#preview");
-const context = canvas.getContext("2d");
+const context = document.querySelector("#preview").getContext("2d");
 let showTravel = true;
 
 function render() {
-  plot.drawPreview(context, {
-    showTravel,
-    padding: 26,
-    paper: "#fffdf6"
-  });
-}
-
-function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const rest = Math.round(seconds % 60);
-  return `${minutes}m ${rest}s`;
+  plot.drawPreview(context, { showTravel, padding: 26, paper: "#fffdf6" });
 }
 
 document.querySelector("#paths").textContent = String(plan.stats.paths);
-document.querySelector("#draw").textContent = `${plan.stats.drawDistance.toFixed(1)} mm`;
-document.querySelector("#travel").textContent = `${plan.stats.travelDistance.toFixed(1)} mm`;
-document.querySelector("#time").textContent = formatTime(plan.stats.estimatedSeconds);
+document.querySelector("#draw").textContent = `${plan.stats.drawDistance.toFixed(0)} mm`;
+document.querySelector("#travel").textContent = `${plan.stats.travelDistance.toFixed(0)} mm`;
+document.querySelector("#time").textContent = `${Math.floor(plan.stats.estimatedSeconds / 60)}m ${Math.round(plan.stats.estimatedSeconds % 60)}s`;
 
 document.querySelector("#travel-toggle").addEventListener("click", function toggleTravel() {
   showTravel = !showTravel;
@@ -32,13 +21,6 @@ document.querySelector("#travel-toggle").addEventListener("click", function togg
   render();
 });
 
-document.querySelector("#download").addEventListener("click", function downloadSVG() {
-  const blob = new Blob([plot.exportSVG()], { type: "image/svg+xml" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "first-job.svg";
-  link.click();
-  URL.revokeObjectURL(link.href);
-});
-
 render();
+// An A4 sheet, its top-left corner 100 mm right and 60 mm down from home.
+mountPen(document.querySelector("#pen"), { getPlot: () => plot, name: "first-job", offset: { x: 100, y: 60 } });

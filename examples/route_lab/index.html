@@ -19,9 +19,9 @@
   <main>
     <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of the planned route with pen-up travel"></canvas></div>
     <aside class="panel">
-      <p class="tag">Optimizer · planner · statistics</p>
+      <p class="tag">Optimizer · planner · what it saves</p>
       <h1>Route lab</h1>
-      <p>Bad input on purpose: chains cut into pieces and shuffled, some drawn twice, and a circle with 1 440 points. Switch the passes on and off and watch what each one buys. Left of the arrow: the raw plan. Right: yours.</p>
+      <p>I made this input as bad as I could: chains cut into pieces and shuffled, some drawn twice, a circle with 1 440 points. That is what a quick generative sketch usually hands you. Switch the passes on and off and read what each one buys, in paths, points, pen lifts, travel and minutes. What you see is what the pen gets.</p>
       <div class="controls">
         <label><input type="checkbox" data-pass="deduplicate" checked> deduplicate — drop paths drawn twice</label>
         <label><input type="checkbox" data-pass="merge" checked> merge — rejoin chains whose ends touch</label>
@@ -31,6 +31,7 @@
         <label><input type="checkbox" id="travel" checked> show pen-up travel</label>
       </div>
       <dl id="table" aria-live="polite"></dl>
+      <div id="pen"></div>
     </aside>
   </main>
   <script type="module" src="sketch.js"></script>

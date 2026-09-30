@@ -1,19 +1,18 @@
-import { createWaveHatch } from "./drawing.js";
+import { createWaveDrawing } from "./drawing.js";
 import { mountPen } from "../pen.js";
 
 const $ = (selector) => document.querySelector(selector);
 try {
   if (!globalThis.VanillaWaves) throw new Error("Could not load vanilla.waves. Check your connection and reload.");
-  const plot = createWaveHatch(globalThis.VanillaWaves);
+  const plot = createWaveDrawing(globalThis.VanillaWaves);
   const plan = plot.plan();
   plot.drawPreview($("#preview").getContext("2d"), { showTravel: false, padding: 26, paper: "#fffdf6" });
   $("#paths").textContent = String(plan.stats.paths);
   $("#draw").textContent = `${(plan.stats.drawDistance / 1000).toFixed(1)} m`;
-  $("#travel").textContent = `${(plan.stats.travelDistance / 1000).toFixed(1)} m`;
-  $("#time").textContent = `${Math.round(plan.stats.estimatedSeconds / 60)} min`;
-  $("#status").textContent = "Sampled at t = 0. Same waves, same sheet, every time.";
+  $("#travel").textContent = `${plan.stats.travelDistance.toFixed(0)} mm`;
+  $("#status").textContent = "Sampled at t = 0.";
   // An A4 sheet, its top-left corner 100 mm right and 60 mm down from home.
-  mountPen($("#pen"), { getPlot: () => plot, name: "wave-hatch", offset: { x: 100, y: 60 } });
+  mountPen($("#pen"), { getPlot: () => plot, name: "waves", offset: { x: 100, y: 60 } });
 } catch (error) {
   $("#status").textContent = error.message;
 }

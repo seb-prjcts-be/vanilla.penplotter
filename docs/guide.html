@@ -15,8 +15,8 @@
   <main class="page">
     <header class="page-header">
       <p class="eyebrow">Guide · v0.2.0</p>
-      <h1>One line to a planned job.</h1>
-      <p class="lead">Start through the facade. Reach for individual modules only when your sketch needs them.</p>
+      <h1>From one line to the pen.</h1>
+      <p class="lead">Seven short steps. The first four give you a planned job; the last one sends it to the machine. You only need the modules underneath when your sketch asks for them.</p>
     </header>
 
     <h2>1. Create geometry</h2>
@@ -78,7 +78,7 @@ console.log(plan.stats);</code></pre>
     <p class="note">Tolerances, coordinates and distance statistics use document units. Planner speeds use mm/s; G-code feed rates use mm/min. HPGL and G-code exports convert coordinates to physical units (96 CSS pixels = 1 inch). SVG retains the document units.</p>
     <p>After editing the document, export, statistics and preview rebuild stale plans automatically, retaining the previous optimization and planning settings. This also covers edits to returned paths, layers and tools. Document data must remain JSON-serializable.</p>
 
-    <h2>5. Preview and export</h2>
+    <h2>5. Preview, and files for other machines</h2>
     <pre><code>plot.drawPreview(canvas.getContext("2d"), {
   showTravel: true
 });
@@ -90,11 +90,11 @@ const gcode = plot.exportGCode({
   penDown: "M3 S1000"
 });</code></pre>
 
-    <h2>6. Use modules directly</h2>
+    <h2>6. Use the modules directly</h2>
     <p>Import from <code>src/geometry</code>, <code>src/optimizer</code>, <code>src/planner</code> or <code>src/renderer</code>. The root facade does not own a hidden representation: every stage accepts and returns the documented snapshots.</p>
 
-    <h2>7. Direct plotting</h2>
-    <p>One machine profile has a tested driver: the iDraw HSE / A2, an AxiDraw-style CoreXY plotter with an EBB board. The plan goes straight to the pen — no SVG in between.</p>
+    <h2>7. To the pen</h2>
+    <p>This is where it was all going. One machine profile has a tested driver so far: the iDraw HSE / A2, an AxiDraw-style CoreXY plotter with an EBB board. The plan goes straight to it; nothing is written to disk on the way.</p>
     <pre><code>import { EbbDriver, createWebSerialTransport } from "./src/driver/ebb.js";
 
 const transport = createWebSerialTransport();

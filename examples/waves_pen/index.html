@@ -3,23 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wave hatch — vanilla.penplotter + vanilla.waves</title>
+  <title>Waves to pen — vanilla.penplotter + vanilla.waves</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../showcase.css">
 </head>
 <body>
   <header><a href="../../index.html"><span>penplotter</span>.engine</a><a href="../../docs/examples.html">All examples</a></header>
   <main>
-    <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of a hatched tonal field on A4"></canvas></div>
+    <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of 32 wave lines on A4"></canvas></div>
     <aside class="panel">
-      <p class="tag">vanilla.waves · hatch · tone</p>
-      <h1>Wave hatch</h1>
-      <p>Seventy cells on an A4 sheet. Two waves decide each one: how far apart the hatch lines are, and at what angle. Where the lines crowd the paper goes dark, where they thin out it stays light. No grey anywhere, only strokes. About ten metres of ink, seven minutes of plotting.</p>
+      <p class="tag">vanilla.waves · a still from an animation</p>
+      <h1>Waves to pen</h1>
+      <p>vanilla.waves animates; a plotter draws once. So I stop time: every line is sampled at t = 0, and the 32 rows that would ripple on a screen become one still sheet. That is the whole trick for plotting anything that moves. Pick the moment, then go to the pen.</p>
       <dl>
         <div><dt>Paths</dt><dd id="paths">—</dd></div>
         <div><dt>Draw</dt><dd id="draw">—</dd></div>
         <div><dt>Travel</dt><dd id="travel">—</dd></div>
-        <div><dt>Estimate</dt><dd id="time">—</dd></div>
       </dl>
       <p id="status" role="status">Loading vanilla.waves…</p>
       <div id="pen"></div>
