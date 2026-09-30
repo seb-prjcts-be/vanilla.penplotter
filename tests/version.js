@@ -12,7 +12,9 @@ assert.equal(PlotterEngine.version, packageData.version);
 assert.equal(JSON.parse(read("docs/vanilla.penplotter.manifest.json")).version, packageData.version);
 assert.ok(read("README.md").includes(`**${packageData.version}**`), "README states the current version");
 assert.ok(read("index.html").includes(`v${packageData.version}`), "landing page shows the current version");
-assert.ok(read("docs/guide.html").includes(`v${packageData.version}`), "guide shows the current version");
+for (const page of ["docs/guide.html", "docs/examples.html", "docs/possibilities.html", "docs/about.html"]) {
+  assert.ok(read(page).includes(`v${packageData.version}`), `${page} shows the current version`);
+}
 assert.match(read("README.md"), /<!-- vereisten:start -->[\s\S]+<!-- vereisten:end -->/, "README carries the shared vereisten block");
 
 console.log("vanilla.penplotter version: ok");

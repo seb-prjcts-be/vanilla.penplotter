@@ -193,14 +193,82 @@ function testRenderer() {
   assert.match(svg, /class="pen-up"/);
 }
 
+// docs/architecture.html and docs/roadmap.html are rendered from Markdown;
+// a stale page is a failing test, not a surprise on GitHub Pages.
+async function testGeneratedDocs() {
+  const { buildDocs } = await import("../tools/build-docs.js");
+  assert.deepEqual(buildDocs(false), [], "run `npm run docs` and commit the result");
+}
+
+// Every example that has a pure composition must build a plan headlessly.
+async function testExampleCompositions() {
+  const { buildFirstJob } = await import("../examples/first_job/composition.js");
+  const { buildTwoPens } = await import("../examples/two_pens/composition.js");
+  const { buildRouteLab } = await import("../examples/route_lab/composition.js");
+  assert.ok(buildFirstJob().plan().stats.paths > 10);
+  const twoPens = buildTwoPens().plan();
+  assert.equal(twoPens.stats.toolChanges, 2, "two pens, two tool picks");
+  assert.match(buildTwoPens().exportHPGL({ penMap: { black: 1, red: 2 } }), /SP2/, "pen map reaches HPGL");
+  const lab = buildRouteLab();
+  lab.optimize({ passes: [] });
+  const raw = lab.plan({ strategy: "input" });
+  lab.optimize({ mergeTolerance: 0.05, duplicateTolerance: 0.01, simplifyTolerance: 0.05 });
+  const planned = lab.plan({ strategy: "nearest" });
+  assert.ok(planned.stats.paths < raw.stats.paths / 5, "route lab: merge and dedupe collapse the fragments");
+  assert.ok(planned.stats.travelDistance < raw.stats.travelDistance / 10, "route lab: nearest order cuts travel");
+}
+
+// The site's live previews are ordinary consumers of the engine: run every
+// builder with a recording canvas. The wave builders need vanilla.waves and
+// are skipped offline (see tests/waves-integration.js).
+// SVG import needs a DOM parser; those previews are covered in the browser.
+function tryBuild(build) {
+  try {
+    return build();
+  } catch (error) {
+    if (/DOMParser/.test(error.message)) return null;
+    throw error;
+  }
+}
+function recordingContext() {
+  const context = { canvas: { width: 520, height: 220 }, strokes: 0 };
+  for (const name of ["clearRect", "fillRect", "beginPath", "moveTo", "lineTo", "save", "restore", "setLineDash"]) context[name] = () => {};
+  context.stroke = () => { context.strokes += 1; };
+  return context;
+}
+async function testSitePreviews() {
+  const possibilities = await import("../docs/possibilities-builders.js");
+  for (const [name, build] of Object.entries(possibilities.builders)) {
+    const context = recordingContext();
+    const plan = tryBuild(build);
+    if (!plan) continue;
+    Renderer.drawPreview(context, plan, { showTravel: true });
+    assert.ok(context.strokes > 0, `possibility ${name} draws something`);
+  }
+  assert.match(possibilities.programs(), /HPGL[\s\S]*G-code[\s\S]*EBB[\s\S]*SM,/);
+  const examples = await import("../docs/examples-builders.js");
+  for (const [name, build] of Object.entries(examples.builders)) {
+    if (name === "waves_svg" || name === "wave_hatch") continue;
+    const context = recordingContext();
+    const plot = tryBuild(build);
+    if (!plot) continue;
+    plot.drawPreview(context, { showTravel: true });
+    assert.ok(context.strokes > 0, `example preview ${name} draws something`);
+  }
+}
+
 function testStaticLinks() {
   const files = [
     "index.html",
     "docs/guide.html",
     "docs/examples.html",
-    "examples/first_job/index.html",
-    "examples/direct_plot/index.html",
-    "examples/waves_svg/index.html"
+    "docs/possibilities.html",
+    "docs/about.html",
+    "docs/architecture.html",
+    "docs/roadmap.html",
+    ...fs.readdirSync(path.join(root, "examples"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => `examples/${entry.name}/index.html`)
   ];
   for (const relative of files) {
     const full = path.join(root, relative);
@@ -210,7 +278,7 @@ function testStaticLinks() {
     for (const match of pageMarkup.matchAll(/(?:href|src)="([^"]+)"/g)) {
       const target = match[1];
       if (/^(?:https?:|#)/.test(target)) continue;
-      const resolved = path.resolve(path.dirname(full), target.split("#")[0]);
+      const resolved = path.resolve(path.dirname(full), target.split(/[#?]/)[0]);
       assert.equal(fs.existsSync(resolved), true, `Broken link ${target} in ${relative}`);
     }
   }
@@ -225,4 +293,7 @@ testSVGParser();
 testPlugin();
 testRenderer();
 testStaticLinks();
+await testGeneratedDocs();
+await testExampleCompositions();
+await testSitePreviews();
 console.log("vanilla.penplotter snapshot: ok");

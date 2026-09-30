@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generated": "2026-09-21",
+  "generated": "2026-09-30",
   "schema": "vanilla.penplotter/document@1",
   "plan_schema": "vanilla.penplotter/plan@1",
   "stages": [
@@ -19,6 +19,10 @@
   "examples": [
     "direct_plot",
     "first_job",
+    "route_lab",
+    "svg_to_pen",
+    "two_pens",
+    "wave_hatch",
     "waves_svg"
   ],
   "drivers": [

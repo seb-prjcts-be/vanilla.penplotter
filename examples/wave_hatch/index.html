@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave hatch — vanilla.penplotter + vanilla.waves</title>
+  <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../showcase.css">
+</head>
+<body>
+  <header><a href="../../index.html"><span>penplotter</span>.engine</a><a href="../../docs/examples.html">All examples</a></header>
+  <main>
+    <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of a hatched tonal field on A4"></canvas></div>
+    <aside class="panel">
+      <p class="tag">vanilla.waves · hatch · tone</p>
+      <h1>Wave hatch</h1>
+      <p>Seventy cells on A4. Two waves decide each cell: one sets the hatch spacing, the other the angle. Dark where the lines are dense, light where they are sparse — tone made of nothing but pen strokes.</p>
+      <dl>
+        <div><dt>Paths</dt><dd id="paths">—</dd></div>
+        <div><dt>Draw</dt><dd id="draw">—</dd></div>
+        <div><dt>Travel</dt><dd id="travel">—</dd></div>
+        <div><dt>Estimate</dt><dd id="time">—</dd></div>
+      </dl>
+      <p id="status" role="status">Loading vanilla.waves…</p>
+      <button id="download" type="button" disabled>Download planned SVG</button>
+    </aside>
+  </main>
+  <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
+  <script type="module" src="sketch.js"></script>
+</body>
+</html>

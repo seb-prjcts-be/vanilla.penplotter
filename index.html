@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>vanilla.penplotter — from generative geometry to physical motion</title>
   <meta name="description" content="A modular JavaScript engine for plotter geometry, optimization, planning, preview, export, and hardware drivers.">
+  <meta property="og:title" content="vanilla.penplotter — from generative geometry to physical motion">
+  <meta property="og:description" content="Build paths in millimetres, remove wasted travel, plan the pens, then export the job or send it straight to the pen.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://seb-prjcts-be.github.io/vanilla.penplotter/">
+  <meta property="og:image" content="https://seb-prjcts-be.github.io/vanilla.penplotter/docs/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="docs/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="docs/style.css">
 </head>
 <body>
@@ -12,10 +19,12 @@
     <a class="brand" href="#top"><span>penplotter</span>.engine</a>
     <button class="menu" type="button" aria-label="Toggle navigation">Menu</button>
     <div class="nav-links">
-      <a href="#pipeline">Pipeline</a>
-      <a href="docs/examples.html">Examples</a>
       <a href="docs/guide.html">Guide</a>
-      <a href="docs/architecture.md">Architecture</a>
+      <a href="docs/examples.html">Examples</a>
+      <a href="docs/possibilities.html">Possibilities</a>
+      <a href="docs/architecture.html">Architecture</a>
+      <a href="docs/about.html">About</a>
+      <a href="https://github.com/seb-prjcts-be/vanilla.penplotter">GitHub</a>
     </div>
   </nav>
 
@@ -27,7 +36,7 @@
         <p class="lead">Build geometry, remove wasted travel, plan pens, inspect the route, then render the same job to SVG, HPGL or G-code — or send it straight to the pen.</p>
         <div class="actions">
           <a class="button primary" href="docs/guide.html">Start with one line</a>
-          <a class="button" href="docs/architecture.md">Read the blueprint</a>
+          <a class="button" href="docs/possibilities.html">See what a pen can do</a>
         </div>
       </div>
       <div class="plot-card">
@@ -54,7 +63,7 @@
         <li><span>02</span><strong>Optimizer</strong><p>Fuse endpoints, remove duplicate work, simplify and resample.</p></li>
         <li><span>03</span><strong>Planner</strong><p>Order reversible paths, move closed seams and schedule tools.</p></li>
         <li><span>04</span><strong>Renderer</strong><p>Preview and export the exact same plan to SVG, HPGL or G-code.</p></li>
-        <li><span>05</span><strong>Driver</strong><p>Dry-run the command list, then stream the plan to a tested machine: the first driver plots an iDraw HSE / A2 over Web Serial. <a href="examples/direct_plot/index.html">Direct plot →</a></p></li>
+        <li><span>05</span><strong>Driver</strong><p>Dry-run the command list, then stream the plan to a tested machine: the first driver plots an iDraw HSE / A2 over Web Serial. <a href="examples/direct_plot/index.html">Direct plot →</a> · <a href="examples/svg_to_pen/index.html">SVG to pen →</a></p></li>
       </ol>
     </section>
 
@@ -83,8 +92,8 @@ const hpgl = plot.exportHPGL();</code></pre>
   </main>
 
   <footer>
-    <span>vanilla.penplotter · modular by design</span>
-    <span>MIT · 2026</span>
+    <span>vanilla.penplotter · modular by design · <a href="docs/about.html">About</a> · <a href="docs/roadmap.html">Roadmap</a></span>
+    <span>MIT · 2026 · v0.2.0</span>
   </footer>
   <script type="module" src="docs/app.js"></script>
 </body>

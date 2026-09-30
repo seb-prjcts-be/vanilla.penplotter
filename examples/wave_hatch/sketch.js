@@ -1,0 +1,25 @@
+import { createWaveHatch } from "./drawing.js";
+
+const $ = (selector) => document.querySelector(selector);
+try {
+  if (!globalThis.VanillaWaves) throw new Error("Could not load vanilla.waves. Check your connection and reload.");
+  const plot = createWaveHatch(globalThis.VanillaWaves);
+  const plan = plot.plan();
+  plot.drawPreview($("#preview").getContext("2d"), { showTravel: false, padding: 26, paper: "#fffdf6" });
+  $("#paths").textContent = String(plan.stats.paths);
+  $("#draw").textContent = `${(plan.stats.drawDistance / 1000).toFixed(1)} m`;
+  $("#travel").textContent = `${(plan.stats.travelDistance / 1000).toFixed(1)} m`;
+  $("#time").textContent = `${Math.round(plan.stats.estimatedSeconds / 60)} min`;
+  $("#status").textContent = "Sampled at t = 0. Same waves, same sheet, every time.";
+  const button = $("#download");
+  button.disabled = false;
+  button.addEventListener("click", () => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([plot.exportSVG()], { type: "image/svg+xml" }));
+    link.download = "wave-hatch-a4.svg";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  });
+} catch (error) {
+  $("#status").textContent = error.message;
+}
