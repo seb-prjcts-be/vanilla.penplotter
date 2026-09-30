@@ -24,7 +24,8 @@
   "scripts": {
     "test": "node tests/snapshot.js && node tests/ebb.js && node tests/regressions.js && node tests/version.js",
     "docs": "node tools/build-docs.js",
-    "manifest": "node tools/gen-manifest.js"
+    "manifest": "node tools/gen-manifest.js",
+    "handbook": "node tools/build-handbook.js"
   },
   "repository": "github:seb-prjcts-be/vanilla.penplotter",
   "homepage": "https://seb-prjcts-be.github.io/vanilla.penplotter/",

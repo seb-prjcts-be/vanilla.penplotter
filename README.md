@@ -1,6 +1,6 @@
 # vanilla.penplotter
 
-**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
+**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[Handbook (PDF)](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/vanilla.penplotter-handbook.pdf)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
 
 You write a drawing in JavaScript. This engine works out the route, lifts the pen as little as it can, and sends the drawing to your plotter from the browser. No SVG, no vpype, no Inkscape in between.
 
@@ -161,9 +161,10 @@ Every example ends at the pen; the [examples page](https://seb-prjcts-be.github.
 npm test
 npm run docs
 npm run manifest
+npm run handbook
 ```
 
-`npm test` runs the snapshot, driver, regression and version tests, checks every local link on the site, builds every example composition and live preview headlessly, and fails when a generated docs page is stale. `npm run docs` renders `docs/architecture.md` and `docs/roadmap.md` to HTML; `npm run manifest` regenerates `docs/vanilla.penplotter.manifest.json`. The optional vanilla.waves check stays off the network: download `waves-core.js` from vanilla.waves commit `4fad55570d9dab243e99f40181f12b5aede2c5be` and run:
+`npm test` runs the snapshot, driver, regression and version tests, checks every local link on the site, builds every example composition and live preview headlessly, and fails when a generated docs page is stale. `npm run docs` renders `docs/architecture.md` and `docs/roadmap.md` to HTML; `npm run manifest` regenerates `docs/vanilla.penplotter.manifest.json`; `npm run handbook` prints `docs/handbook.html`, the in-depth handbook, to `docs/vanilla.penplotter-handbook.pdf` with a headless Chrome or Edge. The optional vanilla.waves check stays off the network: download `waves-core.js` from vanilla.waves commit `4fad55570d9dab243e99f40181f12b5aede2c5be` and run:
 
 ```powershell
 node tests/waves-integration.js path/to/waves-core.js waves-a4.svg
