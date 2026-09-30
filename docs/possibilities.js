@@ -5,7 +5,7 @@ for (const canvas of document.querySelectorAll("canvas[data-possibility]")) {
   Renderer.drawPreview(canvas.getContext("2d"), builders[canvas.dataset.possibility](), {
     showTravel: canvas.dataset.possibility === "route",
     padding: 8,
-    paper: "#fffdf6"
+    paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)"
   });
 }
 const text = document.querySelector("[data-possibility='programs']");

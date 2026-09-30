@@ -7,14 +7,26 @@
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../showcase.css">
   <style>
-    textarea { width:100%; min-height:120px; margin:0 0 10px; padding:10px; border:1px solid var(--line); background:#fffdf6; color:var(--ink); font:11px/1.5 "DM Mono",monospace; resize:vertical; }
+    textarea { width:100%; min-height:120px; margin:0 0 10px; padding:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font:11px/1.5 "DM Mono",monospace; resize:vertical; }
     .file { display:block; margin:0 0 14px; color:var(--muted); font-size:13px; }
     .fit { display:grid; gap:4px; margin:0 0 6px; color:var(--muted); font-size:13px; }
     .fit input { min-height:38px; padding:0 10px; border:1px solid var(--line); background:transparent; color:var(--ink); font:inherit; }
   </style>
 </head>
 <body>
-  <header><a href="../../index.html"><span>penplotter</span>.engine</a><a href="../../docs/examples.html">All examples</a></header>
+  <nav id="navbar">
+    <a class="nav-logo" href="../../index.html">vanilla.<span>penplotter</span></a>
+    <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
+    <ul class="nav-links">
+      <li><a href="../../index.html">Showcase</a></li>
+      <li><a href="../../docs/examples.html" class="active">Examples</a></li>
+      <li><a href="../../docs/possibilities.html">Possibilities</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
+      <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/about.html">About</a></li>
+      <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
+    </ul>
+  </nav>
   <main>
     <div class="canvas-wrap"><canvas id="preview" width="760" height="553" aria-label="Preview of the imported SVG"></canvas></div>
     <aside class="panel">

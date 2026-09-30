@@ -58,7 +58,7 @@ function render() {
   plot.drawPreview(context, {
     showTravel,
     padding: 26 * ratio,
-    paper: "#fffdf6"
+    paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)"
   });
 }
 
@@ -76,9 +76,6 @@ document.querySelector("#travel-toggle").addEventListener("click", function togg
   this.setAttribute("aria-pressed", String(showTravel));
   this.textContent = showTravel ? "Pen-up visible" : "Pen-up hidden";
   render();
-});
-document.querySelector(".menu").addEventListener("click", function toggleMenu() {
-  document.querySelector(".nav").classList.toggle("nav-open");
 });
 window.addEventListener("resize", render);
 render();

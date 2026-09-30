@@ -47,7 +47,7 @@ function build() {
     $("#imported").textContent = `${importedPaths} paths`;
     $("#planned").textContent = `${plan.stats.paths} paths · ${plan.stats.points} points`;
     $("#status").textContent = `Fitted ${(bounds.maxX - bounds.minX).toFixed(0)} × ${(bounds.maxY - bounds.minY).toFixed(0)} source units onto ${width} × ${height.toFixed(0)} mm.`;
-    plot.drawPreview(context, { showTravel: true, padding: 30, paper: "#fffdf6" });
+    plot.drawPreview(context, { showTravel: true, padding: 30, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
   } catch (error) {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     plot = new PlotterEngine({ units: "mm", page: { width: 120, height: 90, margin: 0 } });

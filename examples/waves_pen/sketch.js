@@ -6,7 +6,7 @@ try {
   if (!globalThis.VanillaWaves) throw new Error("Could not load vanilla.waves. Check your connection and reload.");
   const plot = createWaveDrawing(globalThis.VanillaWaves);
   const plan = plot.plan();
-  plot.drawPreview($("#preview").getContext("2d"), { showTravel: false, padding: 26, paper: "#fffdf6" });
+  plot.drawPreview($("#preview").getContext("2d"), { showTravel: false, padding: 26, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
   $("#paths").textContent = String(plan.stats.paths);
   $("#draw").textContent = `${(plan.stats.drawDistance / 1000).toFixed(1)} m`;
   $("#travel").textContent = `${plan.stats.travelDistance.toFixed(0)} mm`;

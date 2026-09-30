@@ -23,7 +23,7 @@ function render() {
   const { passes, strategy } = settings();
   plot.optimize({ passes, mergeTolerance: 0.05, duplicateTolerance: 0.01, simplifyTolerance: 0.05 });
   const plan = plot.plan({ strategy, drawSpeed: 35, travelSpeed: 80, liftDelay: 0.15 });
-  plot.drawPreview(context, { showTravel: $("#travel").checked, padding: 24, paper: "#fffdf6" });
+  plot.drawPreview(context, { showTravel: $("#travel").checked, padding: 24, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
   const rows = [
     ["paths", raw.stats.paths, plan.stats.paths, ""],
     ["points", raw.stats.points, plan.stats.points, ""],

@@ -5,7 +5,7 @@ const plot = buildTwoPens();
 const plan = plot.plan();
 const $ = (selector) => document.querySelector(selector);
 
-plot.drawPreview($("#preview").getContext("2d"), { showTravel: false, padding: 26, paper: "#fffdf6" });
+plot.drawPreview($("#preview").getContext("2d"), { showTravel: false, padding: 26, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
 
 $("#paths").textContent = String(plan.stats.paths);
 $("#changes").textContent = String(plan.stats.toolChanges);

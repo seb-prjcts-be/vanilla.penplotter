@@ -8,7 +8,19 @@
   <link rel="stylesheet" href="../showcase.css">
 </head>
 <body>
-  <header><a href="../../index.html"><span>penplotter</span>.engine</a><a href="../../docs/examples.html">All examples</a></header>
+  <nav id="navbar">
+    <a class="nav-logo" href="../../index.html">vanilla.<span>penplotter</span></a>
+    <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
+    <ul class="nav-links">
+      <li><a href="../../index.html">Showcase</a></li>
+      <li><a href="../../docs/examples.html" class="active">Examples</a></li>
+      <li><a href="../../docs/possibilities.html">Possibilities</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
+      <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/about.html">About</a></li>
+      <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
+    </ul>
+  </nav>
   <main>
     <div class="canvas-wrap"><canvas id="preview" width="640" height="760" aria-label="Plot plan preview"></canvas></div>
     <aside class="panel">
