@@ -14,6 +14,8 @@
 // with exact step counts per motor. Older firmware gets the same profile cut
 // into short constant-speed SM slices.
 
+import { simplifyPath } from "../optimizer/index.js";
+
 const UNIT_TO_MM = Object.freeze({ mm: 1, cm: 10, in: 25.4 });
 const INTERVAL_S = 40e-6; // the EBB motion interrupt runs at 25 kHz
 const RATE_SCALE = 2 ** 31; // LM accumulators step when they pass 2^31
@@ -36,9 +38,12 @@ export const EBB_PROFILES = Object.freeze({
     acceleration: 800, // mm/s², pen down
     travelAcceleration: 1200, // mm/s², pen up
     junctionDeviation: 0.05, // mm: how far a corner may be rounded by not stopping
+    minSpeed: 2, // mm/s: a stroke starts, turns around and ends at this, never at zero
+    simplifyTolerance: 0.02, // mm: chords within this of a straight line are merged before planning
     penDownDelay: 300, // ms
     penUpDelay: 300, // ms
     fifoDepth: 32, // motion commands queued on the board (firmware 3.0+)
+    aheadMs: 250, // how much motion the host sends ahead of the acknowledgements
     usb: Object.freeze({ usbVendorId: 0x04d8, usbProductId: 0xfd92 })
   })
 });
@@ -67,6 +72,7 @@ function positive(value, fallback) {
 // from one point to another with a start and an end speed (mm, mm/s).
 export function planStroke(points, settings) {
   const { speed, acceleration, junctionDeviation, stepsPerMm, maxStepRate } = settings;
+  const floor = Math.min(settings.minSpeed ?? 0, speed);
   const segments = [];
   for (let index = 1; index < points.length; index += 1) {
     const from = points[index - 1];
@@ -82,10 +88,12 @@ export function planStroke(points, settings) {
   }
   if (segments.length === 0) return [];
 
-  // Speed allowed at every vertex: rest at both ends, and in between as much
-  // as the corner allows (GRBL's junction deviation: a sharper corner is a
-  // slower corner, a reversal is a full stop, a straight line never slows).
-  const vertex = new Array(segments.length + 1).fill(0);
+  // Speed allowed at every vertex: the floor at both ends, and in between as
+  // much as the corner allows (GRBL's junction deviation: a sharper corner is
+  // a slower corner, a reversal drops to the floor, a straight line never
+  // slows). Never exactly zero: a step rate of zero leaves the last step to
+  // rounding luck, and the pen would sit on the paper waiting for it.
+  const vertex = new Array(segments.length + 1).fill(floor);
   for (let index = 1; index < segments.length; index += 1) {
     const a = segments[index - 1];
     const b = segments[index];
@@ -94,7 +102,7 @@ export function planStroke(points, settings) {
     const corner = sinHalf >= 1 - 1e-9
       ? Infinity
       : Math.sqrt((acceleration * junctionDeviation * sinHalf) / (1 - sinHalf));
-    vertex[index] = Math.min(corner, a.vmax, b.vmax);
+    vertex[index] = Math.max(floor, Math.min(corner, a.vmax, b.vmax));
   }
   // What the ramps can actually reach, forwards and backwards.
   for (let index = 1; index <= segments.length; index += 1) {
@@ -176,6 +184,8 @@ export function compileEbbPlan(plan, options = {}) {
   const acceleration = positive(options.acceleration, profile.acceleration);
   const travelAcceleration = positive(options.travelAcceleration, profile.travelAcceleration ?? profile.acceleration);
   const junctionDeviation = positive(options.junctionDeviation, profile.junctionDeviation);
+  const minSpeed = positive(options.minSpeed, profile.minSpeed ?? 2);
+  const simplifyTolerance = Math.max(0, Number(options.simplifyTolerance ?? profile.simplifyTolerance ?? 0));
   const commandSet = options.commandSet || "LM";
   if (commandSet !== "LM" && commandSet !== "SM") throw new RangeError(`Unknown command set: ${commandSet}`);
   const returnHome = options.returnHome !== false;
@@ -233,7 +243,9 @@ export function compileEbbPlan(plan, options = {}) {
     let intervals = Math.max(1, Math.round(seconds / INTERVAL_S));
     const axis = (d) => {
       if (d === 0) return { rate: 0, accel: 0, start: 0, end: 0 };
-      const average = (RATE_SCALE * Math.abs(d)) / intervals;
+      // Aim a quarter step past the target: rounding then makes the last
+      // step land a tick early rather than leave it hanging after the end.
+      const average = (RATE_SCALE * (Math.abs(d) + 0.25)) / intervals;
       const start = (average * 2 * phase.vs) / (phase.vs + phase.ve);
       const end = (average * 2 * phase.ve) / (phase.vs + phase.ve);
       let rate = Math.round(start);
@@ -274,11 +286,16 @@ export function compileEbbPlan(plan, options = {}) {
     }
   };
 
-  const stroke = (points, speed, accel) => {
+  const stroke = (rawPoints, speed, accel) => {
+    // Chords within the tolerance of a straight line are one command, not
+    // many: the board parses a command in a few milliseconds, and a circle
+    // drawn as 360 chords of 0.2 mm would stutter 360 times.
+    const points = simplifyTolerance > 0 && rawPoints.length > 2 ? simplifyPath(rawPoints, simplifyTolerance) : rawPoints;
     const phases = planStroke(points, {
       speed,
       acceleration: accel,
       junctionDeviation,
+      minSpeed,
       stepsPerMm: profile.stepsPerMm,
       maxStepRate: profile.maxStepRate
     });
@@ -407,7 +424,13 @@ export class EbbDriver {
     }
 
     const total = compiled.commands.length;
-    const recent = []; // durations of the commands that may still be queued
+    const aheadMs = this.profile.aheadMs ?? 250;
+    const inflight = []; // commands sent whose acknowledgement is still to come
+    const recent = []; // durations of the commands that may still be queued on the board
+    const queuedMs = () => inflight.reduce((sum, item) => sum + item.durationMs, 0);
+    const settle = async (keep) => {
+      while (inflight.length > keep) await inflight.shift().promise;
+    };
     try {
       const depth = await this.openFifo(firmware);
       for (let index = 0; index < total; index += 1) {
@@ -417,19 +440,33 @@ export class EbbDriver {
         }
         const entry = compiled.commands[index];
         if (entry.kind === "tool-change") {
+          await settle(0);
           if (options.onToolChange) await options.onToolChange(entry.toolId);
         } else if (entry.kind === "wait-idle") {
+          await settle(0);
           await this.waitIdle();
           recent.length = 0;
         } else {
-          // The EBB answers once the command is queued; with a full queue
-          // that is only after the oldest queued move has finished.
+          // Commands go out ahead of their acknowledgements, so a run of
+          // short moves is never paced by the USB round trip: at least two
+          // in flight, more while they add up to less than aheadMs of
+          // motion, never more than the board's queue can hold. That bound
+          // also keeps a stop quick: the ES behind them is parsed as soon
+          // as they are. The EBB acknowledges a command once it is queued;
+          // with a full queue that is when the oldest queued move finishes.
+          while (inflight.length >= 2 && (inflight.length > depth || queuedMs() >= aheadMs)) await settle(inflight.length - 1);
           recent.push(entry.durationMs);
-          while (recent.length > depth + 2) recent.shift();
-          await this.ask(entry.cmd, 5000 + recent.reduce((sum, ms) => sum + ms, 0));
+          while (recent.length > depth + 1) recent.shift();
+          const timeoutMs = 5000 + queuedMs() + recent.reduce((sum, ms) => sum + ms, 0);
+          const promise = this.ask(entry.cmd, timeoutMs)
+            .then(() => (options.onProgress ? options.onProgress(index, total, entry) : undefined));
+          promise.catch(() => {}); // reported where it is awaited, never as an unhandled rejection
+          inflight.push({ promise, durationMs: entry.durationMs });
+          continue;
         }
         if (options.onProgress) await options.onProgress(index, total, entry);
       }
+      await settle(0);
     } catch (error) {
       await this.safeStop();
       throw error;
@@ -464,6 +501,12 @@ const NO_OK = new Set(["V", "QM"]);
 
 // Browser transport over Web Serial. Pass an already granted SerialPort, or
 // call open() from a user gesture to let the browser show its port picker.
+//
+// Several commands may be in flight at once. The EBB answers in the order it
+// receives, so replies are handed to the waiting callers in send order: a
+// line starting with "!" is an error reply, everything before an OK line is
+// the reply, and for V and QM, which firmware 3.x answers without OK, the
+// first line is.
 export function createWebSerialTransport(port = null, options = {}) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
@@ -471,8 +514,35 @@ export function createWebSerialTransport(port = null, options = {}) {
   let writer = null;
   let buffer = "";
   let active = false;
-  let waiter = null; // called as soon as bytes arrive
-  let chain = Promise.resolve();
+  let writes = Promise.resolve();
+  const pending = []; // { cmd, name, lines, resolve, reject, timer } in send order
+
+  function finish(item, reply, error) {
+    const at = pending.indexOf(item);
+    if (at >= 0) pending.splice(at, 1);
+    clearTimeout(item.timer);
+    if (error) item.reject(error);
+    else item.resolve(reply.trim());
+  }
+
+  function failAll(error) {
+    while (pending.length) finish(pending[0], null, error);
+  }
+
+  function deliver() {
+    for (;;) {
+      const newline = buffer.search(/[\r\n]/);
+      if (newline < 0) return;
+      const line = buffer.slice(0, newline);
+      buffer = buffer.slice(newline + 1);
+      if (!line) continue;
+      const head = pending[0];
+      if (!head) continue; // nobody asked: leftover from before open()
+      if (line.startsWith("!") || line === "OK") finish(head, line === "OK" ? head.lines.join("\n") : line);
+      else if (NO_OK.has(head.name)) finish(head, line);
+      else head.lines.push(line);
+    }
+  }
 
   async function pump() {
     try {
@@ -481,48 +551,12 @@ export function createWebSerialTransport(port = null, options = {}) {
         if (done) break;
         if (value) {
           buffer += decoder.decode(value, { stream: true });
-          if (waiter) waiter();
+          deliver();
         }
       }
     } catch {
       // expected when close() cancels the reader
     }
-  }
-
-  function takeReply(name) {
-    const lines = buffer.split(/[\r\n]+/);
-    const complete = /[\r\n]$/.test(buffer) ? lines : lines.slice(0, -1);
-    const found = complete.filter(Boolean);
-    const error = found.find((line) => line.startsWith("!"));
-    if (error) return error;
-    const ok = found.indexOf("OK");
-    if (ok >= 0) return found.slice(0, ok).join("\n");
-    if (NO_OK.has(name) && found.length > 0) return found[0];
-    return null;
-  }
-
-  async function exchange(cmd, timeoutMs) {
-    buffer = "";
-    await writer.write(encoder.encode(`${cmd}\r`));
-    const name = cmd.split(",")[0];
-    return new Promise((resolve, reject) => {
-      let timer = null;
-      const check = () => {
-        const reply = takeReply(name);
-        if (reply === null) return false;
-        clearTimeout(timer);
-        waiter = null;
-        buffer = "";
-        resolve(reply.trim());
-        return true;
-      };
-      if (check()) return;
-      waiter = check;
-      timer = setTimeout(() => {
-        waiter = null;
-        reject(new Error(`No reply to "${cmd}" within ${timeoutMs} ms.`));
-      }, timeoutMs);
-    });
   }
 
   return {
@@ -534,20 +568,26 @@ export function createWebSerialTransport(port = null, options = {}) {
       if (!port.readable) await port.open({ baudRate: options.baudRate ?? 115200 });
       reader = port.readable.getReader();
       writer = port.writable.getWriter();
+      buffer = "";
       active = true;
       pump();
     },
-    // Calls are serialized: replies can never be attributed to the wrong command.
     send(cmd, sendOptions = {}) {
-      const result = chain.then(() => {
-        if (!active) throw new Error("Open the transport first.");
-        return exchange(cmd, sendOptions.timeoutMs ?? 3000);
+      if (!active) return Promise.reject(new Error("Open the transport first."));
+      const timeoutMs = sendOptions.timeoutMs ?? 3000;
+      return new Promise((resolve, reject) => {
+        const item = { cmd, name: cmd.split(",")[0], lines: [], resolve, reject, timer: null };
+        pending.push(item);
+        // A reply that never comes breaks the order of everything behind it.
+        item.timer = setTimeout(() => failAll(new Error(`No reply to "${cmd}" within ${timeoutMs} ms.`)), timeoutMs);
+        writes = writes
+          .then(() => writer.write(encoder.encode(`${cmd}\r`)))
+          .catch((error) => finish(item, null, error));
       });
-      chain = result.catch(() => {});
-      return result;
     },
     async close() {
       active = false;
+      failAll(new Error("The transport was closed."));
       if (reader) {
         try { await reader.cancel(); } catch { /* already closed */ }
         reader.releaseLock();

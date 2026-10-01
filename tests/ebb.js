@@ -110,8 +110,9 @@ function testAccelerationProfile() {
   const moves = draw.map(describeMove);
   assert.ok(moves.length >= 3, "a long line has an acceleration, a cruise and a deceleration phase");
   const cruiseHz = 40 * HSE.stepsPerMm; // along X both motors run at the same rate
-  assert.ok(moves[0].start[0] < cruiseHz * 0.02, `starts from rest, not at ${moves[0].start[0]} steps/s`);
-  assert.ok(moves[moves.length - 1].end[0] < cruiseHz * 0.02, "ends at rest");
+  const floorHz = HSE.minSpeed * HSE.stepsPerMm; // never exactly zero, see testNoDwellAtRest
+  assert.ok(moves[0].start[0] <= floorHz * 1.05, `starts at the floor, not at ${moves[0].start[0]} steps/s`);
+  assert.ok(moves[moves.length - 1].end[0] <= floorHz * 1.05, "ends at the floor");
   const peak = Math.max(...moves.map((move) => Math.max(...move.start, ...move.end)));
   assert.ok(peak <= cruiseHz * 1.01 && peak >= cruiseHz * 0.99, `cruises at the draw speed (${peak} steps/s)`);
   for (let index = 1; index < moves.length; index += 1) {
@@ -163,7 +164,7 @@ function testCornering() {
     throw new Error("no command reaches the vertex");
   };
   const reversal = speedAtVertex([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 10, y: 10 }]);
-  assert.ok(reversal < 0.5, `a reversal stops at the vertex (${reversal} mm/s)`);
+  assert.ok(reversal <= HSE.minSpeed * 1.05, `a reversal drops to the floor at the vertex (${reversal} mm/s)`);
   const straight = speedAtVertex([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 110, y: 10 }]);
   assert.ok(straight > 39, `a straight continuation keeps the draw speed (${straight} mm/s)`);
   const bend = speedAtVertex([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 110, y: 60 }]);
@@ -380,6 +381,139 @@ async function testWebSerialTransport() {
   await transport.close();
 }
 
+// A circle drawn as 360 chords of 0.2 mm would be 360 commands of 5 ms: the
+// board cannot parse them that fast and the pen stutters. Chords that stay
+// within two steps of a straight line are merged before planning.
+function testMicroSegmentsMerge() {
+  const circle = [];
+  for (let degree = 0; degree <= 360; degree += 1) {
+    const angle = (degree / 180) * Math.PI;
+    circle.push({ x: 100 + 12 * Math.cos(angle), y: 100 + 12 * Math.sin(angle) });
+  }
+  const plan = planOf((plot) => plot.polyline(circle));
+  const merged = compileEbbPlan(plan, { profile: HSE, drawSpeed: 40 });
+  const [, draw] = strokes(merged);
+  assert.ok(draw.length <= 90, `360 chords become few commands (${draw.length})`);
+  const durations = draw.map((entry) => entry.durationMs).sort((a, b) => a - b);
+  assert.ok(durations[Math.floor(durations.length / 2)] >= 20, `the typical command is long (median ${durations[Math.floor(durations.length / 2)]} ms)`);
+  assert.ok(durations.filter((ms) => ms < 10).length <= 3, "at most a few short leftovers at the seams");
+  assert.deepEqual(stepTotals(draw), [0, 0], "the circle closes exactly where it started");
+  // The engine already simplifies when it plans; the compiler's own pass is
+  // for plans that come in raw. Both off: every chord is a command.
+  const rawPlan = planOf((plot) => { plot.polyline(circle); plot.optimize({ passes: [] }); });
+  const raw = compileEbbPlan(rawPlan, { profile: HSE, drawSpeed: 40, simplifyTolerance: 0 });
+  assert.ok(strokes(raw)[1].length >= 300, `with the tolerances off the geometry is left alone (${strokes(raw)[1].length})`);
+  const compiled = compileEbbPlan(rawPlan, { profile: HSE, drawSpeed: 40 });
+  assert.ok(strokes(compiled)[1].length <= 90, `the compiler merges a raw circle too (${strokes(compiled)[1].length})`);
+}
+
+// The firmware's own arithmetic, tick by tick: an LM must take its last step
+// no later than its nominal duration. A phase that aimed at exactly zero speed
+// could leave the final step hanging for as long as rounding pleased, and the
+// pen sat on the paper.
+function ticksToFinish(rate, steps, accel, intervals) {
+  if (steps === 0) return 0;
+  let current = rate - Math.trunc(accel / 2);
+  let accumulator = 0;
+  let taken = 0;
+  for (let tick = 1; tick <= intervals * 4 + 1000; tick += 1) {
+    current += accel;
+    accumulator += current;
+    if (accumulator >= 2 ** 31) {
+      accumulator -= 2 ** 31;
+      taken += 1;
+      if (taken === Math.abs(steps)) return tick;
+    }
+  }
+  return Infinity;
+}
+
+function testNoDwellAtRest() {
+  const plan = planOf((plot) => {
+    plot.polyline([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 10, y: 10 }, { x: 10, y: 60 }, { x: 10.3, y: 60.2 }]);
+  });
+  const compiled = compileEbbPlan(plan, { profile: HSE, drawSpeed: 40, acceleration: 800 });
+  const floorHz = HSE.minSpeed * HSE.stepsPerMm;
+  for (const entry of motionCommands(compiled)) {
+    const [rate1, steps1, accel1, rate2, steps2, accel2] = entry.cmd.split(",").slice(1).map(Number);
+    const intervals = Math.round(entry.durationMs / 1000 / INTERVAL_S);
+    for (const [rate, steps, accel] of [[rate1, steps1, accel1], [rate2, steps2, accel2]]) {
+      const ticks = ticksToFinish(rate, steps, accel, intervals);
+      assert.ok(ticks <= intervals + 2, `${entry.cmd}: an axis finishes ${ticks - intervals} ticks late`);
+    }
+    // The floor is a pen speed: on CoreXY the faster motor runs at least
+    // |vx| + |vy| times the resolution, so it is the one to check.
+    const endHz = Math.max(steps1 === 0 ? 0 : rate1 + accel1 * intervals, steps2 === 0 ? 0 : rate2 + accel2 * intervals) / RATE_PER_HZ;
+    assert.ok(endHz >= floorHz * 0.8, `${entry.cmd}: never slower than the floor (${endHz} steps/s)`);
+  }
+}
+
+// Commands go out ahead of their acknowledgements: a plot of short moves is
+// not paced by the USB round trip. A transport that answers 5 ms late would
+// otherwise stretch 60 one-millisecond moves to 300 ms.
+async function testPipelinedSends() {
+  const plan = planOf((plot) => {
+    const points = [];
+    for (let i = 0; i <= 60; i += 1) points.push({ x: 20 + i * 0.3, y: 20 + (i % 2) * 0.3 });
+    plot.polyline(points);
+  });
+  const log = [];
+  const slow = {
+    log,
+    async open() {},
+    async close() {},
+    send(cmd) {
+      log.push(cmd);
+      return new Promise((resolve) => setTimeout(() => resolve(cmd === "V" ? "EBBv13_and_above EB Firmware Version 3.0.2" : cmd === "QM" ? "QM,0,0,0,0" : cmd === "QU,2" ? "QU,2,32" : ""), 5));
+    }
+  };
+  const compiled = compileEbbPlan(plan, { profile: HSE, simplifyTolerance: 0, drawSpeed: 60 });
+  const count = motionCommands(compiled).length;
+  assert.ok(count >= 40, `enough short moves to matter (${count})`);
+  const started = performance.now();
+  const result = await new EbbDriver({ transport: slow, profile: HSE }).run(compiled, { confirmed: true });
+  const elapsed = performance.now() - started;
+  assert.equal(result.status, "complete");
+  assert.ok(elapsed < count * 5 * 0.5, `${count} commands acknowledged 5 ms late took ${elapsed.toFixed(0)} ms`);
+  assert.equal(log[log.length - 1], "EM,0,0");
+  // A dwell command or a pen change still waits for the machine to be idle
+  // before the plot goes on, and the stop sequence still ends the log.
+  const transport = createLogTransport();
+  const driver = new EbbDriver({ transport, profile: HSE });
+  await driver.run(compiled, { confirmed: true, onProgress: (index) => { if (index === 10) driver.abort(); } });
+  assert.deepEqual(transport.log.slice(-3), ["ES", "SP,1", "EM,0,0"]);
+}
+
+// The transport itself keeps several commands in flight and hands each reply
+// to the right caller, in order, even when a reply arrives in pieces.
+async function testTransportInFlight() {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const written = [];
+  let push;
+  const port = {
+    readable: new ReadableStream({ start(controller) { push = (text) => controller.enqueue(encoder.encode(text)); } }),
+    writable: new WritableStream({ write(chunk) { written.push(decoder.decode(chunk).trim()); } }),
+    async close() {}
+  };
+  const transport = createWebSerialTransport(port);
+  await transport.open();
+  const first = transport.send("QS");
+  const second = transport.send("SP,1,300");
+  const third = transport.send("QM");
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.deepEqual(written, ["QS", "SP,1,300", "QM"], "all three were written before any reply");
+  push("1500,");
+  push("1000\n\rOK\r\nOK\r\nQM,0,0,0,0\n\r");
+  assert.equal(await first, "1500,1000");
+  assert.equal(await second, "");
+  assert.equal(await third, "QM,0,0,0,0");
+  const bad = transport.send("LM,0,0,0,0,0,0,3");
+  push("!8 Err: no motion\r\n");
+  assert.match(await bad, /^!8 Err: no motion$/, "an error line is the reply; the driver turns it into a stop");
+  await transport.close();
+}
+
 // The driver is public API: every documentation layer has to name it.
 function testDocumentationNamesTheDriver() {
   const root = new URL("../", import.meta.url);
@@ -404,4 +538,8 @@ await testAbortRaisesPen();
 await testErrorReplyStopsSafely();
 await testToolChangeWaitsForIdle();
 await testWebSerialTransport();
+testMicroSegmentsMerge();
+testNoDwellAtRest();
+await testPipelinedSends();
+await testTransportInFlight();
 console.log("vanilla.penplotter ebb: ok");
