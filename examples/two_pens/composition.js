@@ -31,6 +31,6 @@ export function buildTwoPens() {
   plot.polygon(wedge);
 
   plot.optimize({ mergeTolerance: 0.05, simplifyTolerance: 0.03 });
-  plot.plan({ drawSpeed: 35, travelSpeed: 80, toolChangeDelay: 20 });
+  plot.plan({ toolChangeDelay: 20 });
   return plot;
 }

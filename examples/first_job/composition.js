@@ -27,10 +27,6 @@ export function buildFirstJob() {
     duplicateTolerance: 0.01,
     simplifyTolerance: 0.03
   });
-  plot.plan({
-    drawSpeed: 35,
-    travelSpeed: 80,
-    liftDelay: 0.15
-  });
+  plot.plan();   // the machine's own speeds and ramps
   return plot;
 }

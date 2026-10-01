@@ -31,11 +31,10 @@
     </div>
     <div class="demo-layout">
       <div class="demo-code">
-        <div class="code-label">Core snippet</div>
-        <pre><code class="language-javascript">plot.hatch(polygon, { spacing: 4.5, angle: Math.PI / 7 });
-plot.polygon(polygon);
-plot.circle(108, 145, 38);
-const plan = plot.plan({ drawSpeed: 35, travelSpeed: 80 });</code></pre>
+        <div class="code-label">composition.js</div>
+        <pre><code class="language-javascript" data-src="composition.js">// loading composition.js …</code></pre>
+        <div class="code-label">sketch.js</div>
+        <pre><code class="language-javascript" data-src="sketch.js">// loading sketch.js …</code></pre>
       </div>
       <div class="demo-right">
         <div class="demo-canvas"><canvas id="preview" width="640" height="760" aria-label="Plot plan preview"></canvas></div>
@@ -56,5 +55,6 @@ const plan = plot.plan({ drawSpeed: 35, travelSpeed: 80 });</code></pre>
   </footer>
   <script type="module" src="sketch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script type="module" src="../code.js"></script>
 </body>
 </html>

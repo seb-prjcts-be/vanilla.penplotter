@@ -28,6 +28,6 @@ export function createWaveHatch(waves, options = {}) {
     }
   }
   plot.optimize({ simplifyTolerance: 0.02 });
-  plot.plan({ drawSpeed: 35, travelSpeed: 80 });
+  plot.plan();
   return plot;
 }

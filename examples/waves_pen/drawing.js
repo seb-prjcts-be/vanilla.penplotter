@@ -18,6 +18,6 @@ export function createWaveDrawing(waves) {
     plot.polyline(points, { id: `wave-${row + 1}` });
   }
   plot.optimize({ simplifyTolerance: 0.02 });
-  plot.plan({ drawSpeed: 35, travelSpeed: 80 });
+  plot.plan();
   return plot;
 }

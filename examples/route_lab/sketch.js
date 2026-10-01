@@ -7,7 +7,7 @@ const context = $("#preview").getContext("2d");
 
 // The raw plan: input order, no optimizer passes. The comparison baseline.
 plot.optimize({ passes: [] });
-const raw = plot.plan({ strategy: "input", drawSpeed: 35, travelSpeed: 80, liftDelay: 0.15 });
+const raw = plot.plan({ strategy: "input" });
 
 function settings() {
   const passes = [];
@@ -22,7 +22,7 @@ function formatTime(seconds) {
 function render() {
   const { passes, strategy } = settings();
   plot.optimize({ passes, mergeTolerance: 0.05, duplicateTolerance: 0.01, simplifyTolerance: 0.05 });
-  const plan = plot.plan({ strategy, drawSpeed: 35, travelSpeed: 80, liftDelay: 0.15 });
+  const plan = plot.plan({ strategy });
   plot.drawPreview(context, { showTravel: $("#travel").checked, padding: 24, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
   const rows = [
     ["paths", raw.stats.paths, plan.stats.paths, ""],

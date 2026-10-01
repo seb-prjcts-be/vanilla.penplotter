@@ -31,10 +31,10 @@
     </div>
     <div class="demo-layout">
       <div class="demo-code">
-        <div class="code-label">Core snippet</div>
-        <pre><code class="language-javascript">const spacing = tone.sample(column * 1.9 + row * 1.1, 0);  // 1.3 … 6.5 mm
-const angle = turn.sample(column * 0.8 + row * 2.3, 0);    // 0 … π
-plot.hatch(cell, { spacing, angle });</code></pre>
+        <div class="code-label">drawing.js</div>
+        <pre><code class="language-javascript" data-src="drawing.js">// loading drawing.js …</code></pre>
+        <div class="code-label">sketch.js</div>
+        <pre><code class="language-javascript" data-src="sketch.js">// loading sketch.js …</code></pre>
       </div>
       <div class="demo-right">
         <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of a hatched tonal field on A4"></canvas></div>
@@ -56,5 +56,6 @@ plot.hatch(cell, { spacing, angle });</code></pre>
   <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
   <script type="module" src="sketch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script type="module" src="../code.js"></script>
 </body>
 </html>

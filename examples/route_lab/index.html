@@ -38,10 +38,10 @@
     </div>
     <div class="demo-layout">
       <div class="demo-code">
-        <div class="code-label">Core snippet</div>
-        <pre><code class="language-javascript">plot.optimize({ passes: ["deduplicate", "merge", "simplify"] });
-const plan = plot.plan({ strategy: "nearest" });
-plan.stats.travelDistance;   // 14 421 mm → 546 mm</code></pre>
+        <div class="code-label">composition.js</div>
+        <pre><code class="language-javascript" data-src="composition.js">// loading composition.js …</code></pre>
+        <div class="code-label">sketch.js</div>
+        <pre><code class="language-javascript" data-src="sketch.js">// loading sketch.js …</code></pre>
       </div>
       <div class="demo-right">
         <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of the planned route with pen-up travel"></canvas></div>
@@ -64,5 +64,6 @@ plan.stats.travelDistance;   // 14 421 mm → 546 mm</code></pre>
   </footer>
   <script type="module" src="sketch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script type="module" src="../code.js"></script>
 </body>
 </html>

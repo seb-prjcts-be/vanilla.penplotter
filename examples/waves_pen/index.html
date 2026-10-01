@@ -31,10 +31,10 @@
     </div>
     <div class="demo-layout">
       <div class="demo-code">
-        <div class="code-label">Core snippet</div>
-        <pre><code class="language-javascript">const sampler = waves.createSampler({ wave: "triangle sine", range: [-3, 3] });
-points.push({ x, y: 40 + row * 7 + sampler.sample(x + row * 2, 0) });
-plot.polyline(points);</code></pre>
+        <div class="code-label">drawing.js</div>
+        <pre><code class="language-javascript" data-src="drawing.js">// loading drawing.js …</code></pre>
+        <div class="code-label">sketch.js</div>
+        <pre><code class="language-javascript" data-src="sketch.js">// loading sketch.js …</code></pre>
       </div>
       <div class="demo-right">
         <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of 32 wave lines on A4"></canvas></div>
@@ -55,5 +55,6 @@ plot.polyline(points);</code></pre>
   <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
   <script type="module" src="sketch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script type="module" src="../code.js"></script>
 </body>
 </html>

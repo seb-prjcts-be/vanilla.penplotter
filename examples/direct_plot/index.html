@@ -31,11 +31,8 @@
     </div>
     <div class="demo-layout">
       <div class="demo-code">
-        <div class="code-label">Core snippet</div>
-        <pre><code class="language-javascript">const transport = createWebSerialTransport();
-await transport.open();                       // from a click
-const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
-await driver.run(plot.plan(), { confirmed: true });</code></pre>
+        <div class="code-label">sketch.js</div>
+        <pre><code class="language-javascript" data-src="sketch.js">// loading sketch.js …</code></pre>
       </div>
       <div class="demo-right">
         <div class="demo-canvas"><canvas id="preview" width="760" height="553" aria-label="Plot plan preview on the A2 bed"></canvas></div>
@@ -54,5 +51,6 @@ await driver.run(plot.plan(), { confirmed: true });</code></pre>
   </footer>
   <script type="module" src="sketch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script type="module" src="../code.js"></script>
 </body>
 </html>

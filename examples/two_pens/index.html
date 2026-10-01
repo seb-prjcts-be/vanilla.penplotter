@@ -31,11 +31,10 @@
     </div>
     <div class="demo-layout">
       <div class="demo-code">
-        <div class="code-label">Core snippet</div>
-        <pre><code class="language-javascript">plot.layer("arcs", { toolId: "black" });
-plot.arc(62, 150, 40, -1, 1);
-plot.layer("wedge", { toolId: "red" });
-plot.hatch(wedge, { spacing: 2.2 });</code></pre>
+        <div class="code-label">composition.js</div>
+        <pre><code class="language-javascript" data-src="composition.js">// loading composition.js …</code></pre>
+        <div class="code-label">sketch.js</div>
+        <pre><code class="language-javascript" data-src="sketch.js">// loading sketch.js …</code></pre>
       </div>
       <div class="demo-right">
         <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of a two-pen plot: a black fan of arcs and a red hatched wedge"></canvas></div>
@@ -55,5 +54,6 @@ plot.hatch(wedge, { spacing: 2.2 });</code></pre>
   </footer>
   <script type="module" src="sketch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script type="module" src="../code.js"></script>
 </body>
 </html>
