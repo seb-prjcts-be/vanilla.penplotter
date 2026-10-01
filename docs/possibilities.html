@@ -81,7 +81,7 @@ plot.exportHPGL({ penMap: { black: 1, blue: 2, red: 3 } });</code></pre>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="route" width="520" height="220" aria-label="The same strokes, planned in input order and in nearest order"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">plot.plan({ strategy: "input" }).stats.travelDistance;    // long
+<pre class="ex-code-block"><code class="language-javascript">plot.plan({ strategy: "drawn" }).stats.travelDistance;    // long
 plot.plan({ strategy: "nearest" }).stats.travelDistance;  // short</code></pre>
 <a class="ex-full-link" href="../examples/route_lab/index.html">-&gt; full example</a>
     </div>

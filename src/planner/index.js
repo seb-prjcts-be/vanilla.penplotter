@@ -128,6 +128,7 @@ export function planDocument(document, options = {}) {
     penLifts: 0,
     penDowns: 0,
     toolChanges: 0,
+    penChanges: 0, // the same count under the word people use
     estimatedSeconds: 0
   };
   for (const layer of document.layers) {
@@ -135,9 +136,10 @@ export function planDocument(document, options = {}) {
     if (currentTool !== layer.toolId) {
       currentTool = layer.toolId;
       stats.toolChanges += 1;
+      stats.penChanges = stats.toolChanges;
       moves.push({ type: "tool-change", toolId: currentTool, layerId: layer.id });
     }
-    const ordered = options.strategy === "input"
+    const ordered = options.strategy === "input" || options.strategy === "drawn"
       ? layer.paths.map((path) => createPath(path.points, path))
       : orderPathsNearest(layer.paths, current, options);
     for (const path of ordered) {

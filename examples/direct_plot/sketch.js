@@ -12,9 +12,9 @@ for (let x = 3; x <= 37; x += 0.5) {
   wave.push({ x, y: 12.5 + Math.sin(((x - 3) / 34) * Math.PI * 4) * 8 });
 }
 plot.polyline(wave);
-const plan = plot.plan({ strategy: "input" });
+const plan = plot.plan({ strategy: "drawn" });
 
-plot.drawPreview($("#preview").getContext("2d"), { showTravel: true, padding: 40, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
+plot.drawRoute($("#preview").getContext("2d"), { showTravel: true, padding: 40, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
 $("#paths").textContent = String(plan.stats.paths);
 $("#draw").textContent = `${plan.stats.drawDistance.toFixed(0)} mm`;
 

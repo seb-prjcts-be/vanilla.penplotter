@@ -137,8 +137,8 @@ export function mountPen(container, options) {
   container.innerHTML = `
     <p class="pen-title">To the pen</p>
     <div class="pen-fields">
-      <label>Sheet from home, X (mm)<input data-pen="x" type="number" value="${offset.x}" min="0" max="590" step="5"></label>
-      <label>Sheet from home, Y (mm)<input data-pen="y" type="number" value="${offset.y}" min="0" max="430" step="5"></label>
+      <label>Sheet position from the corner, X (mm)<input data-pen="x" type="number" value="${offset.x}" min="0" max="590" step="5"></label>
+      <label>Sheet position from the corner, Y (mm)<input data-pen="y" type="number" value="${offset.y}" min="0" max="430" step="5"></label>
       <label>Turn on the bed<select data-pen="turn">
         <option value="0">0° — as on screen, X along the long rail</option>
         <option value="90">90°</option>

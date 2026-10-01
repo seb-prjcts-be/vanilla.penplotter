@@ -35,7 +35,7 @@ while your program is still drawing, so the picture grows on paper in the
 order you made it. For things that happen over time: an animation appearing
 dot by dot, a hand drawing in the air. [Two modes](live.html) explains both in
 plain words, then carries the design: the driver session, the adapter's
-`createPlot({ live: true })`, the pacing rules, the order of work. Nothing of
+`createPlot({ liveMode: true })`, the pacing rules, the order of work. Nothing of
 it is built yet; that page says what is real.
 
 ## Next — strengthening the direct route

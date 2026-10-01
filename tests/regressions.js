@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { PlotterEngine, Optimizer, Driver } from "../vanilla.penplotter.js";
+import { PlotterEngine, Optimizer, Driver, Renderer } from "../vanilla.penplotter.js";
 
 function testEditsAfterPlanning() {
   const plot = new PlotterEngine();
@@ -89,9 +89,30 @@ function testEstimateFollowsAcceleration() {
   assert.ok(ratio > 0.9 && ratio < 1.1, `planner ${planned.stats.estimatedSeconds.toFixed(1)} s, machine ${machine.toFixed(1)} s`);
 }
 
+function testPeopleWords() {
+  // The words people use are the API too: pen() is tool(), drawRoute() is
+  // drawPreview(), "drawn" is "input", penChanges counts what toolChanges counts.
+  const plot = new PlotterEngine({ units: "mm", page: { width: 100, height: 100, margin: 0 } });
+  const red = plot.pen({ id: "red", name: "Red", color: "#c00" });
+  assert.equal(plot.document.tools.find((tool) => tool.id === "red"), red);
+  plot.line(0, 0, 10, 0);                 // the default pen
+  plot.layer("top", { toolId: "red" });   // from here on, the red one
+  plot.line(0, 5, 10, 5);
+  const plan = plot.plan({ strategy: "drawn" });
+  assert.equal(plan.stats.penChanges, plan.stats.toolChanges);
+  assert.equal(plan.stats.penChanges, 2, "two pens, two picks");
+  assert.deepEqual(plan.moves.map((m) => m.type), plot.plan({ strategy: "input" }).moves.map((m) => m.type), "drawn is the order you drew, as input was");
+  const strokes = [];
+  const context = { canvas: { width: 200, height: 200 }, beginPath() {}, moveTo() {}, lineTo() {}, stroke() { strokes.push(1); }, clearRect() {}, fillRect() {}, save() {}, restore() {}, setLineDash() {} };
+  plot.drawRoute(context);
+  assert.ok(strokes.length > 0, "drawRoute draws");
+  assert.equal(Renderer.drawRoute, Renderer.drawPreview);
+}
+
 testEditsAfterPlanning();
 testOptimizationSettingsSurviveEdits();
 testUnits();
 testBacktracking();
 testEstimateFollowsAcceleration();
+testPeopleWords();
 console.log("vanilla.penplotter regressions: ok");

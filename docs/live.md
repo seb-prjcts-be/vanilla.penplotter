@@ -157,7 +157,7 @@ let plot;
 function setup() {
   createCanvas(600, 600);
   frameRate(0.5);                                 // one frame every two seconds
-  plot = createPlot({ x: 147, y: 66, width: 300, live: true });
+  plot = createPlot({ x: 147, y: 66, width: 300, liveMode: true });
 }
 
 function draw() {
@@ -167,23 +167,23 @@ function draw() {
 }
 
 function keyPressed() {
-  if (key === "l") plot.live();                  // connect, confirm, start following
+  if (key === "l") plot.liveMode(true);          // connect, confirm, start following
   if (key === "s") plot.stop();                  // emergency stop
-  if (key === "e") plot.end();                   // wait for the pen, go home, motors off
+  if (key === "e") plot.liveMode(false);         // wait for the pen, go home, motors off
 }
 ```
 
 | call | sheet mode | live mode |
 |---|---|---|
-| `createPlot({ live: true })` | — | the plot will follow the sketch once `plot.live()` has opened the session |
+| `createPlot({ liveMode: true })` | — | the plot will follow the sketch once `plot.liveMode(true)` has opened the session |
 | `plot.line()` and the others | draw on the canvas, remember in mm | draw on the canvas, remember in mm, and go out at the end of this frame |
 | `plot.clear()` | forget the recorded frame | forget nothing on paper; marks where the next frame's additions start |
 | `plot.go()` | plan and plot the last frame as a sheet | not available while a live session is open |
-| `plot.live()` | — | connect (port picker), confirm, open the session; `plot.live(false)` is `plot.end()` |
-| `plot.end()` | — | wait for the pen, return home, motors off |
+| `plot.liveMode(true)` | — | connect (port picker), confirm, open the session; like `loop()` and `noLoop()`, a switch |
+| `plot.liveMode(false)` | — | wait for the pen, return home, motors off |
 | `plot.stop()` | emergency stop | emergency stop |
 | `plot.pending()` | — | seconds of motion still queued |
-| `plot.isLive()` | false | true while the session is open |
+| `plot.liveMode()` | false | with no argument: true while the session is open |
 
 How a frame goes out: p5 calls `draw()`, the sketch records strokes, and when
 `draw()` returns the adapter hands that frame's strokes to the session in the
@@ -204,14 +204,14 @@ learns the trade. Switching it off is the artist's choice, not the library's.
 ```js
 function setup() {
   noCanvas();                                      // or createCanvas and never look
-  plot = createPlot({ width: 300, live: true });
+  plot = createPlot({ width: 300, liveMode: true });
 }
 function draw() { plot.line(/* … */); }
 ```
 
 Without a canvas the plot still records in millimetres, because the adapter
 never needed the canvas for that. Keep a log: `plot.stats()` after
-`plot.end()` tells what was drawn.
+`plot.liveMode(false)` tells what was drawn.
 
 ### Hands
 
@@ -268,7 +268,7 @@ The rules of sheet mode apply, and two things are stricter.
 2. **A plain example on the engine's site:** draw with the mouse, the pen
    follows. The mouse is the hand. ml5 comes later and changes nothing below
    it.
-3. **The adapter:** `createPlot({ live: true })`, `plot.live()`, `plot.end()`,
+3. **The adapter:** `createPlot({ liveMode: true })`, `plot.liveMode(true)`, `plot.liveMode(false)`,
    the frame protocol and the pacing; a slow-animation example with
    `frameRate(0.5)`.
 4. **The hands:** the ml5 handPose example, pinch to draw, as a page that

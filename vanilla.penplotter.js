@@ -61,6 +61,11 @@ export class PlotterEngine {
     return tool;
   }
 
+  // pen() is the word people use; tool() is the same thing.
+  pen(options = {}) {
+    return this.tool(options);
+  }
+
   layer(id, options = {}) {
     let layer = getLayer(this.document, id);
     if (!layer) layer = addLayer(this.document, { ...options, id, name: options.name || id });
@@ -159,6 +164,11 @@ export class PlotterEngine {
 
   drawPreview(context, options = {}) {
     return drawPreview(context, this._currentPlan(options.plan), options);
+  }
+
+  // The route is what you see: the plan, drawn the way the pen will run it.
+  drawRoute(context, options = {}) {
+    return this.drawPreview(context, options);
   }
 }
 

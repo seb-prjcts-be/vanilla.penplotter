@@ -93,12 +93,12 @@ pinned one; the version check in the adapter catches a core that does not match.
 |---|---|
 | `line`, `polyline`, `polygon`, `rect`, `circle`, `arc` | add paths to the active layer, in document units |
 | `hatch`, `crossHatch`, `stipple` | fill a polygon with lines or seeded dots (`spacing`, `angle`, `count`, `minDistance`, `seed`) |
-| `tool({ id, color, width })`, `layer(id, { toolId })` | pens and layers; the planner finishes one pen before the next and the driver pauses for the swap |
+| `pen({ id, color, width })` (also `tool()`), `layer(id, { toolId })` | pens and layers; the planner finishes one pen before the next and the driver pauses for the swap |
 | `importSVG(text)` | paths, lines, polygons, rects, circles and nested transforms; curves flattened |
 | `optimize({ passes, mergeTolerance, duplicateTolerance, simplifyTolerance, maxSegmentLength })` | deduplicate, merge, simplify, resample, clean |
-| `plan({ strategy, drawSpeed, travelSpeed, acceleration, travelAcceleration, liftDelay, toolChangeDelay })` | nearest-neighbour order with reversal and closed-path reloop, or `"input"` order |
-| `stats()` | paths, points, draw and travel distance, pen lifts, tool changes, estimated seconds |
-| `drawPreview(context, { showTravel })` | the plan on a canvas, pen-up travel in red |
+| `plan({ strategy, drawSpeed, travelSpeed, acceleration, travelAcceleration, liftDelay, toolChangeDelay })` | `"nearest"`: the shortest route, with reversal and closed-path reloop; `"drawn"`: the order you drew |
+| `stats()` | paths, points, draw and travel distance, pen lifts, pen changes, estimated seconds |
+| `drawRoute(context, { showTravel })` | the route on a canvas, the pen in the air in red (also `drawPreview`) |
 | `exportSVG`, `exportHPGL({ penMap, unitsPerMm })`, `exportGCode({ penUp, penDown })`, `exportJSON` | the same plan as a file, for machines without a driver |
 
 ## Every stage on its own

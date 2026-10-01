@@ -71,7 +71,7 @@ await session.close();                                   // back home, motors of
 function setup() {
   createCanvas(600, 600);
   frameRate(0.5);                                 // one frame every two seconds
-  plot = createPlot({ x: 147, y: 66, width: 300, live: true });
+  plot = createPlot({ x: 147, y: 66, width: 300, liveMode: true });
 }
 
 function draw() {
@@ -81,21 +81,21 @@ function draw() {
 }
 
 function keyPressed() {
-  if (key === "l") plot.live();                  // connect, confirm, start following
+  if (key === "l") plot.liveMode(true);          // connect, confirm, start following
   if (key === "s") plot.stop();                  // emergency stop
-  if (key === "e") plot.end();                   // wait for the pen, go home, motors off
+  if (key === "e") plot.liveMode(false);         // wait for the pen, go home, motors off
 }</code></pre>
-<table><thead><tr><th>call</th><th>sheet mode</th><th>live mode</th></tr></thead><tbody><tr><td><code>createPlot({ live: true })</code></td><td>—</td><td>the plot will follow the sketch once <code>plot.live()</code> has opened the session</td></tr><tr><td><code>plot.line()</code> and the others</td><td>draw on the canvas, remember in mm</td><td>draw on the canvas, remember in mm, and go out at the end of this frame</td></tr><tr><td><code>plot.clear()</code></td><td>forget the recorded frame</td><td>forget nothing on paper; marks where the next frame's additions start</td></tr><tr><td><code>plot.go()</code></td><td>plan and plot the last frame as a sheet</td><td>not available while a live session is open</td></tr><tr><td><code>plot.live()</code></td><td>—</td><td>connect (port picker), confirm, open the session; <code>plot.live(false)</code> is <code>plot.end()</code></td></tr><tr><td><code>plot.end()</code></td><td>—</td><td>wait for the pen, return home, motors off</td></tr><tr><td><code>plot.stop()</code></td><td>emergency stop</td><td>emergency stop</td></tr><tr><td><code>plot.pending()</code></td><td>—</td><td>seconds of motion still queued</td></tr><tr><td><code>plot.isLive()</code></td><td>false</td><td>true while the session is open</td></tr></tbody></table>
+<table><thead><tr><th>call</th><th>sheet mode</th><th>live mode</th></tr></thead><tbody><tr><td><code>createPlot({ liveMode: true })</code></td><td>—</td><td>the plot will follow the sketch once <code>plot.liveMode(true)</code> has opened the session</td></tr><tr><td><code>plot.line()</code> and the others</td><td>draw on the canvas, remember in mm</td><td>draw on the canvas, remember in mm, and go out at the end of this frame</td></tr><tr><td><code>plot.clear()</code></td><td>forget the recorded frame</td><td>forget nothing on paper; marks where the next frame's additions start</td></tr><tr><td><code>plot.go()</code></td><td>plan and plot the last frame as a sheet</td><td>not available while a live session is open</td></tr><tr><td><code>plot.liveMode(true)</code></td><td>—</td><td>connect (port picker), confirm, open the session; like <code>loop()</code> and <code>noLoop()</code>, a switch</td></tr><tr><td><code>plot.liveMode(false)</code></td><td>—</td><td>wait for the pen, return home, motors off</td></tr><tr><td><code>plot.stop()</code></td><td>emergency stop</td><td>emergency stop</td></tr><tr><td><code>plot.pending()</code></td><td>—</td><td>seconds of motion still queued</td></tr><tr><td><code>plot.liveMode()</code></td><td>false</td><td>with no argument: true while the session is open</td></tr></tbody></table>
 <p>How a frame goes out: p5 calls <code>draw()</code>, the sketch records strokes, and when <code>draw()</code> returns the adapter hands that frame's strokes to the session in the order they were recorded. Then it holds the next frame until <code>session.pending</code> is below one frame's worth of motion. With <code>frameRate(0.5)</code> and small frames the pen keeps up and the sketch never waits; with <code>frameRate(30)</code> the sketch is throttled to the pen, which is still correct, only no longer an animation on screen. The adapter says so in its status line.</p>
 <p>The on-screen preview stays available in live mode, because without it nobody learns the trade. Switching it off is the artist's choice, not the library's.</p>
 <h2>The three uses, each with its recipe</h2>
 <h3>No preview</h3>
 <pre><code>function setup() {
   noCanvas();                                      // or createCanvas and never look
-  plot = createPlot({ width: 300, live: true });
+  plot = createPlot({ width: 300, liveMode: true });
 }
 function draw() { plot.line(/* … */); }</code></pre>
-<p>Without a canvas the plot still records in millimetres, because the adapter never needed the canvas for that. Keep a log: <code>plot.stats()</code> after <code>plot.end()</code> tells what was drawn.</p>
+<p>Without a canvas the plot still records in millimetres, because the adapter never needed the canvas for that. Keep a log: <code>plot.stats()</code> after <code>plot.liveMode(false)</code> tells what was drawn.</p>
 <h3>Hands</h3>
 <p>ml5 handPose gives 21 landmarks per hand at camera rate. The recipe:</p>
 <ol><li><strong>Pinch</strong> is the pen: pen down when the distance between thumb tip and index tip drops under a threshold, pen up when it opens again. Hysteresis on the threshold, or the pen chatters.</li><li><strong>Smooth</strong> the index tip with an exponential moving average; hand tracking jitters by a few pixels and the pen would draw every one.</li><li><strong>Map</strong> the camera frame to the sheet: mirror horizontally (a camera faces you), scale to the plot's width. A small dead zone at the camera's edge keeps the stroke on the paper.</li><li><strong>Cut</strong> the stroke when the pinch opens, simplify it (RDP, 0.3 mm) and resample it, then <code>plot.polyline(points)</code>; the adapter sends it at the end of the frame.</li><li><strong>Latency</strong> of a few hundred milliseconds is fine. The pen is behind anyway. What matters is that a stroke is one stroke, not twenty short ones.</li></ol>
@@ -106,7 +106,7 @@ function draw() { plot.line(/* … */); }</code></pre>
 <p>The rules of sheet mode apply, and two things are stricter.</p>
 <ul><li>The confirm dialog ("carriage parked, paper in place, hands clear") appears once, when the session opens. It is not asked per stroke; after that the sketch owns the pen.</li><li>Leaving the page is an emergency stop, as since 0.3.0. In live mode this is more likely to happen mid-stroke, so the pen-up on stop stays the first thing sent.</li><li>The bounded queue is a safety feature: a stop never has more than <code>maxPending</code> seconds to tear down.</li><li>The hand recipe keeps the pen up whenever tracking is lost. A hand that leaves the camera lifts the pen; it does not freeze it on the paper.</li></ul>
 <h2>Order of work</h2>
-<ol><li><strong>Engine:</strong> <code>driver.live()</code>, the session, the <code>origin</code> option on <code>compileEbbPlan()</code>. Tested dry against the log transport with the tick-exact firmware simulation of <code>tests/ebb.js</code>, including the bounded queue and the pace of <code>pending</code>.</li><li><strong>A plain example on the engine's site:</strong> draw with the mouse, the pen follows. The mouse is the hand. ml5 comes later and changes nothing below it.</li><li><strong>The adapter:</strong> <code>createPlot({ live: true })</code>, <code>plot.live()</code>, <code>plot.end()</code>, the frame protocol and the pacing; a slow-animation example with <code>frameRate(0.5)</code>.</li><li><strong>The hands:</strong> the ml5 handPose example, pinch to draw, as a page that loads ml5 from its CDN.</li></ol>
+<ol><li><strong>Engine:</strong> <code>driver.live()</code>, the session, the <code>origin</code> option on <code>compileEbbPlan()</code>. Tested dry against the log transport with the tick-exact firmware simulation of <code>tests/ebb.js</code>, including the bounded queue and the pace of <code>pending</code>.</li><li><strong>A plain example on the engine's site:</strong> draw with the mouse, the pen follows. The mouse is the hand. ml5 comes later and changes nothing below it.</li><li><strong>The adapter:</strong> <code>createPlot({ liveMode: true })</code>, <code>plot.liveMode(true)</code>, <code>plot.liveMode(false)</code>, the frame protocol and the pacing; a slow-animation example with <code>frameRate(0.5)</code>.</li><li><strong>The hands:</strong> the ml5 handPose example, pinch to draw, as a page that loads ml5 from its CDN.</li></ol>
 <p>Each step is plotted on the iDraw before the next starts, and the "state" row at the top of this page is updated with what is real.</p>
 <p><em>Design written on 2026-10-01 from Seb's three questions: what if you could make art without the canvas preview, what if you could draw with your hands through ml5, what if you set the frame rate low and watched the animation appear on the plotter, object by object.</em></p>
   </main>

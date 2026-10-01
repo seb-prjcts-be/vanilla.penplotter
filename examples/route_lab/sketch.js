@@ -7,7 +7,7 @@ const context = $("#preview").getContext("2d");
 
 // The raw plan: input order, no optimizer passes. The comparison baseline.
 plot.optimize({ passes: [] });
-const raw = plot.plan({ strategy: "input" });
+const raw = plot.plan({ strategy: "drawn" });
 
 function settings() {
   const passes = [];
@@ -23,7 +23,7 @@ function render() {
   const { passes, strategy } = settings();
   plot.optimize({ passes, mergeTolerance: 0.05, duplicateTolerance: 0.01, simplifyTolerance: 0.05 });
   const plan = plot.plan({ strategy });
-  plot.drawPreview(context, { showTravel: $("#travel").checked, padding: 24, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
+  plot.drawRoute(context, { showTravel: $("#travel").checked, padding: 24, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
   const rows = [
     ["paths", raw.stats.paths, plan.stats.paths, ""],
     ["points", raw.stats.points, plan.stats.points, ""],

@@ -109,7 +109,7 @@ plot.line(20, 30, 190, 30);
 plot.circle(105, 145, 48);
 const plan = plot.plan();
 console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelDistance: …, penLifts: 2, … }</code></pre>
-    <p>From here the plan can go three ways: to a canvas with <code>plot.drawPreview(context)</code>, to a file with <code>plot.exportSVG()</code>, <code>exportHPGL()</code> or <code>exportGCode()</code>, or to the pen with the driver of chapter 9. Node 18 or newer is only needed to run the tests; the engine itself runs in any modern browser and in Node.</p>
+    <p>From here the plan can go three ways: to a canvas with <code>plot.drawRoute(context)</code>, to a file with <code>plot.exportSVG()</code>, <code>exportHPGL()</code> or <code>exportGCode()</code>, or to the pen with the driver of chapter 9. Node 18 or newer is only needed to run the tests; the engine itself runs in any modern browser and in Node.</p>
     <p>Everything the engine exports is reachable from the root module: the class <code>PlotterEngine</code>, the constant <code>VERSION</code>, every function of <code>src/core/model.js</code>, the class <code>PluginHost</code>, and the namespaces <code>Geometry</code>, <code>Optimizer</code>, <code>Planner</code>, <code>Renderer</code> and <code>Driver</code>. The driver module <code>src/driver/ebb.js</code> is also importable on its own, and that is how the examples do it.</p>
 
     <h2 id="c3"><span class="num">3</span>The document model</h2>
@@ -159,7 +159,7 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
         <tr><td><code>plan(options)</code></td><td>plans the optimized document (optimizing first with the remembered or given <code>optimize</code> options if needed, or the raw document with <code>useRaw: true</code>), stores the plan and the options. Returns the plan.</td></tr>
         <tr><td><code>stats()</code></td><td>the current plan's statistics.</td></tr>
         <tr><td><code>exportSVG</code>, <code>exportHPGL</code>, <code>exportGCode</code>, <code>exportJSON</code></td><td>render the current plan; options go to the renderer.</td></tr>
-        <tr><td><code>drawPreview(context, options)</code></td><td>draws the current plan on a canvas 2D context.</td></tr>
+        <tr><td><code>drawRoute(context, options)</code>, also <code>drawPreview</code></td><td>draws the current plan on a canvas 2D context.</td></tr>
         <tr><td><code>use(plugin)</code></td><td>installs a plugin into the engine's host. Chainable.</td></tr>
         <tr><td><code>document</code>, <code>activeLayer</code>, <code>optimized</code>, <code>planned</code></td><td>public fields. Editing <code>document</code> directly is allowed and detected.</td></tr>
       </tbody>
@@ -207,7 +207,7 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
   moves:  [ { type: "tool-change", toolId, layerId },
             { type: "travel", from, to, length, layerId, toolId },
             { type: "draw", points, length, pathId, layerId, toolId, metadata } ],
-  stats:  { paths, points, drawDistance, travelDistance, penLifts, penDowns, toolChanges, estimatedSeconds },
+  stats:  { paths, points, drawDistance, travelDistance, penLifts, penDowns, penChanges (also toolChanges), estimatedSeconds },
   options
 }</code></pre>
     <p>Layers are planned in document order; a layer whose tool differs from the previous one emits a <code>tool-change</code> move first, so all work for one pen is grouped and the plot stops as few times as possible. Within a layer the strategy decides the order:</p>
@@ -354,7 +354,7 @@ console.log(dry.log.length, "commands;", dry.log.slice(0, 5));</code></pre>
     <pre><code>let progress = 0;
 function frame() {
   progress = Math.min(1, progress + 0.004);
-  Renderer.drawPreview(context, plan, { progress, showTravel: false });
+  Renderer.drawRoute(context, plan, { progress, showTravel: false });
   if (progress &lt; 1) requestAnimationFrame(frame);
 }
 frame();</code></pre>

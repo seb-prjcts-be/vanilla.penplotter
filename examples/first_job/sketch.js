@@ -7,7 +7,7 @@ const context = document.querySelector("#preview").getContext("2d");
 let showTravel = true;
 
 function render() {
-  plot.drawPreview(context, { showTravel, padding: 26, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
+  plot.drawRoute(context, { showTravel, padding: 26, paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)" });
 }
 
 document.querySelector("#paths").textContent = String(plan.stats.paths);

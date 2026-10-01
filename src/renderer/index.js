@@ -153,3 +153,6 @@ export function drawPreview(context, plan, options = {}) {
     context.stroke();
   }
 }
+
+// The route is what you see: the same drawing under the word people use.
+export const drawRoute = drawPreview;
