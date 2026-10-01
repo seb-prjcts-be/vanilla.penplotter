@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { PlotterEngine, Optimizer, Driver, Renderer } from "../vanilla.penplotter.js";
+import { PlotterEngine, Optimizer, Driver, Renderer, Planner } from "../vanilla.penplotter.js";
 
 function testEditsAfterPlanning() {
   const plot = new PlotterEngine();
@@ -109,10 +109,24 @@ function testPeopleWords() {
   assert.equal(Renderer.drawRoute, Renderer.drawPreview);
 }
 
+function testBedDrawing() {
+  // The bed drawing is part of the library now: pen.js and p5.penplotter both call it.
+  const plot = new PlotterEngine({ units: "mm", page: { width: 594, height: 432, margin: 0 } });
+  plot.rect(100, 60, 210, 297);
+  const strokes = [];
+  const context = { canvas: { width: 594, height: 432 }, beginPath() {}, moveTo() {}, lineTo() {}, arc() {}, fill() {}, fillText() {}, translate() {}, rotate() {}, stroke() { strokes.push(1); }, strokeRect() { strokes.push(1); }, clearRect() {}, fillRect() {}, save() {}, restore() {} };
+  plot.drawBed(context, { sheet: { x: 100, y: 60, width: 210, height: 297 } });
+  assert.ok(strokes.length >= 3, "bed outline, sheet outline and the drawing");
+  const turned = Planner.placePlan(plot.plan(), { x: 10, y: 20 }, 90);
+  assert.equal(turned.page.width, 432);
+  assert.equal(turned.page.height, 594);
+}
+
 testEditsAfterPlanning();
 testOptimizationSettingsSurviveEdits();
 testUnits();
 testBacktracking();
 testEstimateFollowsAcceleration();
 testPeopleWords();
+testBedDrawing();
 console.log("vanilla.penplotter regressions: ok");

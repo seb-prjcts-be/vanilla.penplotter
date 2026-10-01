@@ -12,8 +12,7 @@ import {
   renderGCode,
   renderHPGL,
   renderJSON,
-  renderSVG
-} from "./src/renderer/index.js";
+  renderSVG, drawBed } from "./src/renderer/index.js";
 import { PluginHost } from "./src/plugins/index.js";
 
 // Adapters such as p5.penplotter read this to refuse a core that is too old.
@@ -169,6 +168,13 @@ export class PlotterEngine {
   // The route is what you see: the plan, drawn the way the pen will run it.
   drawRoute(context, options = {}) {
     return this.drawPreview(context, options);
+  }
+
+  // The bed as the machine sees it, with the sheet and the drawing on it.
+  // options.bed defaults to the page; options.sheet is { x, y, width, height } in mm.
+  drawBed(context, options = {}) {
+    const bed = options.bed || this.document.page;
+    return drawBed(context, this._currentPlan(options.plan), { ...options, bed });
   }
 }
 

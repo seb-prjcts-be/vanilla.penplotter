@@ -156,3 +156,53 @@ export function drawPreview(context, plan, options = {}) {
 
 // The route is what you see: the same drawing under the word people use.
 export const drawRoute = drawPreview;
+
+// The bed as the machine sees it: the home corner top left, X along the long
+// rail, Y along the arm; the sheet where it lies; the drawing on it. The plan
+// is already placed on the bed (placePlan), in its own units; bed and sheet
+// are millimetres. The canvas keeps the bed's proportions.
+export function drawBed(context, plan, options = {}) {
+  const bed = options.bed || { width: 594, height: 432 };
+  const sheet = options.sheet || null;
+  const { width: canvasWidth, height: canvasHeight } = context.canvas;
+  const scale = Math.min(canvasWidth / bed.width, canvasHeight / bed.height);
+  const perUnit = millimetersPerUnit(plan.units);
+  context.clearRect(0, 0, canvasWidth, canvasHeight);
+  context.fillStyle = options.paper || "#fff";
+  context.fillRect(0, 0, bed.width * scale, bed.height * scale);
+  context.strokeStyle = "#000";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, bed.width * scale - 1, bed.height * scale - 1);
+  if (sheet) {
+    context.fillStyle = "rgba(0,0,0,.05)";
+    context.fillRect(sheet.x * scale, sheet.y * scale, sheet.width * scale, sheet.height * scale);
+    context.strokeStyle = "rgba(0,0,0,.4)";
+    context.strokeRect(sheet.x * scale + 0.5, sheet.y * scale + 0.5, sheet.width * scale, sheet.height * scale);
+  }
+  context.strokeStyle = options.ink || "#000";
+  context.lineWidth = 0.8;
+  context.beginPath();
+  for (const move of plan.moves) {
+    if (move.type !== "draw") continue;
+    move.points.forEach((p, index) => {
+      const x = p.x * perUnit * scale;
+      const y = p.y * perUnit * scale;
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+  }
+  context.stroke();
+  context.fillStyle = "#000";
+  context.beginPath();
+  context.arc(0, 0, 5, 0, Math.PI * 2);
+  context.fill();
+  if (options.labels !== false) {
+    context.font = "12px Inter, Arial, sans-serif";
+    context.fillText("home \u00b7 X along the long rail \u2192", 10, 16);
+    context.save();
+    context.translate(14, 30);
+    context.rotate(Math.PI / 2);
+    context.fillText("Y along the arm \u2192", 0, 0);
+    context.restore();
+  }
+}

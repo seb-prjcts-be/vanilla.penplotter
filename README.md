@@ -99,6 +99,7 @@ pinned one; the version check in the adapter catches a core that does not match.
 | `plan({ strategy, drawSpeed, travelSpeed, acceleration, travelAcceleration, liftDelay, toolChangeDelay })` | `"nearest"`: the shortest route, with reversal and closed-path reloop; `"drawn"`: the order you drew |
 | `stats()` | paths, points, draw and travel distance, pen lifts, pen changes, estimated seconds |
 | `drawRoute(context, { showTravel })` | the route on a canvas, the pen in the air in red (also `drawPreview`) |
+| `drawBed(context, { bed, sheet })` | the bed as the machine sees it: the home corner, the sheet where it lies, the drawing on it |
 | `exportSVG`, `exportHPGL({ penMap, unitsPerMm })`, `exportGCode({ penUp, penDown })`, `exportJSON` | the same plan as a file, for machines without a driver |
 
 ## Every stage on its own

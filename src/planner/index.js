@@ -188,3 +188,34 @@ export function planDocument(document, options = {}) {
     options: { ...planTiming(options), ...options }
   };
 }
+
+// The plan on the bed: the sheet's corner at offset (mm from the home
+// corner), turned by 0, 90, 180 or 270 degrees. Never mirrored: a drawing
+// turned on paper is still the same drawing.
+export function placePlan(plan, offset, turn = 0) {
+  const perUnit = millimetersPerUnit(plan.units);
+  const { width, height } = plan.page;
+  const dx = offset.x / perUnit;
+  const dy = offset.y / perUnit;
+  const rotate = {
+    0: (p) => ({ x: p.x, y: p.y }),
+    90: (p) => ({ x: height - p.y, y: p.x }),
+    180: (p) => ({ x: width - p.x, y: height - p.y }),
+    270: (p) => ({ x: p.y, y: width - p.x })
+  }[((Number(turn) % 360) + 360) % 360];
+  if (!rotate) throw new RangeError(`Turn by 0, 90, 180 or 270 degrees, not ${turn}`);
+  const place = (p) => {
+    const r = rotate(p);
+    return { x: r.x + dx, y: r.y + dy };
+  };
+  const sideways = Number(turn) % 180 !== 0;
+  return {
+    ...plan,
+    page: { ...plan.page, width: sideways ? height : width, height: sideways ? width : height },
+    moves: plan.moves.map((m) => {
+      if (m.type === "travel") return { ...m, from: place(m.from), to: place(m.to) };
+      if (m.type === "draw") return { ...m, points: m.points.map(place) };
+      return m;
+    })
+  };
+}

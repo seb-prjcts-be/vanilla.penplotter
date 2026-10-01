@@ -5,6 +5,8 @@
 // for anyone without an EBB plotter, the same plan as SVG, HPGL or G-code.
 // The example itself only builds geometry; nothing here changes its plan.
 import { millimetersPerUnit } from "../src/core/model.js";
+import { placePlan } from "../src/planner/index.js";
+import { drawBed as renderBed } from "../src/renderer/index.js";
 import {
   EBB_PROFILES,
   EbbDriver,
@@ -20,33 +22,7 @@ const profile = EBB_PROFILES["idraw-hse-a2"];
 // home. The machine's X runs along the long rail, so a portrait sheet drawn
 // on screen lands sideways on a portrait sheet on the bed unless it is
 // turned; this is where you say which way it goes.
-export function placePlan(plan, offset, turn = 0) {
-  const perUnit = millimetersPerUnit(plan.units);
-  const { width, height } = plan.page;
-  const dx = offset.x / perUnit;
-  const dy = offset.y / perUnit;
-  const rotate = {
-    0: (p) => ({ x: p.x, y: p.y }),
-    90: (p) => ({ x: height - p.y, y: p.x }),
-    180: (p) => ({ x: width - p.x, y: height - p.y }),
-    270: (p) => ({ x: p.y, y: width - p.x })
-  }[((Number(turn) % 360) + 360) % 360];
-  if (!rotate) throw new RangeError(`Turn by 0, 90, 180 or 270 degrees, not ${turn}`);
-  const place = (p) => {
-    const r = rotate(p);
-    return { x: r.x + dx, y: r.y + dy };
-  };
-  const sideways = Number(turn) % 180 !== 0;
-  return {
-    ...plan,
-    page: { ...plan.page, width: sideways ? height : width, height: sideways ? width : height },
-    moves: plan.moves.map((m) => {
-      if (m.type === "travel") return { ...m, from: place(m.from), to: place(m.to) };
-      if (m.type === "draw") return { ...m, points: m.points.map(place) };
-      return m;
-    })
-  };
-}
+export { placePlan };
 
 // While a plot runs, every link that leaves the page is greyed out and
 // unclickable: the navigation, GitHub, the rest of the site. The panel's own
@@ -79,47 +55,11 @@ export function lockLinks(container, on) {
 // The bed as the machine sees it: X along the long rail, home in the corner
 // by the board, the sheet where the offsets put it, the drawing inside.
 function drawBed(canvas, plan, offset, placed) {
-  const context = canvas.getContext("2d");
-  const { width: bedW, height: bedH } = profile.travel;
-  const scale = canvas.width / bedW;
   const perUnit = millimetersPerUnit(plan.units);
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = "#fff";
-  context.fillRect(0, 0, bedW * scale, bedH * scale);
-  context.strokeStyle = "#000";
-  context.lineWidth = 1;
-  context.strokeRect(0.5, 0.5, bedW * scale - 1, bedH * scale - 1);
-  // the sheet
-  context.fillStyle = "rgba(0,0,0,.05)";
-  context.fillRect(offset.x * scale, offset.y * scale, placed.page.width * perUnit * scale, placed.page.height * perUnit * scale);
-  context.strokeStyle = "rgba(0,0,0,.4)";
-  context.strokeRect(offset.x * scale + 0.5, offset.y * scale + 0.5, placed.page.width * perUnit * scale, placed.page.height * perUnit * scale);
-  // the drawing
-  context.strokeStyle = "#000";
-  context.lineWidth = 0.8;
-  context.beginPath();
-  for (const move of placed.moves) {
-    if (move.type !== "draw") continue;
-    move.points.forEach((p, index) => {
-      const x = p.x * perUnit * scale;
-      const y = p.y * perUnit * scale;
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
-    });
-  }
-  context.stroke();
-  // home
-  context.fillStyle = "#000";
-  context.beginPath();
-  context.arc(0, 0, 5, 0, Math.PI * 2);
-  context.fill();
-  context.font = "12px Inter, Arial, sans-serif";
-  context.fillText("home · X along the long rail →", 10, 16);
-  context.save();
-  context.translate(14, 30);
-  context.rotate(Math.PI / 2);
-  context.fillText("Y along the arm →", 0, 0);
-  context.restore();
+  renderBed(canvas.getContext("2d"), placed, {
+    bed: profile.travel,
+    sheet: { x: offset.x, y: offset.y, width: placed.page.width * perUnit, height: placed.page.height * perUnit }
+  });
 }
 
 function download(name, text, type) {
