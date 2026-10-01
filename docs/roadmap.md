@@ -5,7 +5,7 @@ in between.** `vanilla.penplotter` is the engine and the driver; `p5.penplotter`
 p5.js layer on top. SVG, HPGL and G-code export remain, but are
 no longer the main path.
 
-## Present in 0.3.0
+## Present in 0.3.1
 
 - document, layers, tools and polyline paths
 - primitives, transforms, simple offsets
@@ -14,7 +14,8 @@ no longer the main path.
 - path deduplication, line merging, RDP and resampling
 - nearest-neighbour routing, reversal and closed-path reloop
 - SVG, HPGL, G-code, JSON and canvas preview, with conversion to physical units
-- distance, pen-up/down, pen changes and time estimation
+- distance, pen-up/down, pen changes and a time estimate with the machine's own
+  ramps and pen delays (0.3.1), so a page and the pen panel say the same seconds
 - plan that refreshes itself after every change to the document
 - simulator, generic Web Serial text transport and machine profiles
 - **EBB driver: plotting directly on an iDraw HSE / A2** (CoreXY, bounds checking,

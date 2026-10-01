@@ -1,6 +1,6 @@
 {
-  "version": "0.3.0",
-  "generated": "2026-09-30",
+  "version": "0.3.1",
+  "generated": "2026-10-01",
   "schema": "vanilla.penplotter/document@1",
   "plan_schema": "vanilla.penplotter/plan@1",
   "stages": [

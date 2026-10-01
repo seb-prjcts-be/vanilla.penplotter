@@ -61,16 +61,56 @@ export function orderPathsNearest(paths, start = { x: 0, y: 0 }, options = {}) {
   return result;
 }
 
-export function estimatePlan(stats, options = {}) {
-  const drawSpeed = Math.max(0.001, Number(options.drawSpeed ?? 35));
-  const travelSpeed = Math.max(0.001, Number(options.travelSpeed ?? 80));
-  const liftDelay = Math.max(0, Number(options.liftDelay ?? 0.15));
-  const toolChangeDelay = Math.max(0, Number(options.toolChangeDelay ?? 15));
+// The timing defaults are the machine we test on, the iDraw HSE / A2 through
+// its EBB profile: the same speeds, the same ramps, and 0.3 s for the pen to
+// go down plus 0.3 s to come up. So the estimate on a page and the machine
+// time in the pen panel agree before any option is set.
+export const PLAN_DEFAULTS = Object.freeze({
+  drawSpeed: 40, // mm/s
+  travelSpeed: 120, // mm/s
+  acceleration: 800, // mm/s², drawing
+  travelAcceleration: 1200, // mm/s², pen up
+  liftDelay: 0.6, // s per stroke: pen down and up again
+  toolChangeDelay: 15 // s
+});
+
+export function planTiming(options = {}) {
+  const positive = (value, fallback) => (Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : fallback);
+  const atLeastZero = (value, fallback) => (Number.isFinite(Number(value)) && Number(value) >= 0 ? Number(value) : fallback);
+  return {
+    drawSpeed: positive(options.drawSpeed, PLAN_DEFAULTS.drawSpeed),
+    travelSpeed: positive(options.travelSpeed, PLAN_DEFAULTS.travelSpeed),
+    acceleration: atLeastZero(options.acceleration, PLAN_DEFAULTS.acceleration),
+    travelAcceleration: atLeastZero(options.travelAcceleration, PLAN_DEFAULTS.travelAcceleration),
+    liftDelay: atLeastZero(options.liftDelay, PLAN_DEFAULTS.liftDelay),
+    toolChangeDelay: atLeastZero(options.toolChangeDelay, PLAN_DEFAULTS.toolChangeDelay)
+  };
+}
+
+// One move from rest to rest: a trapezoid when the distance allows the
+// cruising speed, a triangle when it does not. Zero acceleration means the
+// plain distance over speed.
+export function moveSeconds(length, speed, acceleration) {
+  if (!(length > 0)) return 0;
+  if (!(acceleration > 0)) return length / speed;
+  const ramps = (speed * speed) / acceleration;
+  if (length >= ramps) return length / speed + speed / acceleration;
+  return 2 * Math.sqrt(length / acceleration);
+}
+
+// With the moves, every stroke and every hop gets its own ramps; without
+// them, the distances are treated as one long move each.
+export function estimatePlan(stats, options = {}, moves = null) {
+  const timing = planTiming(options);
   const scale = millimetersPerUnit(options.units);
-  return stats.drawDistance * scale / drawSpeed
-    + stats.travelDistance * scale / travelSpeed
-    + stats.penLifts * liftDelay
-    + stats.toolChanges * toolChangeDelay;
+  const motion = moves
+    ? moves.reduce((sum, move) => sum + (move.type === "draw" ? moveSeconds(move.length * scale, timing.drawSpeed, timing.acceleration)
+      : move.type === "travel" ? moveSeconds(move.length * scale, timing.travelSpeed, timing.travelAcceleration) : 0), 0)
+    : moveSeconds(stats.drawDistance * scale, timing.drawSpeed, timing.acceleration)
+      + moveSeconds(stats.travelDistance * scale, timing.travelSpeed, timing.travelAcceleration);
+  // The first tool is in the holder when the plot starts; only a swap costs time.
+  const swaps = Math.max(0, stats.toolChanges - 1);
+  return motion + stats.penLifts * timing.liftDelay + swaps * timing.toolChangeDelay;
 }
 
 export function planDocument(document, options = {}) {
@@ -133,7 +173,7 @@ export function planDocument(document, options = {}) {
       current = clonePoint(path.points[path.points.length - 1]);
     }
   }
-  stats.estimatedSeconds = estimatePlan(stats, { ...options, units: document.units });
+  stats.estimatedSeconds = estimatePlan(stats, { ...options, units: document.units }, moves);
   return {
     schema: "vanilla.penplotter/plan@1",
     units: document.units,
@@ -142,6 +182,7 @@ export function planDocument(document, options = {}) {
     routes,
     moves,
     stats,
-    options: { ...options }
+    // The timing the estimate used, so a driver can take the same speeds.
+    options: { ...planTiming(options), ...options }
   };
 }

@@ -57,7 +57,7 @@
   <main class="page hb">
 
     <header class="hb-cover">
-      <p class="section-tag">Handbook · version 0.3.0</p>
+      <p class="section-tag">Handbook · version 0.3.1</p>
       <h1>vanilla.penplotter</h1>
       <p class="hb-sub">How the engine works, stage by stage</p>
       <p class="lead">From a drawing written in JavaScript to the stepper commands on the wire: the document model, the optimizer, the planner, the renderers, the EBB driver, and the decisions behind each of them. Written for anyone who wants to use the engine well, extend it, or check what it really does.</p>
@@ -101,13 +101,13 @@
     <h2 id="c2"><span class="num">2</span>Install and the first job</h2>
     <p>The engine is a set of ES modules with no dependencies and no build step. The root module <code>vanilla.penplotter.js</code> imports from its own <code>src/</code> folder, so it has to be loaded from somewhere that serves the whole repository: a jsDelivr tag, GitHub Pages, or a local clone.</p>
     <pre><code>&lt;script type="module"&gt;
-  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.0/vanilla.penplotter.js";
+  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.1/vanilla.penplotter.js";
 &lt;/script&gt;</code></pre>
     <p>The smallest complete job: a page, two shapes, a plan, and a look at the statistics.</p>
     <pre><code>const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297, margin: 12 } });
 plot.line(20, 30, 190, 30);
 plot.circle(105, 145, 48);
-const plan = plot.plan({ drawSpeed: 35, travelSpeed: 80 });
+const plan = plot.plan();
 console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelDistance: …, penLifts: 2, … }</code></pre>
     <p>From here the plan can go three ways: to a canvas with <code>plot.drawPreview(context)</code>, to a file with <code>plot.exportSVG()</code>, <code>exportHPGL()</code> or <code>exportGCode()</code>, or to the pen with the driver of chapter 9. Node 18 or newer is only needed to run the tests; the engine itself runs in any modern browser and in Node.</p>
     <p>Everything the engine exports is reachable from the root module: the class <code>PlotterEngine</code>, the constant <code>VERSION</code>, every function of <code>src/core/model.js</code>, the class <code>PluginHost</code>, and the namespaces <code>Geometry</code>, <code>Optimizer</code>, <code>Planner</code>, <code>Renderer</code> and <code>Driver</code>. The driver module <code>src/driver/ebb.js</code> is also importable on its own, and that is how the examples do it.</p>
@@ -215,10 +215,11 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
       <li><strong>nearest</strong> (default): greedy nearest neighbour from the current pen position, starting at <code>options.origin</code> (0,0). For an open, reversible path the closer of its two ends is chosen and the path is reversed when needed. For a closed path the seam is moved: the polygon is rotated so it starts at the corner nearest the pen (<em>reloop</em>), unless <code>reloop: false</code>. A path with <code>reversible: false</code> is only ever approached at its start.</li>
       <li><strong>input</strong>: draw in the order given, no reversal, no reloop. Use it when the order is the drawing, or to see what the planner saves.</li>
     </ul>
-    <p>Every drawn path counts one pen-down and one pen-up. The time estimate is a plain sum, in seconds, with distances converted to millimetres first:</p>
-    <pre><code>drawDistance / drawSpeed  +  travelDistance / travelSpeed  +  penLifts · liftDelay  +  toolChanges · toolChangeDelay
-defaults: drawSpeed 35 mm/s, travelSpeed 80 mm/s, liftDelay 0.15 s, toolChangeDelay 15 s</code></pre>
-    <p>These are the planner's defaults, not the machine's; the EBB profile has its own, slower speeds and the driver's own estimate (chapter 9) is the one that matches the plot. The planner never mutates its input and always returns fresh point objects, so a plan can be kept, compared or serialised while the document moves on.</p>
+    <p>Every drawn path counts one pen-down and one pen-up. The time estimate, in seconds, gives every stroke and every hop its own ramps, with distances converted to millimetres first:</p>
+    <pre><code>Σ ramps(stroke, drawSpeed, acceleration)  +  Σ ramps(hop, travelSpeed, travelAcceleration)  +  penLifts · liftDelay  +  (toolChanges − 1) · toolChangeDelay
+ramps(L, v, a) = L / v + v / a  when L ≥ v² / a,  otherwise 2 · √(L / a)
+defaults: drawSpeed 40 mm/s, travelSpeed 120 mm/s, acceleration 800 mm/s², travelAcceleration 1200 mm/s², liftDelay 0.6 s, toolChangeDelay 15 s</code></pre>
+    <p>The defaults are the machine's: the speeds, ramps and pen delays of the EBB profile for the iDraw HSE / A2, so the estimate on an example page and the time in the pen panel agree, and so does the plot (wave hatch: 681 s estimated, 680 s plotted). The first tool is in the holder when the plot starts, so only a swap costs a tool change. With <code>acceleration: 0</code> the estimate is the plain distance over speed again. The planner never mutates its input and always returns fresh point objects, so a plan can be kept, compared or serialised while the document moves on.</p>
 
     <h2 id="c8"><span class="num">8</span>The renderers</h2>
     <p>A renderer turns a plan into a machine program or a picture. They all read the same <code>moves</code> and <code>routes</code>, so the SVG, the HPGL and the preview show the same order and the same seams the pen will follow.</p>
@@ -393,8 +394,9 @@ frame();</code></pre>
         <tr><td><code>strategy</code></td><td>nearest</td><td>nearest | input</td></tr>
         <tr><td><code>reloop</code></td><td>true</td><td>move closed-path seams</td></tr>
         <tr><td><code>origin</code></td><td>{ x: 0, y: 0 }</td><td>document units</td></tr>
-        <tr><td><code>drawSpeed</code> / <code>travelSpeed</code></td><td>35 / 80</td><td>mm/s, estimate only</td></tr>
-        <tr><td><code>liftDelay</code> / <code>toolChangeDelay</code></td><td>0.15 / 15</td><td>seconds, estimate only</td></tr>
+        <tr><td><code>drawSpeed</code> / <code>travelSpeed</code></td><td>40 / 120</td><td>mm/s, for the estimate and the EBB driver</td></tr>
+        <tr><td><code>acceleration</code> / <code>travelAcceleration</code></td><td>800 / 1200</td><td>mm/s², ramps in the estimate; 0 for a plain sum</td></tr>
+        <tr><td><code>liftDelay</code> / <code>toolChangeDelay</code></td><td>0.6 / 15</td><td>seconds; a lift is pen down and up, a swap is every tool after the first</td></tr>
         <tr><td><code>useRaw</code></td><td>false</td><td>plan the unoptimized document</td></tr>
       </tbody>
     </table>
@@ -422,11 +424,11 @@ frame();</code></pre>
     <h3>Schemas</h3>
     <p><code>vanilla.penplotter/document@1</code> (chapter 3), <code>vanilla.penplotter/plan@1</code> (chapter 7), <code>vanilla.penplotter/ebb@1</code> (the compiled command list, chapter 9). The adapter validates the plan schema before drawing; a plan from another version would be refused in plain words rather than drawn wrong.</p>
 
-    <p class="callout">This handbook describes version 0.3.0 as tested on 2026-10-01. Where the code and this text disagree, the code and its tests are right, and the text needs a fix: open an issue on GitHub.</p>
+    <p class="callout">This handbook describes version 0.3.1 as tested on 2026-10-01. Where the code and this text disagree, the code and its tests are right, and the text needs a fix: open an issue on GitHub.</p>
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
-    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+    <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { PlotterEngine, Optimizer } from "../vanilla.penplotter.js";
+import { PlotterEngine, Optimizer, Driver } from "../vanilla.penplotter.js";
 
 function testEditsAfterPlanning() {
   const plot = new PlotterEngine();
@@ -35,7 +35,7 @@ function testUnits() {
   for (const [units, length] of [["mm", 25.4], ["cm", 2.54], ["in", 1], ["px", 96]]) {
     const plot = new PlotterEngine({ units });
     plot.line(0, 0, length, 0);
-    const plan = plot.plan({ drawSpeed: 25.4, liftDelay: 0, toolChangeDelay: 0 });
+    const plan = plot.plan({ drawSpeed: 25.4, acceleration: 0, liftDelay: 0, toolChangeDelay: 0 });
     assert.ok(Math.abs(plan.stats.estimatedSeconds - 1) < 1e-9, units);
     assert.match(plot.exportGCode(), /G1 X25\.4 Y0/, units);
     assert.match(plot.exportHPGL(), /PD0,0,1016,0;/, units);
@@ -55,8 +55,43 @@ function testBacktracking() {
   assert.match(plot.exportSVG(), /M0 0 L10 0 L1 0/);
 }
 
+function testEstimateFollowsAcceleration() {
+  // The planner's number is the one on the example pages; the driver's is the
+  // one in the pen panel. They model the same machine, so they must agree.
+  const plot = new PlotterEngine();
+  plot.line(0, 0, 100, 0);
+  // 100 mm at 40 mm/s, 800 mm/s²: 2 mm of ramps, 2.5 s cruise plus 0.05 s
+  // of ramp time, then the pen down and up again, 0.3 s each.
+  const plan = plot.plan({ strategy: "input" });
+  assert.equal(plan.options.drawSpeed, 40);
+  assert.equal(plan.options.travelSpeed, 120);
+  assert.ok(Math.abs(plan.stats.estimatedSeconds - (2.5 + 0.05 + 0.6)) < 1e-9, `100 mm line: ${plan.stats.estimatedSeconds}`);
+  // A short stroke never reaches cruising speed: a 1 mm line is a triangle,
+  // 2 · sqrt(1 / 800) s of motion.
+  const short = new PlotterEngine();
+  short.line(0, 0, 1, 0);
+  const shortPlan = short.plan({ liftDelay: 0 });
+  assert.ok(Math.abs(shortPlan.stats.estimatedSeconds - 2 * Math.sqrt(1 / 800)) < 1e-9, `1 mm line: ${shortPlan.stats.estimatedSeconds}`);
+  // Without acceleration the old plain sum is still there.
+  assert.equal(short.plan({ liftDelay: 0, acceleration: 0 }).stats.estimatedSeconds, 1 / 40);
+
+  // A real drawing: the planner's estimate is within a tenth of the machine
+  // time the EBB driver computes from the same plan with the same defaults.
+  const drawing = new PlotterEngine({ units: "mm", page: { width: 100, height: 100, margin: 0 } });
+  for (let row = 0; row < 12; row += 1) drawing.line(5, 5 + row * 7, 95, 5 + row * 7);
+  drawing.circle(50, 50, 30);
+  const zigzag = [];
+  for (let index = 0; index <= 20; index += 1) zigzag.push({ x: 5 + index * 4.5, y: index % 2 ? 92 : 97 });
+  drawing.polyline(zigzag);
+  const planned = drawing.plan();
+  const machine = Driver.compileEbbPlan(planned, { profile: "idraw-hse-a2" }).stats.durationMs / 1000;
+  const ratio = planned.stats.estimatedSeconds / machine;
+  assert.ok(ratio > 0.9 && ratio < 1.1, `planner ${planned.stats.estimatedSeconds.toFixed(1)} s, machine ${machine.toFixed(1)} s`);
+}
+
 testEditsAfterPlanning();
 testOptimizationSettingsSurviveEdits();
 testUnits();
 testBacktracking();
+testEstimateFollowsAcceleration();
 console.log("vanilla.penplotter regressions: ok");

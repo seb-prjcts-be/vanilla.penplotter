@@ -25,7 +25,7 @@
   </nav>
   <main class="page">
     <header class="page-header">
-      <div class="section-tag">JavaScript plotter engine · v0.3.0</div>
+      <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
       <h1>vanilla.<span class="accent">penplotter</span> Guide</h1>
       <p class="guide-intro">Seven short steps. The first four give you a planned job; the last one sends it to the machine. You only need the modules underneath when your sketch asks for them.</p>
     </header>
@@ -79,9 +79,11 @@ plot.stipple(boundary, {
 
 const plan = plot.plan({
   strategy: "nearest",
-  drawSpeed: 35,
-  travelSpeed: 80,
-  liftDelay: 0.15,
+  drawSpeed: 40,             // mm/s; the defaults are the iDraw's own
+  travelSpeed: 120,
+  acceleration: 800,         // mm/s², the estimate ramps like the machine
+  travelAcceleration: 1200,
+  liftDelay: 0.6,            // s per stroke: pen down, and up again
   toolChangeDelay: 15
 });
 
@@ -157,7 +159,7 @@ console.log(plot.stats());</code></pre>
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
-    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+    <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>

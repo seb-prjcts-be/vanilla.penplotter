@@ -16,13 +16,13 @@ You write a drawing in JavaScript. This engine works out the route, lifts the pe
 
 **Plots for real on one machine so far:** an iDraw HSE / A2 with an EBB board, over Web Serial, straight from Chrome or Edge. For every other plotter the same plan comes out as SVG, HPGL or G-code; that is the side door, not the road.
 
-This is version **0.3.0**: a tested vertical slice of Geometry → Optimizer → Planner → Renderer → Driver. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) is deliberately larger than the code; the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html) says which part exists.
+This is version **0.3.1**: a tested vertical slice of Geometry → Optimizer → Planner → Renderer → Driver. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) is deliberately larger than the code; the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html) says which part exists.
 
 ## Install
 
 ```html
 <script type="module">
-  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.0/vanilla.penplotter.js";
+  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.1/vanilla.penplotter.js";
 </script>
 ```
 
@@ -38,7 +38,7 @@ const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } 
 plot.line(20, 30, 190, 30);
 plot.circle(105, 145, 48);
 
-const plan = plot.plan({ drawSpeed: 35, travelSpeed: 80 });
+const plan = plot.plan();             // the iDraw's speeds and ramps, unless you say otherwise
 console.log(plan.stats);              // paths, travel, pen lifts, estimated seconds
 
 const transport = createWebSerialTransport();
@@ -57,7 +57,7 @@ A few things I learned the hard way, so you do not have to:
 - `compileEbbPlan(plan)` gives you the exact command list without sending it; `createLogTransport()` is the dry run. Do one the first time.
 - Web Serial only exists in Chrome and Edge, on `localhost` or https.
 
-Motion is planned with acceleration: every stroke ramps up from rest, cruises, slows into corners by how sharp they are, and ramps down again. The plan's `drawSpeed` and `travelSpeed` are the speeds the machine gets; the profile fills in the rest (40 mm/s drawing, 120 mm/s travelling, 800 and 1200 mm/s², a corner deviation of 0.05 mm), and every value can be overridden in `compileEbbPlan(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })` or `driver.run(plan, { ... })`. A stroke never aims at exactly zero speed (floor 2 mm/s, so the last step of a line is never left hanging with the pen on the paper), chords within 0.02 mm of a straight line are merged before planning (a circle of 360 chords is a few dozen commands, not 360), and commands go out ahead of their acknowledgements, so a run of short moves is never paced by the USB round trip. On firmware 3.x the driver also opens the board's motion queue to its full depth.
+Motion is planned with acceleration: every stroke ramps up from rest, cruises, slows into corners by how sharp they are, and ramps down again. The plan's `drawSpeed` and `travelSpeed` are the speeds the machine gets; the profile fills in the rest (40 mm/s drawing, 120 mm/s travelling, 800 and 1200 mm/s², a corner deviation of 0.05 mm), and every value can be overridden in `compileEbbPlan(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })` or `driver.run(plan, { ... })`. A stroke never aims at exactly zero speed (floor 2 mm/s, so the last step of a line is never left hanging with the pen on the paper), chords within 0.02 mm of a straight line are merged before planning (a circle of 360 chords is a few dozen commands, not 360), and commands go out ahead of their acknowledgements, so a run of short moves is never paced by the USB round trip. On firmware 3.x the driver also opens the board's motion queue to its full depth. The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, the seconds the plot takes: 681 estimated, 680 plotted, for the wave hatch.
 
 **We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted with on 2026-10-01. An AxiDraw or another EBB board speaks the same protocol and should behave the same, but nobody here has plotted with one, so treat every other profile as untested. Not there yet: pause, and resuming from a checkpoint.
 
@@ -75,7 +75,7 @@ This table is literally identical in the README of `p5.penplotter`; a test guard
 | direct plotting | iDraw HSE / A2 with EBB firmware 3.0.2 | the only physically tested profile (`idraw-hse-a2`) |
 | examples | p5.waves 3.4.0, vanilla.waves (pinned commit) | examples only; neither library depends on them |
 
-Tested together: `vanilla.penplotter` 0.3.0 with `p5.penplotter` 0.2.0.
+Tested together: `vanilla.penplotter` 0.3.1 with `p5.penplotter` 0.2.0.
 
 Publishing: always `vanilla.penplotter` first, then `p5.penplotter`. The examples of
 `p5.penplotter` load the core as a sibling folder (`../vanilla.penplotter/`), locally under
@@ -94,7 +94,7 @@ pinned one; the version check in the adapter catches a core that does not match.
 | `tool({ id, color, width })`, `layer(id, { toolId })` | pens and layers; the planner finishes one pen before the next and the driver pauses for the swap |
 | `importSVG(text)` | paths, lines, polygons, rects, circles and nested transforms; curves flattened |
 | `optimize({ passes, mergeTolerance, duplicateTolerance, simplifyTolerance, maxSegmentLength })` | deduplicate, merge, simplify, resample, clean |
-| `plan({ strategy, drawSpeed, travelSpeed, liftDelay, toolChangeDelay })` | nearest-neighbour order with reversal and closed-path reloop, or `"input"` order |
+| `plan({ strategy, drawSpeed, travelSpeed, acceleration, travelAcceleration, liftDelay, toolChangeDelay })` | nearest-neighbour order with reversal and closed-path reloop, or `"input"` order |
 | `stats()` | paths, points, draw and travel distance, pen lifts, tool changes, estimated seconds |
 | `drawPreview(context, { showTravel })` | the plan on a canvas, pen-up travel in red |
 | `exportSVG`, `exportHPGL({ penMap, unitsPerMm })`, `exportGCode({ penUp, penDown })`, `exportJSON` | the same plan as a file, for machines without a driver |

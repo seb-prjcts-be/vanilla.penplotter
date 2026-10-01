@@ -25,13 +25,13 @@
   </nav>
   <main class="page">
     <header class="page-header">
-      <div class="section-tag">JavaScript plotter engine · v0.3.0</div>
+      <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
       <h1>vanilla.<span class="accent">penplotter</span> Roadmap</h1>
       <p class="guide-intro">Roadmap · where the work goes. Generated from <a href="roadmap.md">roadmap.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
     </header>
 <p>Direction since 2026-09-21: <strong>the sketch goes straight to the pen, with no SVG in between.</strong> <code>vanilla.penplotter</code> is the engine and the driver; <code>p5.penplotter</code> is the thin p5.js layer on top. SVG, HPGL and G-code export remain, but are no longer the main path.</p>
-<h2>Present in 0.3.0</h2>
-<ul><li>document, layers, tools and polyline paths</li><li>primitives, transforms, simple offsets</li><li>hatch, crosshatch and deterministic stippling</li><li>browser SVG import with flattening</li><li>path deduplication, line merging, RDP and resampling</li><li>nearest-neighbour routing, reversal and closed-path reloop</li><li>SVG, HPGL, G-code, JSON and canvas preview, with conversion to physical units</li><li>distance, pen-up/down, pen changes and time estimation</li><li>plan that refreshes itself after every change to the document</li><li>simulator, generic Web Serial text transport and machine profiles</li><li><strong>EBB driver: plotting directly on an iDraw HSE / A2</strong> (CoreXY, bounds checking, flow control per command, safe stop), physically tested on 2026-09-21</li><li><strong>acceleration in the EBB driver</strong> (0.3.0): ramps, cornering by junction deviation, exact-step <code>LM</code> moves, the board's full motion queue on firmware 3.x, <code>SM</code> slices on older firmware</li><li>examples: first job, vanilla.waves to SVG, direct plot</li><li>plugin host; the p5 adapter lives in <code>p5.penplotter</code></li></ul>
+<h2>Present in 0.3.1</h2>
+<ul><li>document, layers, tools and polyline paths</li><li>primitives, transforms, simple offsets</li><li>hatch, crosshatch and deterministic stippling</li><li>browser SVG import with flattening</li><li>path deduplication, line merging, RDP and resampling</li><li>nearest-neighbour routing, reversal and closed-path reloop</li><li>SVG, HPGL, G-code, JSON and canvas preview, with conversion to physical units</li><li>distance, pen-up/down, pen changes and a time estimate with the machine's own ramps and pen delays (0.3.1), so a page and the pen panel say the same seconds</li><li>plan that refreshes itself after every change to the document</li><li>simulator, generic Web Serial text transport and machine profiles</li><li><strong>EBB driver: plotting directly on an iDraw HSE / A2</strong> (CoreXY, bounds checking, flow control per command, safe stop), physically tested on 2026-09-21</li><li><strong>acceleration in the EBB driver</strong> (0.3.0): ramps, cornering by junction deviation, exact-step <code>LM</code> moves, the board's full motion queue on firmware 3.x, <code>SM</code> slices on older firmware</li><li>examples: first job, vanilla.waves to SVG, direct plot</li><li>plugin host; the p5 adapter lives in <code>p5.penplotter</code></li></ul>
 <h2>Next — strengthening the direct route</h2>
 <ul><li>pause; resume from an acknowledged command mid-stroke (resuming per completed stroke is in 0.3.0: the pen panel remembers the count, <code>skipDraws</code> leaves them out); profile version alongside the plan</li><li>pen heights configurable from the profile</li><li>Node transport alongside Web Serial, so a script can plot without a browser</li><li>more p5 primitives in <code>p5.penplotter</code> (arcs, curves)</li><li>possibly: read SVG from p5.plotSvg and plot it without vpype or Inkscape</li></ul>
 <h2>Parked</h2>
@@ -42,7 +42,7 @@
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
-    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+    <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
 </body>
 </html>
