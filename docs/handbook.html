@@ -372,6 +372,7 @@ frame();</code></pre>
       <li><strong>Driver</strong>: no pause or resume from a checkpoint; one tested profile; no Node transport yet, so plotting needs a browser; the acceleration profile is per stroke, so a pen-up travel always comes to rest before the pen goes down.</li>
       <li><strong>Facade</strong>: the whole-document comparison costs milliseconds on huge documents.</li>
     </ul>
+    <p>Everything in this handbook is <em>sheet mode</em>: draw everything, then plot. The second mode, <em>live mode</em> (draw something, plot it: a session on the driver that takes one stroke at a time, in the order the sketch made them, so you can draw without a preview, draw with your hands through ml5, or watch a slow animation appear on paper), is designed on the <a href="live.html">Two modes</a> page and not yet built. When it lands it gets its own chapter here.</p>
     <p>The roadmap's direction is fixed: strengthen the direct route. Acceleration landed in 0.3.0; next are pause and resume, pen heights from the profile, a Node transport, and reading p5.gysin's plotter-SVG with its pen map. Parked, because vpype and the AxiDraw software already cover them: a curve-rich document, full SVG/CSS, robust offsets, a production planner, and drivers for machines nobody here can test on. Version 1.0 means stable schemas, TypeScript declarations, npm, and a support matrix where every profile has been plotted with.</p>
 
     <h2 id="c17"><span class="num">17</span>Reference tables</h2>

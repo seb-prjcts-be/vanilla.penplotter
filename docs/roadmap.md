@@ -28,67 +28,14 @@ no longer the main path.
 
 ## Live — the plotter as an output device
 
-Everything above treats a sheet as a whole: `plan()` orders all the paths,
-`run()` starts at the home corner, draws the lot and returns. Time inside the
-sketch does not exist on paper. Live mode turns that around: the plotter
-follows the sketch while it runs. Make, plot, make, plot.
-
-Three ways to use the same thing:
-
-- **No preview.** The sheet is the canvas. You draw blind, or with the canvas
-  switched off, and the pen is the only output. A drawing is what the pen did,
-  not what the screen showed.
-- **Hands.** A hand tracked by ml5 (handPose) draws: a pinch puts the pen
-  down, the fingertip path becomes a stroke, opening the hand lifts the pen.
-  The plotter is an instrument you play, and it plays back a little behind you.
-- **Slow animation.** `frameRate(0.5)`, and every frame adds objects. What
-  appears on the canvas appears on paper, in that order, object by object. The
-  sketch is a score; the plotter performs it. Ink accumulates: a plotted
-  animation is a palimpsest, and `clear()` no longer erases anything on paper.
-  It only says "the next additions start here".
-
-### What it takes in the engine
-
-- **A live session in the EBB driver.** Open once: connect, confirm, motors
-  on, pen up. Then `session.draw(points)` compiles one stroke from wherever
-  the carriage is (travel with ramps, pen down, the stroke with ramps, pen up)
-  and sends it straight away; `session.close()` returns home and switches the
-  motors off. `compileEbbPlan()` already builds strokes from a running
-  position; it needs a mode that starts at the current position instead of
-  home and does not return. Pipelining, bounds checking, the floor speed and
-  the emergency stop stay as they are.
-- **Time is the order.** No nearest-neighbour over the whole sheet: strokes go
-  in the order they were made. Within one frame the few strokes of that frame
-  may be ordered nearest-first, nothing more.
-- **The pen sets the pace.** A frame takes a sixtieth of a second on screen
-  and forty seconds on paper. The sketch has to wait for the pen: the session
-  reports what is still queued, and the adapter holds the next frame until the
-  pen is nearly idle. The queue never grows beyond a few seconds of motion, so
-  a stop is a stop.
-- **Noisy input.** Hand tracking jitters; a stroke is simplified (RDP) and
-  resampled before it goes out. A few hundred milliseconds of latency are
-  fine: the pen is behind anyway.
-- **One pen.** No tool changes mid-session. Pens as layers stay a feature of
-  the planned route.
-
-### What it takes in p5.penplotter
-
-- `createPlot({ live: true })`, or `plot.live()` from a key: at the end of
-  every `draw()` the strokes recorded in that frame go to the session.
-- `plot.go()` keeps meaning the planned route for a whole sheet; live is the
-  other door, not a replacement.
-- The on-screen preview stays available, because without it nobody learns the
-  trade. Switching it off is the artist's choice, not the library's.
-
-### Order of work
-
-1. The session in the engine, tested dry against the log transport with the
-   tick-exact firmware simulation already in `tests/ebb.js`.
-2. A plain example: draw with the mouse, the pen follows. The mouse is the
-   hand; ml5 comes later and changes nothing in the engine.
-3. The adapter option, and a slow-animation example (`frameRate(0.5)`).
-4. The ml5 handPose example, pinch to draw, as an optional page that loads
-   ml5 from its CDN.
+Two modes, two sentences. *Sheet mode*: draw everything, then plot; that is
+0.3.1. *Live mode*: draw something, plot it; the plotter follows the sketch
+while it runs, stroke by stroke, in the order you made them. It opens three
+doors: drawing without a preview, drawing with your hands through ml5, and
+watching a slow animation appear on paper object by object. The design, the
+session API the driver needs, the adapter's `createPlot({ live: true })`, the
+pacing rules and the order of work are on [Two modes](live.html). Nothing of
+it is built yet; that page says what is real.
 
 ## Next — strengthening the direct route
 

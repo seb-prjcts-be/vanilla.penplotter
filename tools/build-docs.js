@@ -11,7 +11,8 @@ const VERSION = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf
 
 export const PAGES = [
   { source: "docs/architecture.md", target: "docs/architecture.html", eyebrow: "Architecture · the target model" },
-  { source: "docs/roadmap.md", target: "docs/roadmap.html", eyebrow: "Roadmap · where the work goes" }
+  { source: "docs/roadmap.md", target: "docs/roadmap.html", eyebrow: "Roadmap · where the work goes" },
+  { source: "docs/live.md", target: "docs/live.html", eyebrow: "Two modes · sheet mode is built, live mode is designed" }
 ];
 
 function escapeHtml(value) {

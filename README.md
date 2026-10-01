@@ -14,6 +14,8 @@ You write a drawing in JavaScript. This engine works out the route, lifts the pe
 | to the pen | `driver.run(plot.plan())` | `plot.go()` |
 | take it if | you work without p5, or want to build your own layer on top | you sketch in p5.js |
 
+**Two modes, two sentences.** *Sheet mode*: draw everything, then plot; the planner orders the whole sheet and the machine draws it from the home corner back to the home corner. That is what every page here describes, and what 0.3.1 does. *Live mode*: draw something, plot it; the plotter follows the sketch while it runs, stroke by stroke, in the order you made them. It opens three doors: drawing without a preview, drawing with your hands through ml5, and watching a slow animation appear on paper object by object. Live mode is designed, not built: the design, the engine and adapter API it needs and the order of work are on [Two modes](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/live.html).
+
 **Plots for real on one machine so far:** an iDraw HSE / A2 with an EBB board, over Web Serial, straight from Chrome or Edge. For every other plotter the same plan comes out as SVG, HPGL or G-code; that is the side door, not the road.
 
 This is version **0.3.1**: a tested vertical slice of Geometry → Optimizer → Planner → Renderer → Driver. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) is deliberately larger than the code; the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html) says which part exists.
