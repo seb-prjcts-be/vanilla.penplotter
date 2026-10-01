@@ -5,7 +5,7 @@ in between.** `vanilla.penplotter` is the engine and the driver; `p5.penplotter`
 p5.js layer on top. SVG, HPGL and G-code export remain, but are
 no longer the main path.
 
-## Present in 0.2.0
+## Present in 0.3.0
 
 - document, layers, tools and polyline paths
 - primitives, transforms, simple offsets
@@ -19,12 +19,14 @@ no longer the main path.
 - simulator, generic Web Serial text transport and machine profiles
 - **EBB driver: plotting directly on an iDraw HSE / A2** (CoreXY, bounds checking,
   flow control per command, safe stop), physically tested on 2026-09-21
+- **acceleration in the EBB driver** (0.3.0): ramps, cornering by junction
+  deviation, exact-step `LM` moves, the board's full motion queue on firmware 3.x,
+  `SM` slices on older firmware
 - examples: first job, vanilla.waves to SVG, direct plot
 - plugin host; the p5 adapter lives in `p5.penplotter`
 
 ## Next — strengthening the direct route
 
-- acceleration in the EBB driver (currently deliberately slow, fixed speeds)
 - pause, resume from an acknowledged command, profile version alongside the plan
 - pen heights configurable from the profile
 - Node transport alongside Web Serial, so a script can plot without a browser

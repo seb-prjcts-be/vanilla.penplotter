@@ -44,8 +44,8 @@ export const MACHINE_PROFILES = Object.freeze({
     name: "iDraw HSE / A2 (EBB)",
     renderer: "svg",
     page: { width: 594, height: 432 },
-    drawSpeed: 15,
-    travelSpeed: 30,
+    drawSpeed: 40,
+    travelSpeed: 120,
     direct: "ebb-web-serial",
     note: "Plots directly through EbbDriver; machine facts live in EBB_PROFILES."
   }

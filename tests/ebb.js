@@ -11,11 +11,52 @@ import {
 } from "../src/driver/ebb.js";
 
 const HSE = EBB_PROFILES["idraw-hse-a2"];
+const INTERVAL_S = 40e-6; // the EBB motion ISR runs at 25 kHz
+const RATE_PER_HZ = 2 ** 31 * INTERVAL_S; // LM rate units per step/s (≈ 85 899.35)
 
-function smCommands(compiled) {
-  return compiled.commands
-    .filter((entry) => entry.cmd.startsWith("SM,"))
-    .map((entry) => entry.cmd.split(",").slice(1).map(Number));
+function motionCommands(compiled) {
+  return compiled.commands.filter((entry) => /^(SM|LM),/.test(entry.cmd));
+}
+
+// One view on both command styles: steps per axis and the step rate (steps/s)
+// of each axis at the start and the end of the command.
+function describeMove(entry) {
+  const parts = entry.cmd.split(",");
+  if (parts[0] === "SM") {
+    const [ms, a1, a2] = parts.slice(1).map(Number);
+    const rate = (steps) => Math.abs(steps) / (ms / 1000);
+    return { steps: [a1, a2], start: [rate(a1), rate(a2)], end: [rate(a1), rate(a2)], ms };
+  }
+  const [rate1, steps1, accel1, rate2, steps2, accel2] = parts.slice(1).map(Number);
+  const intervals = Math.round(entry.durationMs / 1000 / INTERVAL_S);
+  const hz = (rate) => rate / RATE_PER_HZ;
+  const end = (rate, accel, steps) => (steps === 0 ? 0 : hz(rate + accel * intervals));
+  return {
+    steps: [steps1, steps2],
+    start: [steps1 === 0 ? 0 : hz(rate1), steps2 === 0 ? 0 : hz(rate2)],
+    end: [end(rate1, accel1, steps1), end(rate2, accel2, steps2)],
+    ms: entry.durationMs
+  };
+}
+
+function stepTotals(entries) {
+  return entries.reduce((acc, entry) => {
+    const { steps } = describeMove(entry);
+    return [acc[0] + steps[0], acc[1] + steps[1]];
+  }, [0, 0]);
+}
+
+// The motion commands between two consecutive pen commands: one stroke.
+function strokes(compiled) {
+  const result = [];
+  let current = null;
+  for (const entry of compiled.commands) {
+    if (entry.kind === "pen-up" || entry.kind === "pen-down") {
+      current = [];
+      result.push(current);
+    } else if (/^(SM|LM),/.test(entry.cmd) && current) current.push(entry);
+  }
+  return result.filter((stroke) => stroke.length > 0);
 }
 
 function planOf(build, page = { width: 594, height: 432 }) {
@@ -37,50 +78,149 @@ function testCoreXYMixing() {
 
 function testCompileSequence() {
   const plan = planOf((plot) => plot.line(10, 10, 25, 10));
-  const compiled = compileEbbPlan(plan, { profile: HSE, drawSpeed: 10, travelSpeed: 20 });
+  const compiled = compileEbbPlan(plan, { profile: HSE });
   const cmds = compiled.commands.map((entry) => entry.cmd);
   assert.equal(cmds[0], "EM,1,1");
   assert.match(cmds[1], /^SP,1,\d+$/, "pen goes up before any motion");
   assert.equal(cmds[cmds.length - 1], "EM,0,0");
 
-  const firstMove = cmds.findIndex((cmd) => cmd.startsWith("SM,"));
+  const firstMove = cmds.findIndex((cmd) => cmd.startsWith("LM,"));
   const penDown = cmds.findIndex((cmd) => cmd.startsWith("SP,0"));
   assert.ok(firstMove > 1 && penDown > firstMove, "travel happens pen-up, then pen-down");
 
-  const moves = smCommands(compiled);
-  assert.deepEqual(moves[0].slice(1), [1600, 0]);
-  assert.deepEqual(moves[1], [1500, 1200, 1200]);
+  const [travel, draw] = strokes(compiled);
+  assert.deepEqual(stepTotals(travel), [1600, 0], "travel to (10,10) is one motor alone");
+  assert.deepEqual(stepTotals(draw), [1200, 1200], "15 mm along X is 1200 steps on both motors");
   const lastUp = cmds.lastIndexOf(cmds.filter((cmd) => cmd.startsWith("SP,1")).pop());
   assert.ok(lastUp > penDown);
-  const sum = moves.reduce((acc, [, a1, a2]) => [acc[0] + a1, acc[1] + a2], [0, 0]);
-  assert.deepEqual(sum, [0, 0], "step totals return to the origin");
+  assert.deepEqual(stepTotals(motionCommands(compiled)), [0, 0], "step totals return to the origin");
+  for (const entry of motionCommands(compiled)) {
+    assert.match(entry.cmd, /^LM,\d+,-?\d+,-?\d+,\d+,-?\d+,-?\d+,3$/, "LM with positive rates, signed steps, cleared accumulators");
+  }
+}
+
+// Every stroke starts from rest, ramps up, cruises at the chosen speed, and
+// ramps down to rest again; consecutive commands hand over the speed
+// without a jump. This is what the machine was missing: it used to go from
+// zero to full speed in one step and back, on every segment.
+function testAccelerationProfile() {
+  const plan = planOf((plot) => plot.line(10, 10, 210, 10));
+  const compiled = compileEbbPlan(plan, { profile: HSE, drawSpeed: 40, acceleration: 800 });
+  const [, draw] = strokes(compiled);
+  const moves = draw.map(describeMove);
+  assert.ok(moves.length >= 3, "a long line has an acceleration, a cruise and a deceleration phase");
+  const cruiseHz = 40 * HSE.stepsPerMm; // along X both motors run at the same rate
+  assert.ok(moves[0].start[0] < cruiseHz * 0.02, `starts from rest, not at ${moves[0].start[0]} steps/s`);
+  assert.ok(moves[moves.length - 1].end[0] < cruiseHz * 0.02, "ends at rest");
+  const peak = Math.max(...moves.map((move) => Math.max(...move.start, ...move.end)));
+  assert.ok(peak <= cruiseHz * 1.01 && peak >= cruiseHz * 0.99, `cruises at the draw speed (${peak} steps/s)`);
+  for (let index = 1; index < moves.length; index += 1) {
+    for (const axis of [0, 1]) {
+      const handover = Math.abs(moves[index].start[axis] - moves[index - 1].end[axis]);
+      assert.ok(handover <= cruiseHz * 0.02, `no speed jump between commands (${handover} steps/s on axis ${axis + 1})`);
+    }
+  }
+  // 1 mm to accelerate, 1 mm to brake, 198 mm at 40 mm/s: about 5.05 s.
+  const drawMs = draw.reduce((sum, entry) => sum + entry.durationMs, 0);
+  assert.ok(Math.abs(drawMs - 5050) < 100, `draw time ${drawMs} ms`);
+
+  // Bends of about 25° are allowed through at just under the cruise speed.
+  // The ramp from 39.9 to 40 mm/s would be a command of a few ticks; it is
+  // folded into its neighbour instead. The board parses a command in a few
+  // milliseconds, so every command on a long segment has to last longer.
+  const zigzag = [{ x: 20, y: 100 }];
+  for (let index = 1; index <= 12; index += 1) {
+    zigzag.push({ x: 20 + index * 18, y: 100 + (index % 2 ? 8.5 : 0) });
+  }
+  const bends = compileEbbPlan(planOf((plot) => plot.polyline(zigzag)), { profile: HSE, drawSpeed: 40, acceleration: 800 });
+  for (const entry of strokes(bends)[1]) assert.ok(entry.durationMs >= 4, `no micro command: ${entry.cmd} lasts ${entry.durationMs} ms`);
+}
+
+// A reversal brings the pen to a halt at the vertex; a straight continuation
+// does not slow down at all; a gentle bend keeps most of the speed.
+function testCornering() {
+  const speedAtVertex = (points, segmentsBefore = 1) => {
+    const plan = planOf((plot) => plot.polyline(points));
+    const compiled = compileEbbPlan(plan, { profile: HSE, drawSpeed: 40, acceleration: 800 });
+    const [, draw] = strokes(compiled);
+    // Walk the commands until the steps reach the vertex, then read its speed.
+    // All vertices here lie on a stretch along X, where both motors run at
+    // the same rate; a straight continuation may be crossed mid-command.
+    const vertex = mixCoreXY(points[segmentsBefore].x, points[segmentsBefore].y, HSE.stepsPerMm);
+    const origin = mixCoreXY(points[0].x, points[0].y, HSE.stepsPerMm);
+    let a1 = origin.a1;
+    let a2 = origin.a2;
+    const mmPerS = (hz) => hz / HSE.stepsPerMm;
+    for (const entry of draw) {
+      const move = describeMove(entry);
+      const before = [a1, a2];
+      a1 += move.steps[0];
+      a2 += move.steps[1];
+      if (a1 === vertex.a1 && a2 === vertex.a2) return mmPerS(move.end[0]);
+      const inside = (axis, value) => (value - before[axis]) * (value - [a1, a2][axis]) < 0;
+      if (inside(0, vertex.a1) && inside(1, vertex.a2)) return mmPerS((move.start[0] + move.end[0]) / 2);
+    }
+    throw new Error("no command reaches the vertex");
+  };
+  const reversal = speedAtVertex([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 10, y: 10 }]);
+  assert.ok(reversal < 0.5, `a reversal stops at the vertex (${reversal} mm/s)`);
+  const straight = speedAtVertex([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 110, y: 10 }]);
+  assert.ok(straight > 39, `a straight continuation keeps the draw speed (${straight} mm/s)`);
+  const bend = speedAtVertex([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 110, y: 60 }]);
+  assert.ok(bend > 15 && bend < 30, `a 45° bend slows a little (${bend} mm/s)`);
+  const square = speedAtVertex([{ x: 10, y: 10 }, { x: 60, y: 10 }, { x: 60, y: 60 }]);
+  assert.ok(square > 2 && square < 15, `a right angle slows down hard (${square} mm/s)`);
 }
 
 function testNoRoundingDrift() {
   const points = [];
   for (let i = 0; i <= 300; i += 1) points.push({ x: 20 + i * 0.3137, y: 50 + Math.sin(i / 9) * 7.77 });
   const plan = planOf((plot) => plot.polyline(points));
-  const compiled = compileEbbPlan(plan, { profile: HSE, returnHome: false });
-  const sum = smCommands(compiled).reduce((acc, [, a1, a2]) => [acc[0] + a1, acc[1] + a2], [0, 0]);
   const last = points[points.length - 1];
-  assert.deepEqual(sum, [Math.round((last.x + last.y) * 80), Math.round((last.x - last.y) * 80)]);
+  const target = [Math.round((last.x + last.y) * 80), Math.round((last.x - last.y) * 80)];
+  for (const commandSet of ["LM", "SM"]) {
+    const compiled = compileEbbPlan(plan, { profile: HSE, returnHome: false, commandSet });
+    assert.deepEqual(stepTotals(motionCommands(compiled)), target, `${commandSet}: ends exactly on the last point`);
+  }
 }
 
 function testStepRateLimits() {
   const plan = planOf((plot) => plot.line(0, 0, 400, 0));
-  const fast = compileEbbPlan(plan, { profile: HSE, drawSpeed: 100000, travelSpeed: 100000 });
-  for (const [duration, a1, a2] of smCommands(fast)) {
-    assert.ok(Math.max(Math.abs(a1), Math.abs(a2)) / duration <= HSE.maxStepRate, "never above the EBB step-rate limit");
+  const fast = compileEbbPlan(plan, { profile: HSE, drawSpeed: 100000, travelSpeed: 100000, acceleration: 1e6, travelAcceleration: 1e6 });
+  for (const entry of motionCommands(fast)) {
+    const move = describeMove(entry);
+    for (const hz of [...move.start, ...move.end]) assert.ok(hz <= HSE.maxStepRate * 1000 * 1.001, "never above the EBB step-rate limit");
   }
-  // A nearly diagonal line gives motor 2 a step rate below the firmware
-  // minimum; that axis is held back instead of sending an invalid command.
+  // A nearly diagonal line gives motor 2 a step rate far below motor 1. The
+  // low-level move has no minimum, so every step is sent as it comes.
   const slowPlan = planOf((plot) => plot.line(0, 0, 100, 99.99));
   const slow = compileEbbPlan(slowPlan, { profile: HSE, drawSpeed: 5, returnHome: false });
-  for (const [duration, a1, a2] of smCommands(slow)) {
+  assert.deepEqual(stepTotals(motionCommands(slow)), [Math.round(199.99 * 80), Math.round(0.01 * 80)]);
+  // With plain SM commands the firmware does enforce a minimum; the slices
+  // are short enough that a single step never falls below it.
+  const sliced = compileEbbPlan(slowPlan, { profile: HSE, drawSpeed: 5, returnHome: false, commandSet: "SM" });
+  for (const entry of motionCommands(sliced)) {
+    const [ms, a1, a2] = entry.cmd.split(",").slice(1).map(Number);
     for (const steps of [a1, a2]) {
-      if (steps !== 0) assert.ok(Math.abs(steps) / (duration / 1000) >= HSE.minStepRate);
+      if (steps !== 0) assert.ok(Math.abs(steps) / (ms / 1000) >= HSE.minStepRate);
     }
   }
+}
+
+// Firmware older than 2.7 has no LM: the same profile is cut into short
+// constant-speed SM slices instead, so the ramps survive as a staircase.
+function testSmFallback() {
+  const plan = planOf((plot) => plot.line(10, 10, 210, 10));
+  const compiled = compileEbbPlan(plan, { profile: HSE, drawSpeed: 40, acceleration: 800, commandSet: "SM" });
+  const moves = motionCommands(compiled);
+  assert.ok(moves.length > 0 && moves.every((entry) => entry.cmd.startsWith("SM,")));
+  for (const entry of moves) assert.ok(describeMove(entry).ms <= 30, "slices stay short");
+  const [, draw] = strokes(compiled);
+  const rates = draw.map((entry) => describeMove(entry).start[0]);
+  assert.ok(rates[0] < 40 * 80 * 0.3, "the first slice is slow");
+  assert.ok(Math.max(...rates) > 40 * 80 * 0.98, "the middle slices cruise");
+  assert.ok(rates[rates.length - 1] < 40 * 80 * 0.3, "the last slice is slow");
+  assert.deepEqual(stepTotals(moves), [0, 0]);
 }
 
 function testBoundsAndUnits() {
@@ -95,8 +235,20 @@ function testBoundsAndUnits() {
 
   const cm = new PlotterEngine({ units: "cm", page: { width: 59, height: 43 } });
   cm.line(0, 0, 1.5, 0);
-  const compiled = compileEbbPlan(cm.plan({ strategy: "input" }), { profile: HSE, drawSpeed: 10, returnHome: false });
-  assert.deepEqual(smCommands(compiled)[0], [1500, 1200, 1200]);
+  const compiled = compileEbbPlan(cm.plan({ strategy: "input" }), { profile: HSE, returnHome: false });
+  assert.deepEqual(stepTotals(motionCommands(compiled)), [1200, 1200]);
+}
+
+// The speeds a sketch planned with are the speeds the machine gets, unless
+// the caller says otherwise; the profile only fills the gaps.
+function testSpeedsFollowThePlan() {
+  const plot = new PlotterEngine({ units: "mm", page: { width: 594, height: 432 } });
+  plot.line(10, 10, 210, 10);
+  const planned = compileEbbPlan(plot.plan({ strategy: "input", drawSpeed: 20 }), { profile: HSE });
+  const defaults = compileEbbPlan(plot.plan({ strategy: "input" }), { profile: HSE });
+  const overridden = compileEbbPlan(plot.plan({ strategy: "input", drawSpeed: 20 }), { profile: HSE, drawSpeed: 80 });
+  assert.ok(planned.stats.durationMs > defaults.stats.durationMs * 1.5, "a slower plan takes longer");
+  assert.ok(overridden.stats.durationMs < planned.stats.durationMs, "an explicit option wins over the plan");
 }
 
 async function testDriverRun() {
@@ -117,8 +269,30 @@ async function testDriverRun() {
   assert.equal(transport.log[transport.log.length - 1], "EM,0,0");
   assert.equal(progress.length, result.commands);
 
+  // Firmware 3.x: ask for the largest motion FIFO and use it, so the host
+  // never has to race the machine command by command.
+  const firstMotion = transport.log.findIndex((cmd) => cmd.startsWith("LM,"));
+  assert.ok(transport.log.indexOf("QU,2") < firstMotion, "asks the maximum FIFO depth first");
+  assert.ok(transport.log.indexOf("CU,4,32") < firstMotion, "sets the FIFO depth before the first move");
+
   const wrong = new EbbDriver({ transport: createLogTransport({ version: "Grbl 1.1h" }), profile: HSE });
   await assert.rejects(() => wrong.run(plan, { confirmed: true }), /not an EBB/);
+}
+
+// An older EBB (before 2.7.0) has neither LM nor a configurable FIFO: the
+// driver recompiles the plan into SM slices and skips the FIFO commands.
+async function testOldFirmware() {
+  const plan = planOf((plot) => plot.line(10, 10, 60, 10));
+  const transport = createLogTransport({ version: "EBBv13_and_above EB Firmware Version 2.5.1" });
+  const driver = new EbbDriver({ transport, profile: HSE });
+  const result = await driver.run(plan, { confirmed: true });
+  assert.equal(result.status, "complete");
+  assert.ok(transport.log.some((cmd) => cmd.startsWith("SM,")), "falls back to SM");
+  assert.ok(!transport.log.some((cmd) => cmd.startsWith("LM,") || cmd.startsWith("QU,") || cmd.startsWith("CU,4")));
+
+  const precompiled = compileEbbPlan(plan, { profile: HSE });
+  const again = new EbbDriver({ transport: createLogTransport({ version: "EBBv13_and_above EB Firmware Version 2.5.1" }), profile: HSE });
+  await assert.rejects(() => again.run(precompiled, { confirmed: true }), /2\.7/);
 }
 
 async function testAbortRaisesPen() {
@@ -137,10 +311,35 @@ async function testAbortRaisesPen() {
 
 async function testErrorReplyStopsSafely() {
   const plan = planOf((plot) => plot.line(10, 10, 25, 10));
-  const transport = createLogTransport({ failOn: (cmd) => cmd.startsWith("SM,") ? "!8 Err: SM bad" : null });
+  const transport = createLogTransport({ failOn: (cmd) => cmd.startsWith("LM,") ? "!8 Err: LM bad" : null });
   const driver = new EbbDriver({ transport, profile: HSE });
-  await assert.rejects(() => driver.run(plan, { confirmed: true }), /SM bad/);
+  await assert.rejects(() => driver.run(plan, { confirmed: true }), /LM bad/);
   assert.deepEqual(transport.log.slice(-3), ["ES", "SP,1", "EM,0,0"]);
+}
+
+// A pen change waits until the machine has really finished, not until the
+// last command was merely queued: with a deep FIFO those are far apart.
+async function testToolChangeWaitsForIdle() {
+  const plan = (() => {
+    const plot = new PlotterEngine({
+      units: "mm",
+      page: { width: 594, height: 432 },
+      tools: [{ id: "black", name: "black" }, { id: "red", name: "red" }]
+    });
+    plot.layer("a", { toolId: "black" });
+    plot.line(10, 10, 60, 10);
+    plot.layer("b", { toolId: "red" });
+    plot.line(10, 20, 60, 20);
+    return plot.plan({ strategy: "input" });
+  })();
+  const transport = createLogTransport();
+  const driver = new EbbDriver({ transport, profile: HSE });
+  let changed = 0;
+  await driver.run(plan, { confirmed: true, onToolChange: () => { changed += 1; } });
+  assert.equal(changed, 1);
+  const compiled = compileEbbPlan(plan, { profile: HSE });
+  const change = compiled.commands.findIndex((entry) => entry.kind === "tool-change");
+  assert.equal(compiled.commands[change - 1].kind, "wait-idle", "the plot waits for the pen to be up and still before the change");
 }
 
 // A real consumer of the Web Serial contract: a fake port built from the same
@@ -159,6 +358,7 @@ async function testWebSerialTransport() {
         written.push(cmd);
         if (cmd === "V") push("EBBv13_and_above EB Firmware Version 3.0.2\r\n");
         else if (cmd === "QS") { push("1500,"); setTimeout(() => push("1000\n\rOK\r\n"), 5); }
+        else if (cmd === "QU,2") push("QU,2,32\r\nOK\r\n");
         else push("OK\r\n");
       }
     }),
@@ -168,8 +368,15 @@ async function testWebSerialTransport() {
   await transport.open();
   assert.match(await transport.send("V"), /EBB/);
   assert.equal(await transport.send("QS"), "1500,1000");
+  assert.equal(await transport.send("QU,2"), "QU,2,32");
   assert.equal(await transport.send("SP,1,300"), "");
-  assert.deepEqual(written, ["V", "QS", "SP,1,300"]);
+  assert.deepEqual(written, ["V", "QS", "QU,2", "SP,1,300"]);
+  // Replies are picked up the moment they arrive, not on a polling timer:
+  // two hundred acknowledged commands take milliseconds, not a second.
+  const started = performance.now();
+  for (let i = 0; i < 200; i += 1) await transport.send("LM,0,1,100,0,0,0,3");
+  const elapsed = performance.now() - started;
+  assert.ok(elapsed < 150, `200 round trips took ${elapsed.toFixed(0)} ms`);
   await transport.close();
 }
 
@@ -184,11 +391,17 @@ function testDocumentationNamesTheDriver() {
 testCoreXYMixing();
 testDocumentationNamesTheDriver();
 testCompileSequence();
+testAccelerationProfile();
+testCornering();
 testNoRoundingDrift();
 testStepRateLimits();
+testSmFallback();
 testBoundsAndUnits();
+testSpeedsFollowThePlan();
 await testDriverRun();
+await testOldFirmware();
 await testAbortRaisesPen();
 await testErrorReplyStopsSafely();
+await testToolChangeWaitsForIdle();
 await testWebSerialTransport();
 console.log("vanilla.penplotter ebb: ok");

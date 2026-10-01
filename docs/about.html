@@ -24,7 +24,7 @@
   </nav>
   <main class="page">
     <header class="page-header">
-      <p class="eyebrow">About · v0.2.0</p>
+      <p class="eyebrow">About · v0.3.0</p>
       <h1>The sketch goes to the pen.</h1>
       <p class="lead">A pen plotter is the slowest printer you can own, and the only one that draws. I built this engine because I wanted a drawing written in JavaScript to reach that pen without a detour through files and other people's software.</p>
     </header>
@@ -43,7 +43,7 @@
 
     <h2>The machine</h2>
     <p>Development and every physical test happen on one plotter: an iDraw HSE with an A2 bed, an EBB board and firmware 3.0.2. It is a CoreXY machine, like an AxiDraw: motor one moves X + Y, motor two moves X − Y, 80 steps per millimetre at 16× microstepping, a travel of 594 × 432 mm. The board has no homing, so the position of the carriage when the plot starts <em>is</em> the origin. Those facts were measured on paper on 2026-09-21, not copied from a datasheet, and they live in the header of <code>src/driver/ebb.js</code>.</p>
-    <p>The driver is deliberately conservative: constant speeds of 15 mm/s drawing and 30 mm/s travelling, one acknowledgement per command, a bounds check before the first byte, and a single safe stop for abort and error alike: motion halted, pen up, motors off. Acceleration, pause and resume are on the <a href="roadmap.html">roadmap</a>, not in the code.</p>
+    <p>The driver plans motion the way the machine likes it: every stroke ramps up from rest, cruises at the plan's speed, slows into corners by how sharp they are and ramps down again, sent as exact-step low-level moves with the board's motion queue kept full. Around that, the safety net is unchanged: a bounds check before the first byte, one acknowledgement per command, and a single safe stop for abort and error alike: motion halted, pen up, motors off. Pause and resume are on the <a href="roadmap.html">roadmap</a>, not in the code.</p>
 
     <h2>Two libraries, one direction</h2>
     <p>If you draw in p5.js you want the other one. The engine knows nothing about p5.js. <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> is the adapter: three methods on the p5 prototype, no planning or machine code of its own, and a version check that refuses an engine too old for the driver it is handed. The dependency runs one way, and the <em>Requirements</em> table is identical in both READMEs because a test says it has to be.</p>

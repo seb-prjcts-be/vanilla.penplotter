@@ -16,13 +16,13 @@ You write a drawing in JavaScript. This engine works out the route, lifts the pe
 
 **Plots for real on one machine so far:** an iDraw HSE / A2 with an EBB board, over Web Serial, straight from Chrome or Edge. For every other plotter the same plan comes out as SVG, HPGL or G-code; that is the side door, not the road.
 
-This is version **0.2.0**: a tested vertical slice of Geometry → Optimizer → Planner → Renderer → Driver. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) is deliberately larger than the code; the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html) says which part exists.
+This is version **0.3.0**: a tested vertical slice of Geometry → Optimizer → Planner → Renderer → Driver. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) is deliberately larger than the code; the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html) says which part exists.
 
 ## Install
 
 ```html
 <script type="module">
-  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.2.0/vanilla.penplotter.js";
+  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.0/vanilla.penplotter.js";
 </script>
 ```
 
@@ -55,7 +55,9 @@ A few things I learned the hard way, so you do not have to:
 - `compileEbbPlan(plan)` gives you the exact command list without sending it; `createLogTransport()` is the dry run. Do one the first time.
 - Web Serial only exists in Chrome and Edge, on `localhost` or https.
 
-Tested on one machine: iDraw HSE / A2 with EBB firmware 3.0.2, on 2026-09-21, axes and scale measured on paper. Not there yet: acceleration (so the speeds are deliberately slow), pause, and resuming from a checkpoint.
+Motion is planned with acceleration: every stroke ramps up from rest, cruises, slows into corners by how sharp they are, and ramps down again. The plan's `drawSpeed` and `travelSpeed` are the speeds the machine gets; the profile fills in the rest (40 mm/s drawing, 120 mm/s travelling, 800 and 1200 mm/s², a corner deviation of 0.05 mm), and every value can be overridden in `compileEbbPlan(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })` or `driver.run(plan, { ... })`. On firmware 3.x the driver also opens the board's motion queue to its full depth, so the host never races the machine command by command.
+
+Tested on one machine: iDraw HSE / A2 with EBB firmware 3.0.2, on 2026-09-21, axes and scale measured on paper. Not there yet: pause, and resuming from a checkpoint.
 
 ## Requirements
 

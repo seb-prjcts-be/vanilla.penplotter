@@ -23,7 +23,7 @@
   </nav>
   <main class="page">
     <header class="page-header">
-      <p class="eyebrow">Guide · v0.2.0</p>
+      <p class="eyebrow">Guide · v0.3.0</p>
       <h1>From one line to the pen.</h1>
       <p class="lead">Seven short steps. The first four give you a planned job; the last one sends it to the machine. You only need the modules underneath when your sketch asks for them.</p>
     </header>
@@ -111,7 +111,7 @@ await transport.open();   // from a click: the browser shows its port list
 const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
 await driver.run(plot.plan(), { confirmed: true });</code></pre>
     <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or any error ends in the same safe stop: motion halted, pen up, motors off. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
-    <p class="note">Web Serial needs Chrome or Edge on localhost or https. Speeds are deliberately slow: there is no acceleration planning yet, nor pause and resume. For every other machine, keep using SVG, HPGL or G-code export.</p>
+    <p class="note">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. There is no pause and resume yet. For every other machine, keep using SVG, HPGL or G-code export.</p>
 
     <h2>8. Copy-paste starters</h2>
     <p>Four complete sketches. Each one is an ES module: save it as <code>sketch.js</code> next to a copy of the repository and load it from a <code>&lt;script type="module"&gt;</code> tag, or replace the import with the jsDelivr URL from the README.</p>

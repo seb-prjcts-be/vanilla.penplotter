@@ -257,8 +257,9 @@ Support matrix as of 2026-09-21:
 | others | — | no driver; use SVG, HPGL or G-code export |
 
 Of the safety rules above, these are still missing: checkpoints and resuming,
-pause, and storing the profile version alongside the plan. Acceleration is
-also missing; the profile speeds are therefore deliberately low.
+pause, and storing the profile version alongside the plan. Acceleration is in
+place since 0.3.0: the profile carries speeds, accelerations and a junction
+deviation, and the driver plans every stroke as ramps and corners.
 
 ## 8. Plugins
 

@@ -1,6 +1,6 @@
 {
   "name": "vanilla.penplotter",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A modular JavaScript planning engine for generative art and pen plotters.",
   "type": "module",
   "main": "vanilla.penplotter.js",
