@@ -61,7 +61,7 @@ A few things I learned the hard way, so you do not have to:
 
 Motion is planned with acceleration: every stroke ramps up from rest, cruises, slows into corners by how sharp they are, and ramps down again. The plan's `drawSpeed` and `travelSpeed` are the speeds the machine gets; the profile fills in the rest (40 mm/s drawing, 120 mm/s travelling, 800 and 1200 mm/s², a corner deviation of 0.05 mm), and every value can be overridden in `compileEbbPlan(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })` or `driver.run(plan, { ... })`. A stroke never aims at exactly zero speed (floor 2 mm/s, so the last step of a line is never left hanging with the pen on the paper), chords within 0.02 mm of a straight line are merged before planning (a circle of 360 chords is a few dozen commands, not 360), and commands go out ahead of their acknowledgements, so a run of short moves is never paced by the USB round trip. On firmware 3.x the driver also opens the board's motion queue to its full depth. The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, the seconds the plot takes: 681 estimated, 680 plotted, for the wave hatch.
 
-**We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted with on 2026-10-01. An AxiDraw or another EBB board speaks the same protocol and should behave the same, but nobody here has plotted with one, so treat every other profile as untested. Not there yet: pause, and resuming from a checkpoint.
+**We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted on 2026-10-01. An AxiDraw or another EBB board speaks the same protocol and should behave the same, but nobody here has plotted with one, so treat every other profile as untested. Not there yet: pause, and resuming mid-stroke from a checkpoint.
 
 ## Requirements
 
@@ -124,15 +124,15 @@ Every stage accepts and returns plain, JSON-serialisable snapshots: `vanilla.pen
 
 ## Structure
 
-- `vanilla.penplotter.js` — root entry and the `PlotterEngine` facade
-- `src/core/` — documents, layers, tools, paths and validation
-- `src/geometry/` — primitives, fills, offsets, transforms and SVG import
-- `src/optimizer/` — merging, deduplication, simplification and resampling
-- `src/planner/` — drawing order, pen moves, statistics and time
-- `src/renderer/` — canvas preview, and SVG, HPGL, G-code and JSON for other machines
-- `src/driver/` — machine profiles, simulation, a text transport and the EBB driver that plots directly
-- `src/plugins/` — extension points for effects, optimizers, renderers and drivers
-- `index.html`, `docs/`, `examples/` — the GitHub Pages site; `examples/pen.js` is the shared "to the pen" panel every example uses
+- `vanilla.penplotter.js`: root entry and the `PlotterEngine` facade
+- `src/core/`: documents, layers, tools, paths and validation
+- `src/geometry/`: primitives, fills, offsets, transforms and SVG import
+- `src/optimizer/`: merging, deduplication, simplification and resampling
+- `src/planner/`: drawing order, pen moves, statistics and time
+- `src/renderer/`: canvas preview, and SVG, HPGL, G-code and JSON for other machines
+- `src/driver/`: machine profiles, simulation, a text transport and the EBB driver that plots directly
+- `src/plugins/`: extension points for effects, optimizers, renderers and drivers
+- `index.html`, `docs/`, `examples/`: the GitHub Pages site; `examples/pen.js` is the shared "to the pen" panel every example uses
 
 ## Examples
 

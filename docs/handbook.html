@@ -60,7 +60,7 @@
       <p class="section-tag">Handbook · version 0.3.1</p>
       <h1>vanilla.penplotter</h1>
       <p class="hb-sub">How the engine works, stage by stage</p>
-      <p class="lead">From a drawing written in JavaScript to the stepper commands on the wire: the document model, the optimizer, the planner, the renderers, the EBB driver, and the decisions behind each of them. Written for anyone who wants to use the engine well, extend it, or check what it really does.</p>
+      <p class="lead">Between a drawing written in JavaScript and the stepper commands on the wire: the document model, the optimizer, the planner, the renderers, the EBB driver, and the decisions behind each of them. Written for anyone who wants to use the engine well, extend it, or check what it really does.</p>
       <p class="hb-meta">Sebastien Vanblaere · 2026-09-30 · MIT · seb-prjcts-be.github.io/vanilla.penplotter · PDF of docs/handbook.html<br>Also available as a page on the site; this PDF is printed from it with <code>npm run handbook</code>.</p>
     </header>
 
@@ -213,7 +213,7 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
     <p>Layers are planned in document order; a layer whose tool differs from the previous one emits a <code>tool-change</code> move first, so all work for one pen is grouped and the plot stops as few times as possible. Within a layer the strategy decides the order:</p>
     <ul>
       <li><strong>nearest</strong> (default): greedy nearest neighbour from the current pen position, starting at <code>options.origin</code> (0,0). For an open, reversible path the closer of its two ends is chosen and the path is reversed when needed. For a closed path the seam is moved: the polygon is rotated so it starts at the corner nearest the pen (<em>reloop</em>), unless <code>reloop: false</code>. A path with <code>reversible: false</code> is only ever approached at its start.</li>
-      <li><strong>input</strong>: draw in the order given, no reversal, no reloop. Use it when the order is the drawing, or to see what the planner saves.</li>
+      <li><strong>drawn</strong>: draw in the order given, no reversal, no reloop. Use it when the order is the drawing, or to see what the planner saves. <code>input</code> is accepted as the same word.</li>
     </ul>
     <p>Every drawn path counts one pen-down and one pen-up. The time estimate, in seconds, gives every stroke and every hop its own ramps, with distances converted to millimetres first:</p>
     <pre><code>Σ ramps(stroke, drawSpeed, acceleration)  +  Σ ramps(hop, travelSpeed, travelAcceleration)  +  penLifts · liftDelay  +  (toolChanges − 1) · toolChangeDelay
@@ -392,7 +392,7 @@ frame();</code></pre>
     <table>
       <thead><tr><th>option</th><th>default</th><th>unit</th></tr></thead>
       <tbody>
-        <tr><td><code>strategy</code></td><td>nearest</td><td>nearest | input</td></tr>
+        <tr><td><code>strategy</code></td><td>nearest</td><td>nearest | drawn</td></tr>
         <tr><td><code>reloop</code></td><td>true</td><td>move closed-path seams</td></tr>
         <tr><td><code>origin</code></td><td>{ x: 0, y: 0 }</td><td>document units</td></tr>
         <tr><td><code>drawSpeed</code> / <code>travelSpeed</code></td><td>40 / 120</td><td>mm/s, for the estimate and the EBB driver</td></tr>

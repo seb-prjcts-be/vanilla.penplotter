@@ -1,4 +1,4 @@
-# Two modes — draw everything, then plot; draw something, plot it
+# Two modes: draw everything, then plot; draw something, plot it
 
 You know this from drawing by hand. There are two ways to make a picture with
 a pen.
@@ -26,7 +26,7 @@ Why would you want the second way? Because some things only exist in time.
   triangle is there that nobody drew. On a screen that takes a second. On
   paper, dot by dot, it takes half an hour, and you see it come out of
   nothing. In sheet mode the engine would put the dots in a clever order,
-  and the magic would be gone.
+  and the surprise would be gone.
 - **Draw with your hands.** A camera watches your hand. Pinch your fingers
   and the pen goes down; move your hand and the pen follows; open your hand
   and the pen lifts. The plotter draws what you draw in the air, a moment
@@ -175,14 +175,14 @@ function keyPressed() {
 
 | call | sheet mode | live mode |
 |---|---|---|
-| `createPlot({ liveMode: true })` | — | the plot will follow the sketch once `plot.liveMode(true)` has opened the session |
+| `createPlot({ liveMode: true })` | n/a | the plot will follow the sketch once `plot.liveMode(true)` has opened the session |
 | `plot.line()` and the others | draw on the canvas, remember in mm | draw on the canvas, remember in mm, and go out at the end of this frame |
 | `plot.clear()` | forget the recorded frame | forget nothing on paper; marks where the next frame's additions start |
 | `plot.go()` | plan and plot the last frame as a sheet | not available while a live session is open |
-| `plot.liveMode(true)` | — | connect (port picker), confirm, open the session; like `loop()` and `noLoop()`, a switch |
-| `plot.liveMode(false)` | — | wait for the pen, return home, motors off |
+| `plot.liveMode(true)` | n/a | connect (port picker), confirm, open the session; like `loop()` and `noLoop()`, a switch |
+| `plot.liveMode(false)` | n/a | wait for the pen, return home, motors off |
 | `plot.stop()` | emergency stop | emergency stop |
-| `plot.pending()` | — | seconds of motion still queued |
+| `plot.pending()` | n/a | seconds of motion still queued |
 | `plot.liveMode()` | false | with no argument: true while the session is open |
 
 How a frame goes out: p5 calls `draw()`, the sketch records strokes, and when
@@ -274,10 +274,10 @@ The rules of sheet mode apply, and two things are stricter.
 4. **The hands:** the ml5 handPose example, pinch to draw, as a page that
    loads ml5 from its CDN.
 
-Each step is plotted on the iDraw before the next starts, and the "state" row
-at the top of this page is updated with what is real.
+Each step is plotted on the iDraw before the next starts, and the "is it built" row
+of the table at the top of this page is updated with what is real.
 
-*Design written on 2026-10-01 from Seb's three questions: what if you could
+*Design written on 2026-10-01 from three questions I asked: what if you could
 make art without the canvas preview, what if you could draw with your hands
 through ml5, what if you set the frame rate low and watched the animation
 appear on the plotter, object by object.*

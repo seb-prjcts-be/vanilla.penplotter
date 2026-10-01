@@ -1,4 +1,4 @@
-# Technical architecture — vanilla.penplotter
+# Technical architecture: vanilla.penplotter
 
 ## 1. Product promise
 
@@ -87,8 +87,8 @@ reproducible exports possible.
 
 The v0.1 facade keeps the optimization and the plan as long as the document
 stays the same. Before every reuse it compares the full document (as JSON) with
-the previous state; any difference — including a direct mutation of the public
-document or of returned paths and layers — invalidates both caches. Rebuilding
+the previous state; any difference, including a direct mutation of the public
+document or of returned paths and layers, invalidates both caches. Rebuilding
 uses the most recently passed optimization and plan settings.
 Previously returned plans are not modified. There is deliberately only one
 mechanism: no separate invalidation per drawing method. The price is one
@@ -254,7 +254,7 @@ Support matrix as of 2026-09-21:
 | profile | board | status |
 |---|---|---|
 | `idraw-hse-a2` | EBB, firmware 3.0.2 | physically tested: axes, scale (40 mm verified by measurement), full plot from Chrome |
-| others | — | no driver; use SVG, HPGL or G-code export |
+| others | n/a | no driver; use SVG, HPGL or G-code export |
 
 Of the safety rules above, these are still missing: checkpoints and resuming,
 pause, and storing the profile version alongside the plan. Acceleration is in

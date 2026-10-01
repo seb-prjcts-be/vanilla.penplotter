@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Technical architecture - vanilla.penplotter</title>
+  <title>Technical architecture: vanilla.penplotter - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
   <main class="page">
     <header class="page-header">
       <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-      <h1>vanilla.<span class="accent">penplotter</span> Technical architecture</h1>
+      <h1>vanilla.<span class="accent">penplotter</span> Technical architecture: vanilla.penplotter</h1>
       <p class="guide-intro">Architecture · the target model. Generated from <a href="architecture.md">architecture.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
     </header>
 <h2>1. Product promise</h2>
@@ -65,7 +65,7 @@
 <h2>3. Modules</h2>
 <table><thead><tr><th>Module</th><th>Responsibility</th><th>Not responsible for</th></tr></thead><tbody><tr><td><code>core</code></td><td>schemas, ids, units, layers, tools, validation, snapshots</td><td>geometric algorithms</td></tr><tr><td><code>geometry</code></td><td>primitives, curves, transformations, offsets, clipping</td><td>route order</td></tr><tr><td><code>io-svg</code></td><td>SVG read/write, transforms, viewBox, layers</td><td>machine control</td></tr><tr><td><code>effects</code></td><td>hatch, crosshatch, stipple, contours, artistic passes</td><td>pen changes</td></tr><tr><td><code>optimizer</code></td><td>clean, fuse, dedupe, simplify, resample</td><td>hardware protocol</td></tr><tr><td><code>planner</code></td><td>order, reversal, seams, layers, pen schedule, time</td><td>SVG parsing</td></tr><tr><td><code>renderer</code></td><td>preview, SVG, HPGL, G-code, JSON</td><td>serial flow control</td></tr><tr><td><code>driver</code></td><td>connection, capabilities, streaming, pause/resume/abort</td><td>creative geometry</td></tr><tr><td><code>plugins</code></td><td>lifecycle and named extension points</td><td>global monkey patches</td></tr><tr><td>external adapters</td><td>separate repositories such as <code>p5.penplotter</code> and future canvas-sketch integrations</td><td>core logic</td></tr></tbody></table>
 <p>Every transformation returns a new snapshot. No optimizer may silently mutate the original artwork. That makes comparison, undo, caching, workers and reproducible exports possible.</p>
-<p>The v0.1 facade keeps the optimization and the plan as long as the document stays the same. Before every reuse it compares the full document (as JSON) with the previous state; any difference — including a direct mutation of the public document or of returned paths and layers — invalidates both caches. Rebuilding uses the most recently passed optimization and plan settings. Previously returned plans are not modified. There is deliberately only one mechanism: no separate invalidation per drawing method. The price is one comparison per call (± 5 ms at 11,000 points, ± 230 ms at 500,000); document data must therefore remain JSON-serializable.</p>
+<p>The v0.1 facade keeps the optimization and the plan as long as the document stays the same. Before every reuse it compares the full document (as JSON) with the previous state; any difference, including a direct mutation of the public document or of returned paths and layers, invalidates both caches. Rebuilding uses the most recently passed optimization and plan settings. Previously returned plans are not modified. There is deliberately only one mechanism: no separate invalidation per drawing method. The price is one comparison per call (± 5 ms at 11,000 points, ± 230 ms at 500,000); document data must therefore remain JSON-serializable.</p>
 <h2>4. Geometry and topology</h2>
 <h3>Connected segments and line merging</h3>
 <p>For a small document, endpoint comparison is enough. For large jobs:</p>
@@ -111,7 +111,7 @@
 <p>The first machine driver. Three layers, each testable separately:</p>
 <ul><li><code>compileEbbPlan(plan)</code> is pure: a <code>PlotPlan</code> becomes a list of EBB commands (the <code>MachineProgram</code>). CoreXY mixing <code>motor1 = X + Y</code>, <code>motor2 = X − Y</code>; step targets are absolute so that rounding never accumulates into drift; an axis that would run slower than the firmware minimum is held back and caught up later. Unit and bounds checking happen here, before anything exists to send.</li><li><code>EbbDriver</code> streams with one reply per command as flow control, refuses without <code>confirmed: true</code> and without an EBB version reply, and on abort or error always ends in the same safe stop (<code>ES</code>, pen up, motors off).</li><li>A transport is only <code>send(cmd) → reply</code>: <code>createLogTransport()</code> for the dry run, <code>createWebSerialTransport()</code> for the browser.</li></ul>
 <p>Support matrix as of 2026-09-21:</p>
-<table><thead><tr><th>profile</th><th>board</th><th>status</th></tr></thead><tbody><tr><td><code>idraw-hse-a2</code></td><td>EBB, firmware 3.0.2</td><td>physically tested: axes, scale (40 mm verified by measurement), full plot from Chrome</td></tr><tr><td>others</td><td>—</td><td>no driver; use SVG, HPGL or G-code export</td></tr></tbody></table>
+<table><thead><tr><th>profile</th><th>board</th><th>status</th></tr></thead><tbody><tr><td><code>idraw-hse-a2</code></td><td>EBB, firmware 3.0.2</td><td>physically tested: axes, scale (40 mm verified by measurement), full plot from Chrome</td></tr><tr><td>others</td><td>n/a</td><td>no driver; use SVG, HPGL or G-code export</td></tr></tbody></table>
 <p>Of the safety rules above, these are still missing: checkpoints and resuming, pause, and storing the profile version alongside the plan. Acceleration is in place since 0.3.0: the profile carries speeds, accelerations and a junction deviation, and the driver plans every stroke as ramps and corners.</p>
 <h2>8. Plugins</h2>
 <p>A plugin has a name, semver compatibility, capabilities and <code>install(host)</code>. Registration is explicit:</p>

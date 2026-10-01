@@ -23,10 +23,10 @@ no longer the main path.
 - **acceleration in the EBB driver** (0.3.0): ramps, cornering by junction
   deviation, exact-step `LM` moves, the board's full motion queue on firmware 3.x,
   `SM` slices on older firmware
-- examples: first job, vanilla.waves to SVG, direct plot
+- examples: direct plot, first job, two pens, route lab, waves to pen, wave hatch, SVG to pen
 - plugin host; the p5 adapter lives in `p5.penplotter`
 
-## Live — the plotter as an output device
+## Live: the plotter as an output device
 
 Two ways to draw. *Sheet mode*: draw everything, then plot; your program
 makes the whole drawing, the engine finds a good order, the plotter draws it.
@@ -38,7 +38,7 @@ plain words, then carries the design: the driver session, the adapter's
 `createPlot({ liveMode: true })`, the pacing rules, the order of work. Nothing of
 it is built yet; that page says what is real.
 
-## Next — strengthening the direct route
+## Next: strengthening the direct route
 
 - pause; resume from an acknowledged command mid-stroke (resuming per completed stroke
   is in 0.3.0: the pen panel remembers the count, `skipDraws` leaves them out); profile
@@ -46,7 +46,6 @@ it is built yet; that page says what is real.
 - pen heights configurable from the profile
 - Node transport alongside Web Serial, so a script can plot without a browser
 - more p5 primitives in `p5.penplotter` (arcs, curves)
-- possibly: read SVG from p5.plotSvg and plot it without vpype or Inkscape
 
 ## Parked
 
