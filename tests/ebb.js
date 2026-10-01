@@ -569,6 +569,36 @@ async function testEmergencyStop() {
   assert.deepEqual(log.log, ["ES", "SP,1", "EM,0,0"]);
 }
 
+// The pen panel places the sheet on the bed: moved by the offsets and turned
+// by a quarter turn or more, as a rotation (never a mirror) that keeps every
+// point inside the turned sheet. The machine's X runs along the long rail, so
+// this is how a portrait drawing gets to lie portrait on a portrait sheet.
+async function testPlacePlanOnTheBed() {
+  const { placePlan } = await import("../examples/pen.js");
+  const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297, margin: 0 } });
+  plot.line(0, 0, 210, 0); // the top edge, left to right
+  plot.line(10, 20, 30, 20); // a short line near the top left
+  const plan = plot.plan({ strategy: "input" });
+  const lines = (placed) => placed.moves.filter((m) => m.type === "draw").map((m) => m.points.map((p) => [Math.round(p.x), Math.round(p.y)]));
+
+  const flat = placePlan(plan, { x: 100, y: 60 }, 0);
+  assert.deepEqual(lines(flat)[0], [[100, 60], [310, 60]]);
+  assert.deepEqual([flat.page.width, flat.page.height], [210, 297]);
+
+  const turned = placePlan(plan, { x: 100, y: 60 }, 90);
+  assert.deepEqual([turned.page.width, turned.page.height], [297, 210], "a portrait sheet lies sideways");
+  assert.deepEqual(lines(turned)[0], [[397, 60], [397, 270]], "the top edge now runs down the right side");
+  assert.deepEqual(lines(turned)[1], [[377, 70], [377, 90]], "the short line turns with it, no mirror");
+  for (const placed of [flat, turned, placePlan(plan, { x: 0, y: 0 }, 180), placePlan(plan, { x: 0, y: 0 }, 270)]) {
+    for (const move of placed.moves.filter((m) => m.type === "draw")) {
+      for (const p of move.points) {
+        assert.ok(p.x >= -1e-9 && p.y >= -1e-9 && p.x <= 600 && p.y <= 600, "inside the bed");
+      }
+    }
+  }
+  assert.throws(() => placePlan(plan, { x: 0, y: 0 }, 45), /0, 90, 180 or 270/);
+}
+
 // The driver is public API: every documentation layer has to name it.
 function testDocumentationNamesTheDriver() {
   const root = new URL("../", import.meta.url);
@@ -599,4 +629,5 @@ await testPipelinedSends();
 await testTransportInFlight();
 testResumeSkipsStrokes();
 await testEmergencyStop();
+await testPlacePlanOnTheBed();
 console.log("vanilla.penplotter ebb: ok");

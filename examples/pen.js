@@ -15,20 +15,83 @@ import {
 
 const profile = EBB_PROFILES["idraw-hse-a2"];
 
-// The plan, moved so that the sheet's corner lies `offset` mm from home.
-function shiftPlan(plan, offset) {
+// The plan as it lies on the bed: turned by 0, 90, 180 or 270 degrees around
+// the sheet, then moved so that the sheet's corner lies `offset` mm from
+// home. The machine's X runs along the long rail, so a portrait sheet drawn
+// on screen lands sideways on a portrait sheet on the bed unless it is
+// turned; this is where you say which way it goes.
+export function placePlan(plan, offset, turn = 0) {
   const perUnit = millimetersPerUnit(plan.units);
+  const { width, height } = plan.page;
   const dx = offset.x / perUnit;
   const dy = offset.y / perUnit;
-  const move = (p) => ({ x: p.x + dx, y: p.y + dy });
+  const rotate = {
+    0: (p) => ({ x: p.x, y: p.y }),
+    90: (p) => ({ x: height - p.y, y: p.x }),
+    180: (p) => ({ x: width - p.x, y: height - p.y }),
+    270: (p) => ({ x: p.y, y: width - p.x })
+  }[((Number(turn) % 360) + 360) % 360];
+  if (!rotate) throw new RangeError(`Turn by 0, 90, 180 or 270 degrees, not ${turn}`);
+  const place = (p) => {
+    const r = rotate(p);
+    return { x: r.x + dx, y: r.y + dy };
+  };
+  const sideways = Number(turn) % 180 !== 0;
   return {
     ...plan,
+    page: { ...plan.page, width: sideways ? height : width, height: sideways ? width : height },
     moves: plan.moves.map((m) => {
-      if (m.type === "travel") return { ...m, from: move(m.from), to: move(m.to) };
-      if (m.type === "draw") return { ...m, points: m.points.map(move) };
+      if (m.type === "travel") return { ...m, from: place(m.from), to: place(m.to) };
+      if (m.type === "draw") return { ...m, points: m.points.map(place) };
       return m;
     })
   };
+}
+
+// The bed as the machine sees it: X along the long rail, home in the corner
+// by the board, the sheet where the offsets put it, the drawing inside.
+function drawBed(canvas, plan, offset, placed) {
+  const context = canvas.getContext("2d");
+  const { width: bedW, height: bedH } = profile.travel;
+  const scale = canvas.width / bedW;
+  const perUnit = millimetersPerUnit(plan.units);
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "#fff";
+  context.fillRect(0, 0, bedW * scale, bedH * scale);
+  context.strokeStyle = "#000";
+  context.lineWidth = 1;
+  context.strokeRect(0.5, 0.5, bedW * scale - 1, bedH * scale - 1);
+  // the sheet
+  context.fillStyle = "rgba(0,0,0,.05)";
+  context.fillRect(offset.x * scale, offset.y * scale, placed.page.width * perUnit * scale, placed.page.height * perUnit * scale);
+  context.strokeStyle = "rgba(0,0,0,.4)";
+  context.strokeRect(offset.x * scale + 0.5, offset.y * scale + 0.5, placed.page.width * perUnit * scale, placed.page.height * perUnit * scale);
+  // the drawing
+  context.strokeStyle = "#000";
+  context.lineWidth = 0.8;
+  context.beginPath();
+  for (const move of placed.moves) {
+    if (move.type !== "draw") continue;
+    move.points.forEach((p, index) => {
+      const x = p.x * perUnit * scale;
+      const y = p.y * perUnit * scale;
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+  }
+  context.stroke();
+  // home
+  context.fillStyle = "#000";
+  context.beginPath();
+  context.arc(0, 0, 5, 0, Math.PI * 2);
+  context.fill();
+  context.font = "12px Inter, Arial, sans-serif";
+  context.fillText("home · X along the long rail →", 10, 16);
+  context.save();
+  context.translate(14, 30);
+  context.rotate(Math.PI / 2);
+  context.fillText("Y along the arm →", 0, 0);
+  context.restore();
 }
 
 function download(name, text, type) {
@@ -48,7 +111,14 @@ export function mountPen(container, options) {
     <div class="pen-fields">
       <label>Sheet from home, X (mm)<input data-pen="x" type="number" value="${offset.x}" min="0" max="590" step="5"></label>
       <label>Sheet from home, Y (mm)<input data-pen="y" type="number" value="${offset.y}" min="0" max="430" step="5"></label>
+      <label>Turn on the bed<select data-pen="turn">
+        <option value="0">0° — as on screen, X along the long rail</option>
+        <option value="90">90°</option>
+        <option value="180">180°</option>
+        <option value="270">270°</option>
+      </select></label>
     </div>
+    <canvas data-pen="bed" width="594" height="432" style="display:block;width:100%;height:auto;margin:0 0 12px;border:1px solid rgba(0,0,0,.15);background:#fff" aria-label="The bed: where the sheet and the drawing lie"></canvas>
     <dl class="pen-stats">
       <div><dt>Commands</dt><dd data-pen="commands">—</dd></div>
       <div><dt>On the machine</dt><dd data-pen="time">—</dd></div>
@@ -73,7 +143,9 @@ export function mountPen(container, options) {
   // acknowledged complete, and a signature of the drawing so a changed
   // sketch never resumes into the wrong lines.
   const RESUME_KEY = `vanilla.penplotter:resume:${name}`;
-  const signature = (c) => `${c.draws}:${c.stats.drawMm.toFixed(1)}:${c.stats.penDowns + c.skipDraws}`;
+  let turn = 0;
+  const placed = () => placePlan(getPlot().plan(), offset, turn);
+  const signature = (c) => `${c.draws}:${c.stats.drawMm.toFixed(1)}:${c.stats.penDowns + c.skipDraws}:${offset.x},${offset.y},${turn}`;
   const readResume = () => {
     try {
       const record = JSON.parse(localStorage.getItem(RESUME_KEY));
@@ -112,8 +184,11 @@ export function mountPen(container, options) {
   function refresh() {
     offset.x = Number($("x").value);
     offset.y = Number($("y").value);
+    turn = Number($("turn").value);
     try {
-      compiled = compileEbbPlan(shiftPlan(getPlot().plan(), offset), { profile });
+      const onBed = placed();
+      compiled = compileEbbPlan(onBed, { profile });
+      drawBed($("bed"), getPlot().plan(), offset, onBed);
       const seconds = compiled.stats.durationMs / 1000;
       $("commands").textContent = String(compiled.commands.length);
       $("time").textContent = `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} s`;
@@ -125,6 +200,7 @@ export function mountPen(container, options) {
       }
     } catch (error) {
       compiled = null;
+      try { drawBed($("bed"), getPlot().plan(), offset, placed()); } catch { /* the bed can wait */ }
       $("commands").textContent = "—";
       $("time").textContent = "—";
       status(`Not plottable as it is: ${error.message}`);
@@ -173,7 +249,7 @@ export function mountPen(container, options) {
     buttons();
     const started = performance.now();
     try {
-      const job = skipDraws > 0 ? compileEbbPlan(shiftPlan(getPlot().plan(), offset), { profile, skipDraws }) : compiled;
+      const job = skipDraws > 0 ? compileEbbPlan(placed(), { profile, skipDraws }) : compiled;
       const result = await driver.run(job, {
         confirmed: true,
         onProgress: (index, total, entry) => {
@@ -197,6 +273,7 @@ export function mountPen(container, options) {
 
   $("x").addEventListener("input", refresh);
   $("y").addEventListener("input", refresh);
+  $("turn").addEventListener("change", refresh);
   $("dry").addEventListener("click", dryRun);
   $("connect").addEventListener("click", connect);
   $("plot").addEventListener("click", () => run(0));
