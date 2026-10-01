@@ -28,13 +28,14 @@ no longer the main path.
 
 ## Live — the plotter as an output device
 
-Two modes, two sentences. *Sheet mode*: draw everything, then plot; that is
-0.3.1. *Live mode*: draw something, plot it; the plotter follows the sketch
-while it runs, stroke by stroke, in the order you made them. It opens three
-doors: drawing without a preview, drawing with your hands through ml5, and
-watching a slow animation appear on paper object by object. The design, the
-session API the driver needs, the adapter's `createPlot({ live: true })`, the
-pacing rules and the order of work are on [Two modes](live.html). Nothing of
+Two ways to draw. *Sheet mode*: draw everything, then plot; your program
+makes the whole drawing, the engine finds a good order, the plotter draws it.
+That is 0.3.1. *Live mode*: draw something, plot it; the plotter draws along
+while your program is still drawing, so the picture grows on paper in the
+order you made it. For things that happen over time: an animation appearing
+dot by dot, a hand drawing in the air. [Two modes](live.html) explains both in
+plain words, then carries the design: the driver session, the adapter's
+`createPlot({ live: true })`, the pacing rules, the order of work. Nothing of
 it is built yet; that page says what is real.
 
 ## Next — strengthening the direct route

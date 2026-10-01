@@ -1,52 +1,57 @@
 # Two modes — draw everything, then plot; draw something, plot it
 
-A plotter can be a printer or an instrument. As a printer it gets a finished
-sheet and reproduces it. As an instrument it is played: it draws what you make
-while you make it. Both libraries will offer both, under two names that are
-used everywhere in the code and the docs:
+You know this from drawing by hand. There are two ways to make a picture with
+a pen.
 
-| | **sheet mode** | **live mode** |
+**The first way: you know the whole picture before you start.** You have it
+in your head, or on a sketch. Then you pick up the pen and draw it, in a
+clever order: this line, then the one next to it, lifting the pen as little
+as you can. The picture was finished before the first line. We call this
+**sheet mode**: *draw everything, then plot.* Your program makes the whole
+drawing. The engine works out a good order. The plotter draws it, start to
+finish. This is what both libraries do today.
+
+**The second way: you draw and look, draw and look.** You put down a line,
+see what it does, and decide the next one. The picture grows while you make
+it, and the order you made it in is part of the picture. Nobody knows what it
+will be until it is done. We call this **live mode**: *draw something, plot
+it.* Your program makes one thing, the plotter draws it, your program makes
+the next thing. The plotter is not printing a picture. It is drawing along
+with you.
+
+Why would you want the second way? Because some things only exist in time.
+
+- **Watch it appear.** Take the chaos game: one point jumps halfway to a
+  random corner and leaves a dot, over and over. After a few hundred dots a
+  triangle is there that nobody drew. On a screen that takes a second. On
+  paper, dot by dot, it takes half an hour, and you see it come out of
+  nothing. In sheet mode the engine would put the dots in a clever order,
+  and the magic would be gone.
+- **Draw with your hands.** A camera watches your hand. Pinch your fingers
+  and the pen goes down; move your hand and the pen follows; open your hand
+  and the pen lifts. The plotter draws what you draw in the air, a moment
+  later, with the precision of a machine.
+- **Draw without looking.** Switch the screen off. The paper is the only
+  place the drawing exists. What the drawing is, is what the pen did.
+
+A plotter can be a printer, or it can be an instrument. Sheet mode is the
+printer. Live mode is the instrument.
+
+| | sheet mode | live mode |
 |---|---|---|
 | in one sentence | draw everything, then plot | draw something, plot it |
-| the sheet is | a result, planned as a whole | a canvas, written as you go |
-| order of the strokes | the planner's: nearest neighbour, reversal, reloop | yours: the order in which they were made |
-| start and end | from the home corner, back to the home corner | from the home corner once; the carriage stays where the last stroke ended |
-| time inside the sketch | does not exist on paper | is the drawing |
-| pens | any number, one stop per change | one pen for the whole session |
-| preview | the plan, before anything moves | optional; the pen is the output |
-| the engine's call | `driver.run(plot.plan())` | `session.draw(points)` on a `driver.live()` session |
-| the p5 call | `plot.go()` | `createPlot({ live: true })` or `plot.live()` |
-| state in 0.3.1 | built, plotted, published | designed here, not built |
+| who decides the order | the engine, to save pen lifts and travel | you, by the order you draw in |
+| when the pen starts | when the whole drawing is ready | right away, and it keeps going |
+| what you see | first a preview, then the plot | the drawing growing on paper |
+| how many pens | as many as you like, the machine stops for each change | one |
+| what it is good for | a finished design, a series, anything with more than one pen | things that happen over time: animation, gestures, chance |
+| is it built | yes: version 0.3.1 of the engine, 0.2.0 of the p5 adapter | not yet: designed on this page |
 
-Sheet mode is what every page of this site describes today. This page is the
-design of live mode: what it is for, what it does on the wire, what it asks of
-the engine and the adapter, and in which order it gets built. Nothing of it is
-in the code yet. When it is, the "state" row above changes and this sentence
-goes.
-
-## Why
-
-Three things become possible that a finished sheet cannot do.
-
-**Draw without a preview.** The sheet is the canvas. You can switch the screen
-off, or never look at it, and the pen is the only output. What the drawing is,
-is what the pen did. For a generative sketch this is the difference between
-printing a picture and performing one.
-
-**Draw with your hands.** A hand tracked by a camera (ml5 handPose) becomes the
-pen: pinch thumb and index finger and the pen goes down, move the hand and the
-stroke follows, open the hand and the pen lifts. The plotter plays back a
-little behind you. This is drawing as an instrument, with the machine's own
-precision added to your gesture.
-
-**Watch an animation appear.** Set `frameRate(0.5)` and let every frame add a
-few objects. What appears on the canvas appears on paper, in that order,
-object by object, as slow as the pen is. The sketch is a score; the plotter
-performs it. Ink accumulates: a plotted animation is a palimpsest, and nothing
-is ever erased.
-
-Make, plot, make, plot. That is the loop, and it is the loop of every sketch
-that already runs in `draw()`.
+Everything else on this site is about sheet mode. The rest of this page is
+the design of live mode, and from here on the words get technical: it is
+written for whoever builds it, and for whoever wants to know exactly what
+the machine will do. Nothing of it is in the code yet. When it is, the last
+row of the table changes and this sentence goes.
 
 ## What happens on the wire
 
