@@ -43,7 +43,7 @@
       <div class="hero-text">
         <div class="hero-badge">JavaScript plotter engine · v0.3.1</div>
         <h1>vanilla.<span class="accent">penplotter</span></h1>
-        <p class="hero-sub">A drawing written in JavaScript goes straight to the pen.<br>The engine plans the route, lifts the pen as little as it can, and drives the plotter from the browser.</p>
+        <p class="hero-sub">A drawing written in JavaScript goes straight to the pen.<br>This library works out the route, lifts the pen as little as it can, and drives the plotter from the browser.</p>
         <a href="#which" class="cta-btn">See how it works &#8595;</a>
       </div>
     </div>
@@ -54,20 +54,20 @@
     <div class="section-header">
       <div class="section-tag">one direction, two doors</div>
       <h2>Two <span class="accent">Libraries</span></h2>
-      <p class="section-desc">The engine, or the p5 face on it. Take whichever matches how you draw; both end at the same pen.</p>
+      <p class="section-desc">This one does the thinking. The other one lets you use it from p5.js. Take whichever matches how you draw; both end at the same pen.</p>
     </div>
     <ol class="pipeline-list">
-      <li><span>this</span><strong>vanilla.penplotter</strong><p>The engine. It holds the geometry, cleans it up, plans the pen's route, estimates the time and drives the machine. Plain JavaScript, no dependencies, no p5.js. Take this if you draw with your own code, with Paper.js, from an SVG, or want to build your own layer on top.</p></li>
-      <li><span>sister</span><strong>p5.penplotter</strong><p>Three methods on p5.js. You draw as you always do, <code>plot.line()</code> instead of <code>line()</code>, and <code>plot.go()</code> sends the last frame to the pen. It contains no engine of its own; it calls this one. Take it if you sketch in p5.js. <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter →</a></p></li>
+      <li><span>this</span><strong>vanilla.penplotter</strong><p>The engine. It knows how big your sheet is, in millimetres. It tidies your drawing up, works out the shortest route for the pen, tells you how long the plot will take, and talks to the machine. Plain JavaScript, nothing else needed. Take this if you draw with your own code, with Paper.js, from an SVG file, or want to build something of your own on top.</p></li>
+      <li><span>sister</span><strong>p5.penplotter</strong><p>Three commands for p5.js. You draw as you always do, <code>plot.line()</code> instead of <code>line()</code>, and <code>plot.go()</code> sends your sketch to the pen. It does no thinking of its own; it uses this engine. Take it if you sketch in p5.js. <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter →</a></p></li>
     </ol>
   </section>
 
   <!-- ONE PLAN -->
   <section id="plan" class="section">
     <div class="section-header">
-      <div class="section-tag">no canvas capture, no SVG detour</div>
+      <div class="section-tag">no screenshot, no file in between</div>
       <h2>One <span class="accent">Plan</span></h2>
-      <p class="section-desc">The sketch builds plot geometry in millimetres. The same plan feeds the preview, the statistics and the driver: what you see on screen is what the pen does.</p>
+      <p class="section-desc">Your code draws in millimetres, the size of the real sheet. From that drawing the engine makes one plan. That one plan is what the preview shows, what the numbers describe, and what the pen draws. There is no second version that can differ.</p>
     </div>
     <div style="max-width:760px; margin:0 auto;">
       <pre class="code-block"><code class="language-javascript">import { PlotterEngine } from "./vanilla.penplotter.js";
@@ -90,16 +90,16 @@ await new EbbDriver({ transport, profile: "idraw-hse-a2" })
   <!-- FIVE STAGES -->
   <section id="pipeline" class="section section-dark">
     <div class="section-header">
-      <div class="section-tag">one job, five independent stages</div>
+      <div class="section-tag">one job, five parts</div>
       <h2>Five <span class="accent">Stages</span></h2>
-      <p class="section-desc">Use the whole engine, or take one gear. Every stage is a module of its own.</p>
+      <p class="section-desc">Use the whole engine, or only the part you need. Each one is a file of its own.</p>
     </div>
     <ol class="pipeline-list">
-      <li><span>01</span><strong>Geometry</strong><p>Paths, SVG, hatches, stipples and transforms, all in physical units.</p></li>
-      <li><span>02</span><strong>Optimizer</strong><p>Join ends that touch, drop what was drawn twice, simplify and resample.</p></li>
-      <li><span>03</span><strong>Planner</strong><p>Order the paths, reverse the ones that allow it, move the seam of closed shapes, schedule the pens.</p></li>
-      <li><span>04</span><strong>Renderer</strong><p>Preview the plan on a canvas; for other machines, write it as SVG, HPGL or G-code.</p></li>
-      <li><span>05</span><strong>Driver</strong><p>Dry-run the command list, then stream the plan to the machine with acceleration planning. Tested on one: an iDraw HSE / A2 over Web Serial. <a href="examples/direct_plot/index.html">Direct plot →</a></p></li>
+      <li><span>01</span><strong>Geometry</strong><p>Your lines, circles and curves, or an SVG file. Hatching and dots to fill a shape. Moving, turning and scaling. All in millimetres.</p></li>
+      <li><span>02</span><strong>Optimizer</strong><p>Tidies up: joins lines whose ends touch, throws away what was drawn twice, takes out points that change nothing.</p></li>
+      <li><span>03</span><strong>Planner</strong><p>Puts the lines in a good order so the pen travels as little as possible, draws some of them backwards, chooses where a circle starts, and keeps each pen's lines together.</p></li>
+      <li><span>04</span><strong>Renderer</strong><p>Shows the plan on a canvas before anything moves. For other plotters it writes the plan as SVG, HPGL or G-code, the files those machines read.</p></li>
+      <li><span>05</span><strong>Driver</strong><p>Talks to the machine. First without moving, to check every command; then for real, speeding up and slowing down smoothly. Tested on one plotter: an iDraw HSE / A2, from Chrome or Edge. <a href="examples/direct_plot/index.html">Direct plot →</a></p></li>
     </ol>
   </section>
 
@@ -108,7 +108,7 @@ await new EbbDriver({ transport, profile: "idraw-hse-a2" })
     <div class="section-header">
       <div class="section-tag">one import, one plan, one click</div>
       <h2>Get <span class="accent">Started</span></h2>
-      <p class="section-desc">Import the module. Draw in millimetres. Plot from a click.</p>
+      <p class="section-desc">Load it with one line. Draw in millimetres. Plot from a click.</p>
     </div>
     <div style="max-width:520px; margin:0 auto; text-align:left;">
       <div class="code-preview" style="margin-bottom:1.5rem;">
