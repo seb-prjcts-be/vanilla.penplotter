@@ -48,6 +48,34 @@ export function placePlan(plan, offset, turn = 0) {
   };
 }
 
+// While a plot runs, every link that leaves the page is greyed out and
+// unclickable: the navigation, GitHub, the rest of the site. The panel's own
+// links stay, they only download. Restored when the plot ends.
+const locked = new Map();
+export function lockLinks(container, on) {
+  if (on) {
+    for (const link of document.querySelectorAll("a[href]")) {
+      const href = link.getAttribute("href") || "";
+      if (container.contains(link) || href.startsWith("#") || locked.has(link)) continue;
+      locked.set(link, { tabindex: link.getAttribute("tabindex"), title: link.getAttribute("title"), style: link.getAttribute("style") });
+      link.setAttribute("tabindex", "-1");
+      link.setAttribute("aria-disabled", "true");
+      link.setAttribute("title", "A plot is running; this link comes back when it is done.");
+      link.style.pointerEvents = "none";
+      link.style.opacity = "0.3";
+    }
+    return;
+  }
+  for (const [link, was] of locked) {
+    link.removeAttribute("aria-disabled");
+    for (const [name, value] of Object.entries(was)) {
+      if (value === null) link.removeAttribute(name);
+      else link.setAttribute(name, value);
+    }
+  }
+  locked.clear();
+}
+
 // The bed as the machine sees it: X along the long rail, home in the corner
 // by the board, the sheet where the offsets put it, the drawing inside.
 function drawBed(canvas, plan, offset, placed) {
@@ -247,6 +275,7 @@ export function mountPen(container, options) {
     if (!ok) return;
     busy = true;
     buttons();
+    lockLinks(container, true);
     const started = performance.now();
     try {
       const job = skipDraws > 0 ? compileEbbPlan(placed(), { profile, skipDraws }) : compiled;
@@ -268,6 +297,7 @@ export function mountPen(container, options) {
       log(`Stopped safely: ${error.message}`);
     }
     busy = false;
+    lockLinks(container, false);
     refresh();
   }
 
