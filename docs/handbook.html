@@ -65,7 +65,7 @@
     <section class="toc no-break">
       <h2>Contents</h2>
       <ol>
-        <li><a href="#c1">What the engine is, and what it is not</a></li>
+        <li><a href="#c1">The engine</a></li>
         <li><a href="#c2">Install and the first job</a></li>
         <li><a href="#c3">The document model</a></li>
         <li><a href="#c4">The facade: PlotterEngine</a></li>
@@ -85,7 +85,7 @@
       </ol>
     </section>
 
-    <h2 id="c1"><span class="num">1</span>What the engine is, and what it is not</h2>
+    <h2 id="c1"><span class="num">1</span>The engine</h2>
     <p>A pen plotter is a machine that moves a pen over paper along lines you give it. The usual way to feed it from a generative sketch is a chain of four programs: record the sketch as an SVG, clean and sort the lines in vpype, open the file in Inkscape, send it with the plotter's own extension. Each step works. Together they lose what the sketch knew: which lines belong together, which pen they want, in which order they should be drawn.</p>
     <p><code>vanilla.penplotter</code> keeps that knowledge in one place. You build geometry in millimetres; the engine removes wasted travel, orders the paths, estimates the time, previews the result, and either streams the plan straight to a tested machine or writes the file another machine needs. It is a compiler for plotter jobs, with five stages that can each be used on their own:</p>
     <pre><code>Geometry  →  Optimizer  →  Planner  →  Renderer  →  Driver
@@ -93,7 +93,7 @@
   fills        merge         reverse    SVG          Web Serial
   import       simplify      reloop     HPGL         dry run
   transforms   resample      pens       G-code       safe stop</code></pre>
-    <p>What it is not: not a drawing library (no curves, no text, no booleans; draw elsewhere and hand over points), not p5.plotSvg (which captures p5 sketches as SVG and stops there), not vpype (the mature command-line reference for line sorting), and not a universal driver: one machine profile has been plotted with, and the engine says so wherever it can.</p>
+    <p>It is not a drawing library: no curves, no text, no booleans; draw elsewhere and hand over points. It is not p5.plotSvg, which captures p5 sketches as SVG and stops there, and not vpype, the mature command-line reference for line sorting. And it is not a universal driver: one machine profile has been plotted with, and the engine says so wherever it can.</p>
     <div class="fact"><strong>Two libraries, one direction</strong>The engine knows nothing about p5.js. <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> adds three methods to p5 and calls this engine for everything else. Its own handbook covers that side. The dependency runs one way: the adapter checks the engine's version, never the reverse.</div>
 
     <h2 id="c2"><span class="num">2</span>Install and the first job</h2>

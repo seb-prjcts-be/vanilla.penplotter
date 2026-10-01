@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About — vanilla.penplotter</title>
-  <meta name="description" content="Why vanilla.penplotter exists, what it is not, which machine it has been tested on, and how it was made.">
+  <meta name="description" content="Why vanilla.penplotter exists, where it stops, which machine it has been tested on, and how it was made.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -33,7 +33,7 @@
     <p>The usual road from a generative sketch to paper has four stops: capture the sketch as an SVG, clean and sort it in vpype, open it in Inkscape, send it with the plotter's own extension. Each stop works. Together they turn a five-second idea into a ten-minute ritual, and every stop forgets what the sketch knew: which lines belong together, which pen they want, in which order they should be drawn.</p>
     <p><code>vanilla.penplotter</code> keeps that knowledge. A sketch builds geometry in millimetres, the engine removes wasted travel, orders the paths, estimates the time, and either writes the file you still need or, on a tested machine, streams the plan straight to the motors. The road becomes one line: <code>plot.go()</code> in the p5 adapter, <code>driver.run(plot.plan())</code> here.</p>
 
-    <h2>What it is not</h2>
+    <h2>Where it stops</h2>
     <ul>
       <li><strong>Not a drawing library.</strong> It has primitives, fills and an SVG importer, but no curves, no text, no booleans. Draw with p5.js, p5.gysin, Paper.js or plain arrays; hand the points over.</li>
       <li><strong>Not p5.plotSvg.</strong> <a href="https://github.com/golanlevin/p5.plotSvg">p5.plotSvg</a> captures a p5 sketch as an SVG and covers far more of p5's drawing API. It deliberately stops there. This engine starts there: it reads that SVG, plans it and plots it.</li>
