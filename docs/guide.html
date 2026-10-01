@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guide — vanilla.penplotter</title>
+  <title>Guide - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,17 +17,17 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
-      <li><a href="guide.html" class="active">Guide</a></li>
       <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="guide.html" class="active">Guide</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
   <main class="page">
     <header class="page-header">
-      <p class="eyebrow">Guide · v0.3.0</p>
-      <h1>From one line to the pen.</h1>
-      <p class="lead">Seven short steps. The first four give you a planned job; the last one sends it to the machine. You only need the modules underneath when your sketch asks for them.</p>
+      <div class="section-tag">JavaScript plotter engine · v0.3.0</div>
+      <h1>vanilla.<span class="accent">penplotter</span> Guide</h1>
+      <p class="guide-intro">Seven short steps. The first four give you a planned job; the last one sends it to the machine. You only need the modules underneath when your sketch asks for them.</p>
     </header>
 
     <h2>1. Create geometry</h2>
@@ -84,7 +86,7 @@ const plan = plot.plan({
 });
 
 console.log(plan.stats);</code></pre>
-    <p class="note">Tolerances, coordinates and distance statistics use document units. Planner speeds use mm/s; G-code feed rates use mm/min. HPGL and G-code exports convert coordinates to physical units (96 CSS pixels = 1 inch). SVG retains the document units.</p>
+    <p class="callout">Tolerances, coordinates and distance statistics use document units. Planner speeds use mm/s; G-code feed rates use mm/min. HPGL and G-code exports convert coordinates to physical units (96 CSS pixels = 1 inch). SVG retains the document units.</p>
     <p>After editing the document, export, statistics and preview rebuild stale plans automatically, retaining the previous optimization and planning settings. This also covers edits to returned paths, layers and tools. Document data must remain JSON-serializable.</p>
 
     <h2>5. Preview, and files for other machines</h2>
@@ -111,7 +113,7 @@ await transport.open();   // from a click: the browser shows its port list
 const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
 await driver.run(plot.plan(), { confirmed: true });</code></pre>
     <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or any error ends in the same safe stop: motion halted, pen up, motors off. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
-    <p class="note">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. There is no pause and resume yet. For every other machine, keep using SVG, HPGL or G-code export.</p>
+    <p class="callout">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. There is no pause and resume yet. For every other machine, keep using SVG, HPGL or G-code export.</p>
 
     <h2>8. Copy-paste starters</h2>
     <p>Four complete sketches. Each one is an ES module: save it as <code>sketch.js</code> next to a copy of the repository and load it from a <code>&lt;script type="module"&gt;</code> tag, or replace the import with the jsDelivr URL from the README.</p>
@@ -153,5 +155,10 @@ for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;
 console.log(plot.stats());</code></pre>
     <p>More directions on the <a href="possibilities.html">Possibilities</a> page; every example on <a href="examples.html">Examples</a> is a finished version of one of these.</p>
   </main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

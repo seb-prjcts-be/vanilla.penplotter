@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Two pens — vanilla.penplotter</title>
+  <title>Two pens - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../showcase.css">
 </head>
 <body>
@@ -15,27 +17,43 @@
       <li><a href="../../index.html">Showcase</a></li>
       <li><a href="../../docs/examples.html" class="active">Examples</a></li>
       <li><a href="../../docs/possibilities.html">Possibilities</a></li>
-      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main>
-    <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of a two-pen plot: a black fan of arcs and a red hatched wedge"></canvas></div>
-    <aside class="panel">
-      <p class="tag">Layers · tools · one pen change</p>
+    <main class="demo-page">
+    <div class="demo-header">
+      <div class="demo-number">Layers · tools · one pen change</div>
       <h1>Two pens</h1>
       <p>Every layer names its pen. The engine draws everything for the black fineliner first, then lifts, holds the motors and waits for you to put in the red brush pen. One stop, no guessing which line was which. If you take the plan to another machine instead, HPGL gets pen 1 and pen 2 and the SVG keeps a group per pen.</p>
+    </div>
+    <div class="demo-layout">
+      <div class="demo-code">
+        <div class="code-label">Core snippet</div>
+        <pre><code class="language-javascript">plot.layer("arcs", { toolId: "black" });
+plot.arc(62, 150, 40, -1, 1);
+plot.layer("wedge", { toolId: "red" });
+plot.hatch(wedge, { spacing: 2.2 });</code></pre>
+      </div>
+      <div class="demo-right">
+        <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of a two-pen plot: a black fan of arcs and a red hatched wedge"></canvas></div>
       <dl>
-        <div><dt>Paths</dt><dd id="paths">—</dd></div>
-        <div><dt>Pens</dt><dd id="changes">—</dd></div>
-        <div><dt>Draw</dt><dd id="draw">—</dd></div>
-        <div><dt>Estimate</dt><dd id="time">—</dd></div>
+      <div><dt>Paths</dt><dd id="paths">—</dd></div>
+      <div><dt>Pens</dt><dd id="changes">—</dd></div>
+      <div><dt>Draw</dt><dd id="draw">—</dd></div>
+      <div><dt>Estimate</dt><dd id="time">—</dd></div>
       </dl>
       <div id="pen"></div>
-    </aside>
+      </div>
+    </div>
   </main>
+  <footer>
+    <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>
+    <p class="footer-sub">vanilla.penplotter v0.3.0 &nbsp;&middot;&nbsp; iDraw HSE / A2 &nbsp;&middot;&nbsp; EBB 3.0.2</p>
+  </footer>
   <script type="module" src="sketch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

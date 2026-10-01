@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>First job — vanilla.penplotter</title>
+  <title>First job - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../showcase.css">
 </head>
 <body>
@@ -15,28 +17,44 @@
       <li><a href="../../index.html">Showcase</a></li>
       <li><a href="../../docs/examples.html" class="active">Examples</a></li>
       <li><a href="../../docs/possibilities.html">Possibilities</a></li>
-      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main>
-    <div class="canvas-wrap"><canvas id="preview" width="640" height="760" aria-label="Plot plan preview"></canvas></div>
-    <aside class="panel">
-      <p class="tag">The smallest complete job</p>
+    <main class="demo-page">
+    <div class="demo-header">
+      <div class="demo-number">The smallest complete job</div>
       <h1>First job</h1>
       <p>A hatched shape, its outline and a circle. Not much, but enough to watch the engine do its work: it joins the hatch lines end to end, orders them so the pen travels as little as possible, and shows you in red where it still has to lift. Then it goes to the pen.</p>
+    </div>
+    <div class="demo-layout">
+      <div class="demo-code">
+        <div class="code-label">Core snippet</div>
+        <pre><code class="language-javascript">plot.hatch(polygon, { spacing: 4.5, angle: Math.PI / 7 });
+plot.polygon(polygon);
+plot.circle(108, 145, 38);
+const plan = plot.plan({ drawSpeed: 35, travelSpeed: 80 });</code></pre>
+      </div>
+      <div class="demo-right">
+        <div class="demo-canvas"><canvas id="preview" width="640" height="760" aria-label="Plot plan preview"></canvas></div>
       <dl>
-        <div><dt>Paths</dt><dd id="paths">—</dd></div>
-        <div><dt>Draw</dt><dd id="draw">—</dd></div>
-        <div><dt>Travel</dt><dd id="travel">—</dd></div>
-        <div><dt>Estimate</dt><dd id="time">—</dd></div>
+      <div><dt>Paths</dt><dd id="paths">—</dd></div>
+      <div><dt>Draw</dt><dd id="draw">—</dd></div>
+      <div><dt>Travel</dt><dd id="travel">—</dd></div>
+      <div><dt>Estimate</dt><dd id="time">—</dd></div>
       </dl>
       <button id="travel-toggle" class="secondary" type="button">Hide pen-up travel</button>
       <div id="pen"></div>
-    </aside>
+      </div>
+    </div>
   </main>
+  <footer>
+    <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>
+    <p class="footer-sub">vanilla.penplotter v0.3.0 &nbsp;&middot;&nbsp; iDraw HSE / A2 &nbsp;&middot;&nbsp; EBB 3.0.2</p>
+  </footer>
   <script type="module" src="sketch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

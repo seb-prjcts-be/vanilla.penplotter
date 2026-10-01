@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Possibilities — vanilla.penplotter</title>
+  <title>Possibilities - vanilla.penplotter</title>
   <meta name="description" content="What a pen plotter can do once the sketch owns the plan: tone from lines, pens as layers, routes that shrink, files in, pen out.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,121 +18,144 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html" class="active">Possibilities</a></li>
-      <li><a href="guide.html">Guide</a></li>
       <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="guide.html">Guide</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main class="page wide">
-    <header class="page-header">
-      <p class="eyebrow">Possibilities · v0.3.0</p>
-      <h1>What a pen can do.</h1>
-      <p class="lead">A plotter has no pixels, no grey, no fill. It has one line at a time, a pen you can swap, and all the time in the world. I find that a good set of limits to draw inside. Everything below is drawn live by the engine in this page; take each one as a starting point, not a feature list.</p>
-    </header>
-
-    <section class="ex" id="tone">
-      <div class="ex-preview"><canvas data-possibility="tone" width="520" height="220" aria-label="Six squares hatched at decreasing spacing"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">plot.hatch() · plot.crossHatch()</p>
-        <h2>Tone from lines</h2>
-        <p>Grey does not exist; density does. Hatch spacing in millimetres is the only tone control a pen respects, and it is honest: 6 mm reads light, 1 mm reads dark, and a second pass at right angles goes darker still. Let a wave, a noise field or an image decide the spacing per cell and you have a tonal drawing.</p>
-        <pre><code>for (const [index, spacing] of [6, 4, 2.6, 1.7, 1.2].entries()) {
-  plot.hatch(cell(index), { spacing, angle: Math.PI / 4 });
+    <main>
+  <div class="ex-page-header">
+    <div class="section-tag">JavaScript plotter engine · v0.3.0</div>
+    <h1>vanilla.<span class="accent">penplotter</span> Possibilities</h1>
+    <p>A plotter has no pixels, no grey, no fill. It has one line at a time, a pen you can swap, and all the time in the world. I find that a good set of limits to draw inside. Everything below is drawn live by the engine in this page; take each one as a starting point, not a feature list.</p>
+  </div>
+  <section id="tone" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">plot.hatch() · plot.crossHatch()</div>
+      <h2>Tone from <span class="accent">lines</span></h2>
+      <p class="section-desc">Grey does not exist; density does. Hatch spacing in millimetres is the only tone control a pen respects, and it is honest: 6 mm reads light, 1 mm reads dark, and a second pass at right angles goes darker still. Let a wave, a noise field or an image decide the spacing per cell and you have a tonal drawing.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-possibility="tone" width="520" height="220" aria-label="Six squares hatched at decreasing spacing"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">for (const [index, spacing] of [6, 4, 2.6, 1.7, 1.2].entries()) {
+plot.hatch(cell(index), { spacing, angle: Math.PI / 4 });
 }
 plot.crossHatch(cell(5), { spacing: 1.2 });</code></pre>
-        <a class="ex-link" href="../examples/wave_hatch/index.html">See it grow into a sheet: Wave hatch →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/wave_hatch/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="stipple">
-      <div class="ex-preview"><canvas data-possibility="stipple" width="520" height="220" aria-label="Stippled band with increasing density"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">plot.stipple({ count, minDistance, seed })</p>
-        <h2>Dots that never collide</h2>
-        <p>A stipple is a quarter-millimetre dash, placed by a seeded generator that keeps a minimum distance. The same seed gives the same dots tomorrow, on paper. Vary the count per region and the sheet gets a grain.</p>
-        <pre><code>plot.stipple(band, { count: 900, minDistance: 1.4, seed: 7 });</code></pre>
-      </div>
-    </section>
+  <section id="stipple" class="section">
+    <div class="section-header">
+      <div class="section-tag">plot.stipple({ count, minDistance, seed })</div>
+      <h2>Dots that never <span class="accent">collide</span></h2>
+      <p class="section-desc">A stipple is a quarter-millimetre dash, placed by a seeded generator that keeps a minimum distance. The same seed gives the same dots tomorrow, on paper. Vary the count per region and the sheet gets a grain.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-possibility="stipple" width="520" height="220" aria-label="Stippled band with increasing density"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">plot.stipple(band, { count: 900, minDistance: 1.4, seed: 7 });</code></pre>
+    </div>
+  </section>
 
-    <section class="ex" id="pens">
-      <div class="ex-preview"><canvas data-possibility="pens" width="520" height="220" aria-label="Three-pen composition"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">plot.tool() · plot.layer() · penMap</p>
-        <h2>Pens as layers</h2>
-        <p>A tool is a pen: colour and width. A layer names its tool. The planner finishes one pen before asking for the next, HPGL gets pen numbers from a map, SVG gets one group per layer with the pen colour in its metadata. Three pens, one plan, two stops.</p>
-        <pre><code>plot.tool({ id: "blue", color: "#385a86", width: 0.5 });
+  <section id="pens" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">plot.tool() · plot.layer() · penMap</div>
+      <h2>Pens as <span class="accent">layers</span></h2>
+      <p class="section-desc">A tool is a pen: colour and width. A layer names its tool. The planner finishes one pen before asking for the next, HPGL gets pen numbers from a map, SVG gets one group per layer with the pen colour in its metadata. Three pens, one plan, two stops.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-possibility="pens" width="520" height="220" aria-label="Three-pen composition"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">plot.tool({ id: "blue", color: "#385a86", width: 0.5 });
 plot.layer("sky", { toolId: "blue" });
 plot.exportHPGL({ penMap: { black: 1, blue: 2, red: 3 } });</code></pre>
-        <a class="ex-link" href="../examples/two_pens/index.html">Two pens →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/two_pens/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="route">
-      <div class="ex-preview"><canvas data-possibility="route" width="520" height="220" aria-label="The same strokes, planned in input order and in nearest order"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">plot.plan({ strategy: "nearest" })</p>
-        <h2>Routes that shrink</h2>
-        <p>Left: strokes drawn in the order the sketch produced them, pen-up travel in red. Right: the same strokes, reordered and reversed by the planner. The drawing is identical; the plot is minutes shorter. Every example on this site is planned this way.</p>
-        <pre><code>plot.plan({ strategy: "input" }).stats.travelDistance;    // long
+  <section id="route" class="section">
+    <div class="section-header">
+      <div class="section-tag">plot.plan({ strategy: "nearest" })</div>
+      <h2>Routes that <span class="accent">shrink</span></h2>
+      <p class="section-desc">Left: strokes drawn in the order the sketch produced them, pen-up travel in red. Right: the same strokes, reordered and reversed by the planner. The drawing is identical; the plot is minutes shorter. Every example on this site is planned this way.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-possibility="route" width="520" height="220" aria-label="The same strokes, planned in input order and in nearest order"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">plot.plan({ strategy: "input" }).stats.travelDistance;    // long
 plot.plan({ strategy: "nearest" }).stats.travelDistance;  // short</code></pre>
-        <a class="ex-link" href="../examples/route_lab/index.html">Route lab →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/route_lab/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="import">
-      <div class="ex-preview"><canvas data-possibility="import" width="520" height="220" aria-label="An imported SVG next to its planned version"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">Geometry.importSVG() · transformDocument()</p>
-        <h2>Files in</h2>
-        <p>Paths, lines, polygons, rects, circles and nested transforms come in from any SVG, curves flattened at a tolerance you choose. So a p5.plotSvg capture, an Inkscape drawing or a p5.gysin plotter-SVG can be fitted onto the bed, planned and plotted here, without leaving the browser.</p>
-        <pre><code>const doc = Geometry.importSVG(svgText, { curveSteps: 24 });
+  <section id="import" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">Geometry.importSVG() · transformDocument()</div>
+      <h2>Files <span class="accent">in</span></h2>
+      <p class="section-desc">Paths, lines, polygons, rects, circles and nested transforms come in from any SVG, curves flattened at a tolerance you choose. So a p5.plotSvg capture, an Inkscape drawing or a p5.gysin plotter-SVG can be fitted onto the bed, planned and plotted here, without leaving the browser.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-possibility="import" width="520" height="220" aria-label="An imported SVG next to its planned version"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">const doc = Geometry.importSVG(svgText, { curveSteps: 24 });
 const fitted = Geometry.transformDocument(doc, Geometry.Matrix.scale(0.3));</code></pre>
-        <a class="ex-link" href="../examples/svg_to_pen/index.html">SVG to pen →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/svg_to_pen/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="programs">
-      <div class="ex-preview"><pre class="ex-text" data-possibility="programs" aria-label="The same plan as HPGL, G-code and EBB commands"></pre></div>
-      <div class="ex-copy">
-        <p class="eyebrow">exportHPGL() · exportGCode() · compileEbbPlan()</p>
-        <h2>One plan, four machines</h2>
-        <p>The plan is the contract, and the EBB command list is what I actually send. The other three are the side door: HPGL for a vintage HP or Roland plotter, G-code for a GRBL machine with a servo, an SVG for AxiDraw's own software. Same route, same order, same seams, whichever way it leaves.</p>
-        <pre><code>plot.exportHPGL({ unitsPerMm: 40 });
+  <section id="programs" class="section">
+    <div class="section-header">
+      <div class="section-tag">exportHPGL() · exportGCode() · compileEbbPlan()</div>
+      <h2>One plan, four <span class="accent">machines</span></h2>
+      <p class="section-desc">The plan is the contract, and the EBB command list is what I actually send. The other three are the side door: HPGL for a vintage HP or Roland plotter, G-code for a GRBL machine with a servo, an SVG for AxiDraw's own software. Same route, same order, same seams, whichever way it leaves.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><pre class="ex-text" data-possibility="programs" aria-label="The same plan as HPGL, G-code and EBB commands"></pre></div>
+<pre class="ex-code-block"><code class="language-javascript">plot.exportHPGL({ unitsPerMm: 40 });
 plot.exportGCode({ penUp: "M5", penDown: "M3 S1000" });
 compileEbbPlan(plot.plan(), { profile: "idraw-hse-a2" }).commands;</code></pre>
-      </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="ex" id="waves">
-      <div class="ex-preview"><canvas data-possibility="waves" width="520" height="220" aria-label="Wave lines sampled at a fixed time"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">any function of x · p5.waves · vanilla.waves</p>
-        <h2>A number in, a line out</h2>
-        <p>The engine only wants points. Anything that returns a number for an x is a drawing: <code>Math.sin</code>, a noise function, or one of the 35 shapes in p5.waves and vanilla.waves. Sample at a fixed time and the animation becomes a sheet; sample at ten times and you have a series.</p>
-        <pre><code>for (let x = 20; x <= 190; x += 0.5) {
-  points.push({ x, y: 60 + wave(x) });
+  <section id="waves" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">any function of x · p5.waves · vanilla.waves</div>
+      <h2>A number in, a line <span class="accent">out</span></h2>
+      <p class="section-desc">The engine only wants points. Anything that returns a number for an x is a drawing: <code>Math.sin</code>, a noise function, or one of the 35 shapes in p5.waves and vanilla.waves. Sample at a fixed time and the animation becomes a sheet; sample at ten times and you have a series.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-possibility="waves" width="520" height="220" aria-label="Wave lines sampled at a fixed time"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">for (let x = 20; x <= 190; x += 0.5) {
+points.push({ x, y: 60 + wave(x) });
 }
 plot.polyline(points);</code></pre>
-        <a class="ex-link" href="../examples/waves_pen/index.html">Waves to pen →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/waves_pen/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="series">
-      <div class="ex-preview"><canvas data-possibility="series" width="520" height="220" aria-label="Four variations of one rule, side by side"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">seeds · new PlotterEngine() per sheet</p>
-        <h2>Series, not singles</h2>
-        <p>A plotter makes editions. One rule, one seed per sheet, four engines, four plans, four files with the same name and a number: the workflow of a print run, in a loop.</p>
-        <pre><code>for (const seed of [1, 2, 3, 4]) {
-  const plot = build(seed);
-  download(`sheet-${seed}.svg`, plot.exportSVG());
+  <section id="series" class="section">
+    <div class="section-header">
+      <div class="section-tag">seeds · new PlotterEngine() per sheet</div>
+      <h2>Series, not <span class="accent">singles</span></h2>
+      <p class="section-desc">A plotter makes editions. One rule, one seed per sheet, four engines, four plans, four files with the same name and a number: the workflow of a print run, in a loop.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-possibility="series" width="520" height="220" aria-label="Four variations of one rule, side by side"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">for (const seed of [1, 2, 3, 4]) {
+const plot = build(seed);
+download(`sheet-${seed}.svg`, plot.exportSVG());
 }</code></pre>
-      </div>
-    </section>
-
-    <p class="note">Everything here runs without hardware. With an iDraw HSE / A2 attached, <a href="../examples/direct_plot/index.html">Direct plot</a> takes any of these plans to paper; the <a href="roadmap.html">roadmap</a> says what the driver still lacks.</p>
+    </div>
+  </section>
+  <section class="section" style="padding:3rem 2rem;">
+    <div style="max-width:760px; margin:0 auto;">
+      <p class="callout">Everything here runs without hardware. With an iDraw HSE / A2 attached, <a href="../examples/direct_plot/index.html">Direct plot</a> takes any of these plans to paper; the <a href="roadmap.html">roadmap</a> says what the driver still lacks.</p>
+    </div>
+  </section>
   </main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+  </footer>
   <script type="module" src="possibilities.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

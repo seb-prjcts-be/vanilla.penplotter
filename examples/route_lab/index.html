@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Route lab — vanilla.penplotter</title>
+  <title>Route lab - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../showcase.css">
   <style>
     .controls { display:grid; gap:10px; margin:24px 0; }
@@ -22,30 +24,45 @@
       <li><a href="../../index.html">Showcase</a></li>
       <li><a href="../../docs/examples.html" class="active">Examples</a></li>
       <li><a href="../../docs/possibilities.html">Possibilities</a></li>
-      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main>
-    <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of the planned route with pen-up travel"></canvas></div>
-    <aside class="panel">
-      <p class="tag">Optimizer · planner · what it saves</p>
+    <main class="demo-page">
+    <div class="demo-header">
+      <div class="demo-number">Optimizer · planner · what it saves</div>
       <h1>Route lab</h1>
       <p>I made this input as bad as I could: chains cut into pieces and shuffled, some drawn twice, a circle with 1 440 points. That is what a quick generative sketch usually hands you. Switch the passes on and off and read what each one buys, in paths, points, pen lifts, travel and minutes. What you see is what the pen gets.</p>
+    </div>
+    <div class="demo-layout">
+      <div class="demo-code">
+        <div class="code-label">Core snippet</div>
+        <pre><code class="language-javascript">plot.optimize({ passes: ["deduplicate", "merge", "simplify"] });
+const plan = plot.plan({ strategy: "nearest" });
+plan.stats.travelDistance;   // 14 421 mm → 546 mm</code></pre>
+      </div>
+      <div class="demo-right">
+        <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of the planned route with pen-up travel"></canvas></div>
       <div class="controls">
-        <label><input type="checkbox" data-pass="deduplicate" checked> deduplicate — drop paths drawn twice</label>
-        <label><input type="checkbox" data-pass="merge" checked> merge — rejoin chains whose ends touch</label>
-        <label><input type="checkbox" data-pass="simplify" checked> simplify — fewer points, same shape (0.05 mm)</label>
-        <label><input type="checkbox" data-pass="clean" checked> clean — remove zero-length paths</label>
-        <label>strategy <select id="strategy"><option value="nearest">nearest — reorder and reverse paths</option><option value="input">input — draw in the order given</option></select></label>
-        <label><input type="checkbox" id="travel" checked> show pen-up travel</label>
+      <label><input type="checkbox" data-pass="deduplicate" checked> deduplicate — drop paths drawn twice</label>
+      <label><input type="checkbox" data-pass="merge" checked> merge — rejoin chains whose ends touch</label>
+      <label><input type="checkbox" data-pass="simplify" checked> simplify — fewer points, same shape (0.05 mm)</label>
+      <label><input type="checkbox" data-pass="clean" checked> clean — remove zero-length paths</label>
+      <label>strategy <select id="strategy"><option value="nearest">nearest — reorder and reverse paths</option><option value="input">input — draw in the order given</option></select></label>
+      <label><input type="checkbox" id="travel" checked> show pen-up travel</label>
       </div>
       <dl id="table" aria-live="polite"></dl>
       <div id="pen"></div>
-    </aside>
+      </div>
+    </div>
   </main>
+  <footer>
+    <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>
+    <p class="footer-sub">vanilla.penplotter v0.3.0 &nbsp;&middot;&nbsp; iDraw HSE / A2 &nbsp;&middot;&nbsp; EBB 3.0.2</p>
+  </footer>
   <script type="module" src="sketch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

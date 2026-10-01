@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Direct plot — vanilla.penplotter</title>
+  <title>Direct plot - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../showcase.css">
 </head>
 <body>
@@ -15,26 +17,42 @@
       <li><a href="../../index.html">Showcase</a></li>
       <li><a href="../../docs/examples.html" class="active">Examples</a></li>
       <li><a href="../../docs/possibilities.html">Possibilities</a></li>
-      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main>
-    <div class="canvas-wrap"><canvas id="preview" width="760" height="553" aria-label="Plot plan preview on the A2 bed"></canvas></div>
-    <aside class="panel">
-      <p class="tag">The first thing to plot</p>
+    <main class="demo-page">
+    <div class="demo-header">
+      <div class="demo-number">The first thing to plot</div>
       <h1>Direct plot</h1>
       <p>A 40 by 25 millimetre frame with two waves inside: the drawing I used to check the machine, and the one to try first. Small, quick, and if the frame measures 40 mm on paper, the scale is right. Dry run first if you like; it lists every command without sending one.</p>
+    </div>
+    <div class="demo-layout">
+      <div class="demo-code">
+        <div class="code-label">Core snippet</div>
+        <pre><code class="language-javascript">const transport = createWebSerialTransport();
+await transport.open();                       // from a click
+const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
+await driver.run(plot.plan(), { confirmed: true });</code></pre>
+      </div>
+      <div class="demo-right">
+        <div class="demo-canvas"><canvas id="preview" width="760" height="553" aria-label="Plot plan preview on the A2 bed"></canvas></div>
       <dl>
-        <div><dt>Paths</dt><dd id="paths">—</dd></div>
-        <div><dt>Draw</dt><dd id="draw">—</dd></div>
-        <div><dt>On the sheet</dt><dd>40 × 25 mm</dd></div>
+      <div><dt>Paths</dt><dd id="paths">—</dd></div>
+      <div><dt>Draw</dt><dd id="draw">—</dd></div>
+      <div><dt>On the sheet</dt><dd>40 × 25 mm</dd></div>
       </dl>
       <div id="pen"></div>
-    </aside>
+      </div>
+    </div>
   </main>
+  <footer>
+    <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>
+    <p class="footer-sub">vanilla.penplotter v0.3.0 &nbsp;&middot;&nbsp; iDraw HSE / A2 &nbsp;&middot;&nbsp; EBB 3.0.2</p>
+  </footer>
   <script type="module" src="sketch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

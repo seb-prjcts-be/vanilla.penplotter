@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wave hatch — vanilla.penplotter + vanilla.waves</title>
+  <title>Wave hatch - vanilla.penplotter + vanilla.waves</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../showcase.css">
 </head>
 <body>
@@ -15,29 +17,44 @@
       <li><a href="../../index.html">Showcase</a></li>
       <li><a href="../../docs/examples.html" class="active">Examples</a></li>
       <li><a href="../../docs/possibilities.html">Possibilities</a></li>
-      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main>
-    <div class="canvas-wrap"><canvas id="preview" width="640" height="880" aria-label="Preview of a hatched tonal field on A4"></canvas></div>
-    <aside class="panel">
-      <p class="tag">vanilla.waves · hatch · tone</p>
+    <main class="demo-page">
+    <div class="demo-header">
+      <div class="demo-number">vanilla.waves · hatch · tone</div>
       <h1>Wave hatch</h1>
       <p>Seventy cells on an A4 sheet. Two waves decide each one: how far apart the hatch lines are, and at what angle. Where the lines crowd the paper goes dark, where they thin out it stays light. No grey anywhere, only strokes. About ten metres of ink, seven minutes of plotting.</p>
+    </div>
+    <div class="demo-layout">
+      <div class="demo-code">
+        <div class="code-label">Core snippet</div>
+        <pre><code class="language-javascript">const spacing = tone.sample(column * 1.9 + row * 1.1, 0);  // 1.3 … 6.5 mm
+const angle = turn.sample(column * 0.8 + row * 2.3, 0);    // 0 … π
+plot.hatch(cell, { spacing, angle });</code></pre>
+      </div>
+      <div class="demo-right">
+        <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of a hatched tonal field on A4"></canvas></div>
       <dl>
-        <div><dt>Paths</dt><dd id="paths">—</dd></div>
-        <div><dt>Draw</dt><dd id="draw">—</dd></div>
-        <div><dt>Travel</dt><dd id="travel">—</dd></div>
-        <div><dt>Estimate</dt><dd id="time">—</dd></div>
+      <div><dt>Paths</dt><dd id="paths">—</dd></div>
+      <div><dt>Draw</dt><dd id="draw">—</dd></div>
+      <div><dt>Travel</dt><dd id="travel">—</dd></div>
+      <div><dt>Estimate</dt><dd id="time">—</dd></div>
       </dl>
       <p id="status" role="status">Loading vanilla.waves…</p>
       <div id="pen"></div>
-    </aside>
+      </div>
+    </div>
   </main>
+  <footer>
+    <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>
+    <p class="footer-sub">vanilla.penplotter v0.3.0 &nbsp;&middot;&nbsp; iDraw HSE / A2 &nbsp;&middot;&nbsp; EBB 3.0.2</p>
+  </footer>
   <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
   <script type="module" src="sketch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

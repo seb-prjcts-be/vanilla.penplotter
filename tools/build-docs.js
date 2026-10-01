@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const VERSION = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version;
 
 export const PAGES = [
   { source: "docs/architecture.md", target: "docs/architecture.html", eyebrow: "Architecture · the target model" },
@@ -95,8 +96,10 @@ export function renderPage(page, markdown) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(title)} — vanilla.penplotter</title>
+  <title>${escapeHtml(title)} - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -107,20 +110,24 @@ export function renderPage(page, markdown) {
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
+      <li><a href="architecture.html"${page.target.endsWith("architecture.html") ? ' class="active"' : ""}>Architecture</a></li>
       <li><a href="guide.html">Guide</a></li>
-      <li><a href="architecture.html" class="active">Architecture</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
   <main class="page">
     <header class="page-header">
-      <p class="eyebrow">${escapeHtml(page.eyebrow)}</p>
-      <h1>${escapeHtml(title)}</h1>
-      <p class="lead">Generated from <a href="${path.basename(page.source)}">${path.basename(page.source)}</a>; edit the Markdown and run <code>npm run docs</code>.</p>
+      <div class="section-tag">JavaScript plotter engine · v${VERSION}</div>
+      <h1>vanilla.<span class="accent">penplotter</span> ${escapeHtml(title)}</h1>
+      <p class="guide-intro">${escapeHtml(page.eyebrow)}. Generated from <a href="${path.basename(page.source)}">${path.basename(page.source)}</a>; edit the Markdown and run <code>npm run docs</code>.</p>
     </header>
 ${content}
   </main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v${VERSION}</p>
+  </footer>
 </body>
 </html>
 `;

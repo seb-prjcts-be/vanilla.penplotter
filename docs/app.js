@@ -1,3 +1,5 @@
+// The landing page's hero: one planned A4 job, drawn path by path behind
+// the title, the way the machine will draw it, then again from the start.
 import { PlotterEngine } from "../vanilla.penplotter.js";
 
 const plot = new PlotterEngine({
@@ -35,47 +37,34 @@ plot.optimize({
   duplicateTolerance: 0.02,
   simplifyTolerance: 0.04
 });
-const plan = plot.plan({
-  strategy: "nearest",
-  drawSpeed: 35,
-  travelSpeed: 80,
-  liftDelay: 0.14
-});
+plot.plan({ strategy: "nearest", drawSpeed: 35, travelSpeed: 80, liftDelay: 0.14 });
 
 const canvas = document.querySelector("#hero-plot");
 const context = canvas.getContext("2d");
-let showTravel = true;
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const CYCLE_MS = 48000; // the whole sheet, then a pause, then again
+const HOLD_MS = 6000;
+let started = performance.now();
 
-function render() {
-  const ratio = window.devicePixelRatio || 1;
+function frame(now) {
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
   const bounds = canvas.getBoundingClientRect();
   const width = Math.max(320, Math.floor(bounds.width * ratio));
-  const height = Math.max(420, Math.floor(bounds.height * ratio));
+  const height = Math.max(320, Math.floor(bounds.height * ratio));
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
   }
+  const elapsed = (now - started) % (CYCLE_MS + HOLD_MS);
+  const progress = reduced ? 1 : Math.min(1, elapsed / CYCLE_MS);
   plot.drawPreview(context, {
-    showTravel,
-    padding: 26 * ratio,
-    paper: "#ffffff", travelColor: "rgba(0, 0, 0, .35)"
+    showTravel: false,
+    padding: 40 * ratio,
+    paper: "#ffffff",
+    progress
   });
+  if (!reduced) requestAnimationFrame(frame);
 }
 
-function duration(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const remainder = Math.round(seconds % 60);
-  return `${minutes}m ${remainder}s`;
-}
-
-document.querySelector("#stat-paths").textContent = String(plan.stats.paths);
-document.querySelector("#stat-travel").textContent = plan.stats.travelDistance.toFixed(1);
-document.querySelector("#stat-time").textContent = duration(plan.stats.estimatedSeconds);
-document.querySelector("#travel-toggle").addEventListener("click", function toggleTravel() {
-  showTravel = !showTravel;
-  this.setAttribute("aria-pressed", String(showTravel));
-  this.textContent = showTravel ? "Pen-up visible" : "Pen-up hidden";
-  render();
-});
-window.addEventListener("resize", render);
-render();
+window.addEventListener("resize", () => { started = performance.now(); frame(started); });
+requestAnimationFrame(frame);

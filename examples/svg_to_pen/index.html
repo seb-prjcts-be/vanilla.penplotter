@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SVG to pen — vanilla.penplotter</title>
+  <title>SVG to pen - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../showcase.css">
   <style>
     textarea { width:100%; min-height:120px; margin:0 0 10px; padding:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font:11px/1.5 "DM Mono",monospace; resize:vertical; }
@@ -21,29 +23,44 @@
       <li><a href="../../index.html">Showcase</a></li>
       <li><a href="../../docs/examples.html" class="active">Examples</a></li>
       <li><a href="../../docs/possibilities.html">Possibilities</a></li>
-      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../docs/guide.html">Guide</a></li>
       <li><a href="../../docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main>
-    <div class="canvas-wrap"><canvas id="preview" width="760" height="553" aria-label="Preview of the imported SVG"></canvas></div>
-    <aside class="panel">
-      <p class="tag">Import · plan · pen</p>
+    <main class="demo-page">
+    <div class="demo-header">
+      <div class="demo-number">Import · plan · pen</div>
       <h1>SVG to pen</h1>
       <p>You already have drawings as SVG: from p5.plotSvg, from Inkscape, from a text editor. Paste one here or pick the file. It gets read, fitted to the width you want, cleaned up and planned, and then it goes to the pen like everything else on this site. The usual detour through vpype and Inkscape is the part I wanted to skip.</p>
+    </div>
+    <div class="demo-layout">
+      <div class="demo-code">
+        <div class="code-label">Core snippet</div>
+        <pre><code class="language-javascript">const imported = Geometry.importSVG(svgText);
+const fitted = Geometry.transformDocument(imported, matrix);
+for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;</code></pre>
+      </div>
+      <div class="demo-right">
+        <div class="demo-canvas"><canvas id="preview" width="760" height="553" aria-label="Preview of the imported SVG"></canvas></div>
       <textarea id="source" spellcheck="false" aria-label="SVG source"></textarea>
       <label class="file">Or pick a file: <input id="file" type="file" accept=".svg,image/svg+xml"></label>
       <label class="fit">Width on the sheet (mm)<input id="fit" type="number" value="120" min="10" max="590" step="5"></label>
       <dl>
-        <div><dt>Imported</dt><dd id="imported">—</dd></div>
-        <div><dt>Planned</dt><dd id="planned">—</dd></div>
+      <div><dt>Imported</dt><dd id="imported">—</dd></div>
+      <div><dt>Planned</dt><dd id="planned">—</dd></div>
       </dl>
       <p id="status" role="status">Paste or pick an SVG.</p>
       <div id="pen"></div>
-    </aside>
+      </div>
+    </div>
   </main>
+  <footer>
+    <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>
+    <p class="footer-sub">vanilla.penplotter v0.3.0 &nbsp;&middot;&nbsp; iDraw HSE / A2 &nbsp;&middot;&nbsp; EBB 3.0.2</p>
+  </footer>
   <script type="module" src="sketch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

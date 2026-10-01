@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Handbook — vanilla.penplotter</title>
+  <title>Handbook - vanilla.penplotter</title>
   <meta name="description" content="The vanilla.penplotter handbook: how the engine works, stage by stage, from the document model to the EBB commands on the wire.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
     .hb-cover { padding: 4rem 0 3rem; border-bottom: 2px solid #000; margin-bottom: 2rem; }
@@ -46,8 +48,8 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
-      <li><a href="guide.html">Guide</a></li>
       <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="guide.html">Guide</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
@@ -420,7 +422,12 @@ frame();</code></pre>
     <h3>Schemas</h3>
     <p><code>vanilla.penplotter/document@1</code> (chapter 3), <code>vanilla.penplotter/plan@1</code> (chapter 7), <code>vanilla.penplotter/ebb@1</code> (the compiled command list, chapter 9). The adapter validates the plan schema before drawing; a plan from another version would be refused in plain words rather than drawn wrong.</p>
 
-    <p class="note">This handbook describes version 0.3.0 as tested on 2026-10-01. Where the code and this text disagree, the code and its tests are right, and the text needs a fix: open an issue on GitHub.</p>
+    <p class="callout">This handbook describes version 0.3.0 as tested on 2026-10-01. Where the code and this text disagree, the code and its tests are right, and the text needs a fix: open an issue on GitHub.</p>
   </main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

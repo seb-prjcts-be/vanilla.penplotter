@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Technical architecture — vanilla.penplotter</title>
+  <title>Technical architecture - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,17 +17,17 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
-      <li><a href="guide.html">Guide</a></li>
       <li><a href="architecture.html" class="active">Architecture</a></li>
+      <li><a href="guide.html">Guide</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
   <main class="page">
     <header class="page-header">
-      <p class="eyebrow">Architecture · the target model</p>
-      <h1>Technical architecture</h1>
-      <p class="lead">Generated from <a href="architecture.md">architecture.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
+      <div class="section-tag">JavaScript plotter engine · v0.3.0</div>
+      <h1>vanilla.<span class="accent">penplotter</span> Technical architecture</h1>
+      <p class="guide-intro">Architecture · the target model. Generated from <a href="architecture.md">architecture.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
     </header>
 <h2>1. Product promise</h2>
 <p><code>vanilla.penplotter</code> is not an export button but a programmable compiler for plotter jobs:</p>
@@ -132,5 +134,9 @@
 <h2>12. Version boundary</h2>
 <p>V0.1 proves the chain. The only hardware claim is the <code>idraw-hse-a2</code> profile from the support matrix in §7; there is no claim for AxiDraw and other iDraw models. It is also not yet a complete SVG renderer. V1.0 requires fixture files, property tests, cross-browser tests, hardware tests per profile and a compatibility policy for document, plan and plugin schemas.</p>
   </main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+  </footer>
 </body>
 </html>

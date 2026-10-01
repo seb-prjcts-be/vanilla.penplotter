@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roadmap — vanilla.penplotter</title>
+  <title>Roadmap - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,17 +17,17 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
       <li><a href="guide.html">Guide</a></li>
-      <li><a href="architecture.html" class="active">Architecture</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
   <main class="page">
     <header class="page-header">
-      <p class="eyebrow">Roadmap · where the work goes</p>
-      <h1>Roadmap</h1>
-      <p class="lead">Generated from <a href="roadmap.md">roadmap.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
+      <div class="section-tag">JavaScript plotter engine · v0.3.0</div>
+      <h1>vanilla.<span class="accent">penplotter</span> Roadmap</h1>
+      <p class="guide-intro">Roadmap · where the work goes. Generated from <a href="roadmap.md">roadmap.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
     </header>
 <p>Direction since 2026-09-21: <strong>the sketch goes straight to the pen, with no SVG in between.</strong> <code>vanilla.penplotter</code> is the engine and the driver; <code>p5.penplotter</code> is the thin p5.js layer on top. SVG, HPGL and G-code export remain, but are no longer the main path.</p>
 <h2>Present in 0.3.0</h2>
@@ -38,5 +40,9 @@
 <h2>1.0</h2>
 <p>Stable schemas and migrations, TypeScript declarations and npm distribution, stable adapter contracts for <code>p5.penplotter</code>, and a support matrix in which every profile has been tested on real hardware.</p>
   </main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+  </footer>
 </body>
 </html>

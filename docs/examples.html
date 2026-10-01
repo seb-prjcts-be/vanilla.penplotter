@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Examples — vanilla.penplotter</title>
+  <title>Examples - vanilla.penplotter</title>
   <meta name="description" content="Seven examples that all end at the pen: from a first hatched job to an SVG that skips the usual detour.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,116 +18,137 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html" class="active">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
-      <li><a href="guide.html">Guide</a></li>
       <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="guide.html">Guide</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-  <main class="page wide">
-    <header class="page-header">
-      <p class="eyebrow">Examples · v0.3.0</p>
-      <h1>Seven ways to the pen.</h1>
-      <p class="lead">Every one of these ends the same way: connect, confirm, plot. The previews below are the engine running in this page, so what you see is the plan the machine would get. Open an example for the full page and its source. No plotter at hand? Each page can also hand you the plan as SVG, HPGL or G-code; I just did not want that to be the headline.</p>
-    </header>
-
-    <section class="ex" id="direct_plot">
-      <div class="ex-preview"><canvas data-example="direct_plot" width="480" height="600" aria-label="Direct plot preview"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">start here</p>
-        <h2>Direct plot</h2>
-        <p>A 40 by 25 millimetre frame with two waves inside. It is the drawing I used to check the machine, and the one to try first: small, quick, and if the frame measures 40 mm on paper, the scale is right. The dry run lists every command without sending one.</p>
-        <pre><code>const transport = createWebSerialTransport();
+    <main>
+  <div class="ex-page-header">
+    <div class="section-tag">JavaScript plotter engine · v0.3.0</div>
+    <h1>vanilla.<span class="accent">penplotter</span> Examples</h1>
+    <p>Every one of these ends the same way: connect, confirm, plot. The previews below are the engine running in this page, so what you see is the plan the machine would get. Open an example for the full page and its source. No plotter at hand? Each page can also hand you the plan as SVG, HPGL or G-code; I just did not want that to be the headline.</p>
+  </div>
+  <section id="direct_plot" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">start here</div>
+      <h2>Direct <span class="accent">plot</span></h2>
+      <p class="section-desc">A 40 by 25 millimetre frame with two waves inside. It is the drawing I used to check the machine, and the one to try first: small, quick, and if the frame measures 40 mm on paper, the scale is right. The dry run lists every command without sending one.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-example="direct_plot" width="480" height="600" aria-label="Direct plot preview"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">const transport = createWebSerialTransport();
 await transport.open();                       // from a click
 const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
 await driver.run(plot.plan(), { confirmed: true });</code></pre>
-        <a class="ex-link" href="../examples/direct_plot/index.html">Open example →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/direct_plot/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="first_job">
-      <div class="ex-preview"><canvas data-example="first_job" width="480" height="600" aria-label="First job preview"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">plot.hatch() · plot.polygon() · plot.circle()</p>
-        <h2>First job</h2>
-        <p>A hatched shape, its outline and a circle. Enough to watch the engine join the hatch lines, order them, and show in red where the pen still has to lift.</p>
-        <pre><code>plot.hatch(polygon, { spacing: 4.5, angle: Math.PI / 7 });
+  <section id="first_job" class="section">
+    <div class="section-header">
+      <div class="section-tag">plot.hatch() · plot.polygon() · plot.circle()</div>
+      <h2>First <span class="accent">job</span></h2>
+      <p class="section-desc">A hatched shape, its outline and a circle. Enough to watch the engine join the hatch lines, order them, and show in red where the pen still has to lift.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-example="first_job" width="480" height="600" aria-label="First job preview"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">plot.hatch(polygon, { spacing: 4.5, angle: Math.PI / 7 });
 plot.polygon(polygon);
 plot.circle(108, 145, 38);
 const plan = plot.plan({ drawSpeed: 35, travelSpeed: 80 });</code></pre>
-        <a class="ex-link" href="../examples/first_job/index.html">Open example →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/first_job/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="two_pens">
-      <div class="ex-preview"><canvas data-example="two_pens" width="480" height="600" aria-label="Two pens preview"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">plot.tool() · plot.layer() · one pen change</p>
-        <h2>Two pens</h2>
-        <p>Every layer names its pen. The engine draws all the black first, then holds the motors and waits until you have put in the red pen. One stop, at the right moment.</p>
-        <pre><code>plot.layer("arcs", { toolId: "black" });
+  <section id="two_pens" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">plot.tool() · plot.layer() · one pen change</div>
+      <h2>Two <span class="accent">pens</span></h2>
+      <p class="section-desc">Every layer names its pen. The engine draws all the black first, then holds the motors and waits until you have put in the red pen. One stop, at the right moment.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-example="two_pens" width="480" height="600" aria-label="Two pens preview"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">plot.layer("arcs", { toolId: "black" });
 plot.arc(62, 150, 40, -1, 1);
 plot.layer("wedge", { toolId: "red" });
 plot.hatch(wedge, { spacing: 2.2 });</code></pre>
-        <a class="ex-link" href="../examples/two_pens/index.html">Open example →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/two_pens/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="route_lab">
-      <div class="ex-preview"><canvas data-example="route_lab" width="480" height="600" aria-label="Route lab preview"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">plot.optimize({ passes }) · plot.plan({ strategy })</p>
-        <h2>Route lab</h2>
-        <p>Input made as bad as I could: shuffled fragments, duplicates, a 1 440-point circle. Switch each optimizer pass on and off and read what it buys in paths, pen lifts, travel and minutes. The pen gets whatever you settle on.</p>
-        <pre><code>plot.optimize({ passes: ["deduplicate", "merge", "simplify"] });
+  <section id="route_lab" class="section">
+    <div class="section-header">
+      <div class="section-tag">plot.optimize({ passes }) · plot.plan({ strategy })</div>
+      <h2>Route <span class="accent">lab</span></h2>
+      <p class="section-desc">Input made as bad as I could: shuffled fragments, duplicates, a 1 440-point circle. Switch each optimizer pass on and off and read what it buys in paths, pen lifts, travel and minutes. The pen gets whatever you settle on.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-example="route_lab" width="480" height="600" aria-label="Route lab preview"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">plot.optimize({ passes: ["deduplicate", "merge", "simplify"] });
 const plan = plot.plan({ strategy: "nearest" });
 plan.stats.travelDistance;   // 14 421 mm → 546 mm</code></pre>
-        <a class="ex-link" href="../examples/route_lab/index.html">Open example →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/route_lab/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="waves_pen">
-      <div class="ex-preview"><canvas data-example="waves_pen" width="480" height="600" aria-label="Waves to pen preview"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">vanilla.waves · a still from an animation</p>
-        <h2>Waves to pen</h2>
-        <p>vanilla.waves animates; a plotter draws once. So time stops: 32 rows sampled at t = 0 become one sheet. That is the whole trick for plotting anything that moves.</p>
-        <pre><code>const sampler = waves.createSampler({ wave: "triangle sine", range: [-3, 3] });
+  <section id="waves_pen" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">vanilla.waves · a still from an animation</div>
+      <h2>Waves to <span class="accent">pen</span></h2>
+      <p class="section-desc">vanilla.waves animates; a plotter draws once. So time stops: 32 rows sampled at t = 0 become one sheet. That is the whole trick for plotting anything that moves.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-example="waves_pen" width="480" height="600" aria-label="Waves to pen preview"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">const sampler = waves.createSampler({ wave: "triangle sine", range: [-3, 3] });
 points.push({ x, y: 40 + row * 7 + sampler.sample(x + row * 2, 0) });
 plot.polyline(points);</code></pre>
-        <a class="ex-link" href="../examples/waves_pen/index.html">Open example →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/waves_pen/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="wave_hatch">
-      <div class="ex-preview"><canvas data-example="wave_hatch" width="480" height="600" aria-label="Wave hatch preview"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">vanilla.waves · plot.hatch({ spacing, angle })</p>
-        <h2>Wave hatch</h2>
-        <p>Seventy cells; two waves decide each one, spacing and angle. Dark where the lines crowd, light where they thin out. No grey, only strokes: about ten metres of ink.</p>
-        <pre><code>const spacing = tone.sample(column * 1.9 + row * 1.1, 0);  // 1.3 … 6.5 mm
+  <section id="wave_hatch" class="section">
+    <div class="section-header">
+      <div class="section-tag">vanilla.waves · plot.hatch({ spacing, angle })</div>
+      <h2>Wave <span class="accent">hatch</span></h2>
+      <p class="section-desc">Seventy cells; two waves decide each one, spacing and angle. Dark where the lines crowd, light where they thin out. No grey, only strokes: about ten metres of ink.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-example="wave_hatch" width="480" height="600" aria-label="Wave hatch preview"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">const spacing = tone.sample(column * 1.9 + row * 1.1, 0);  // 1.3 … 6.5 mm
 const angle = turn.sample(column * 0.8 + row * 2.3, 0);    // 0 … π
 plot.hatch(cell, { spacing, angle });</code></pre>
-        <a class="ex-link" href="../examples/wave_hatch/index.html">Open example →</a>
-      </div>
-    </section>
+<a class="ex-full-link" href="../examples/wave_hatch/index.html">-&gt; full example</a>
+    </div>
+  </section>
 
-    <section class="ex" id="svg_to_pen">
-      <div class="ex-preview"><canvas data-example="svg_to_pen" width="480" height="600" aria-label="SVG to pen preview"></canvas></div>
-      <div class="ex-copy">
-        <p class="eyebrow">Geometry.importSVG() · transformDocument()</p>
-        <h2>SVG to pen</h2>
-        <p>You already have drawings as SVG, from p5.plotSvg or Inkscape. Paste one, pick a width, and it goes to the pen like everything else here. The detour through vpype and Inkscape is the part I wanted to skip.</p>
-        <pre><code>const imported = Geometry.importSVG(svgText);
+  <section id="svg_to_pen" class="section section-dark">
+    <div class="section-header">
+      <div class="section-tag">Geometry.importSVG() · transformDocument()</div>
+      <h2>SVG to <span class="accent">pen</span></h2>
+      <p class="section-desc">You already have drawings as SVG, from p5.plotSvg or Inkscape. Paste one, pick a width, and it goes to the pen like everything else here. The detour through vpype and Inkscape is the part I wanted to skip.</p>
+    </div>
+    <div class="ex-preview">
+      <div class="ex-canvas"><canvas data-example="svg_to_pen" width="480" height="600" aria-label="SVG to pen preview"></canvas></div>
+<pre class="ex-code-block"><code class="language-javascript">const imported = Geometry.importSVG(svgText);
 const fitted = Geometry.transformDocument(imported, matrix);
 for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;</code></pre>
-        <a class="ex-link" href="../examples/svg_to_pen/index.html">Open example →</a>
-      </div>
-    </section>
-
-    <p class="note">Plotting needs Chrome or Edge on <code>localhost</code> or https, and for now one machine: an iDraw HSE / A2 with an EBB board. The wave examples load a pinned vanilla.waves build. If you draw in p5.js, the sister site has the same idea with a p5 face: <a href="https://seb-prjcts-be.github.io/p5.penplotter/docs/examples.html">p5.penplotter examples</a>.</p>
+<a class="ex-full-link" href="../examples/svg_to_pen/index.html">-&gt; full example</a>
+    </div>
+  </section>
+  <section class="section" style="padding:3rem 2rem;">
+    <div style="max-width:760px; margin:0 auto;">
+      <p class="callout">Plotting needs Chrome or Edge on <code>localhost</code> or https, and for now one machine: an iDraw HSE / A2 with an EBB board. The wave examples load a pinned vanilla.waves build. If you draw in p5.js, the sister site has the same idea with a p5 face: <a href="https://seb-prjcts-be.github.io/p5.penplotter/docs/examples.html">p5.penplotter examples</a>.</p>
+    </div>
+  </section>
   </main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v0.3.0</p>
+  </footer>
   <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
   <script type="module" src="examples.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>
