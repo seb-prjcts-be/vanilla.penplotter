@@ -48,7 +48,7 @@ await driver.run(plot.plan(), { confirmed: true });</code></pre>
 
   <section id="first_job" class="section">
     <div class="section-header">
-      <div class="section-tag">plot.hatch() · plot.polygon() · plot.circle()</div>
+      <div class="section-tag">a hatched shape, its outline, a circle</div>
       <h2>First <span class="accent">job</span></h2>
       <p class="section-desc">A hatched shape, its outline and a circle. Enough to watch the engine join the hatch lines, order them, and show in red where the pen still has to lift.</p>
     </div>
@@ -64,7 +64,7 @@ const plan = plot.plan();</code></pre>
 
   <section id="two_pens" class="section section-dark">
     <div class="section-header">
-      <div class="section-tag">plot.tool() · plot.layer() · one pen change</div>
+      <div class="section-tag">black first, then red</div>
       <h2>Two <span class="accent">pens</span></h2>
       <p class="section-desc">Every layer names its pen. The engine draws all the black first, then holds the motors and waits until you have put in the red pen. One stop, at the right moment.</p>
     </div>
@@ -80,7 +80,7 @@ plot.hatch(wedge, { spacing: 2.2 });</code></pre>
 
   <section id="route_lab" class="section">
     <div class="section-header">
-      <div class="section-tag">plot.optimize({ passes }) · plot.plan({ strategy })</div>
+      <div class="section-tag">the same drawing, five times less travel</div>
       <h2>Route <span class="accent">lab</span></h2>
       <p class="section-desc">Input made as bad as I could: shuffled fragments, duplicates, a 1 440-point circle. Switch each optimizer pass on and off and read what it buys in paths, pen lifts, travel and minutes. The pen gets whatever you settle on.</p>
     </div>
@@ -95,7 +95,7 @@ plan.stats.travelDistance;   // 14 421 mm → 546 mm</code></pre>
 
   <section id="waves_pen" class="section section-dark">
     <div class="section-header">
-      <div class="section-tag">vanilla.waves · a still from an animation</div>
+      <div class="section-tag">thirty-two rows, one moment</div>
       <h2>Waves to <span class="accent">pen</span></h2>
       <p class="section-desc">vanilla.waves animates; a plotter draws once. So time stops: 32 rows sampled at t = 0 become one sheet. That is the whole trick for plotting anything that moves.</p>
     </div>
@@ -110,7 +110,7 @@ plot.polyline(points);</code></pre>
 
   <section id="wave_hatch" class="section">
     <div class="section-header">
-      <div class="section-tag">vanilla.waves · plot.hatch({ spacing, angle })</div>
+      <div class="section-tag">ten metres of ink, no grey anywhere</div>
       <h2>Wave <span class="accent">hatch</span></h2>
       <p class="section-desc">Seventy cells; two waves decide each one, spacing and angle. Dark where the lines crowd, light where they thin out. No grey, only strokes: about ten metres of ink.</p>
     </div>
@@ -125,7 +125,7 @@ plot.hatch(cell, { spacing, angle });</code></pre>
 
   <section id="svg_to_pen" class="section section-dark">
     <div class="section-header">
-      <div class="section-tag">Geometry.importSVG() · transformDocument()</div>
+      <div class="section-tag">a file you already have, on paper</div>
       <h2>SVG to <span class="accent">pen</span></h2>
       <p class="section-desc">You already have drawings as SVG, from p5.plotSvg or Inkscape. Paste one, pick a width, and it goes to the pen like everything else here. The detour through vpype and Inkscape is the part I wanted to skip.</p>
     </div>
