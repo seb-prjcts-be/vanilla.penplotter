@@ -27,7 +27,9 @@ no longer the main path.
 
 ## Next — strengthening the direct route
 
-- pause, resume from an acknowledged command, profile version alongside the plan
+- pause; resume from an acknowledged command mid-stroke (resuming per completed stroke
+  is in 0.3.0: the pen panel remembers the count, `skipDraws` leaves them out); profile
+  version alongside the plan
 - pen heights configurable from the profile
 - Node transport alongside Web Serial, so a script can plot without a browser
 - more p5 primitives in `p5.penplotter` (arcs, curves)

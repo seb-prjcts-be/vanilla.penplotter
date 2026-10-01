@@ -514,6 +514,61 @@ async function testTransportInFlight() {
   await transport.close();
 }
 
+// A plot that was cut short can go on where it stopped: the compiled list
+// says which pen-up completes which stroke, and a compile can skip the
+// strokes already on paper. The carriage is parked at home again by hand, so
+// the first travel goes from home to the first stroke that is still to do.
+function testResumeSkipsStrokes() {
+  const plan = planOf((plot) => {
+    plot.line(10, 10, 60, 10);
+    plot.line(10, 20, 60, 20);
+    plot.line(30, 40, 80, 40);
+  });
+  const full = compileEbbPlan(plan, { profile: HSE });
+  assert.equal(full.draws, 3);
+  const completes = full.commands.filter((entry) => entry.completes !== undefined).map((entry) => [entry.kind, entry.completes]);
+  assert.deepEqual(completes, [["pen-up", 0], ["pen-up", 1], ["pen-up", 2]], "each pen-up after a stroke says which stroke it completes");
+
+  const resumed = compileEbbPlan(plan, { profile: HSE, skipDraws: 2 });
+  assert.equal(resumed.draws, 3, "still counts against the whole drawing");
+  assert.equal(resumed.stats.penDowns, 1);
+  const [travel, draw] = strokes(resumed);
+  assert.deepEqual(stepTotals(travel), [mixCoreXY(30, 40, 80).a1, mixCoreXY(30, 40, 80).a2], "home to the third line");
+  assert.deepEqual(stepTotals(draw), [4000, 4000], "the third line itself");
+  assert.deepEqual(stepTotals(motionCommands(resumed)), [0, 0]);
+  assert.equal(resumed.commands.find((entry) => entry.completes !== undefined).completes, 2);
+
+  const nothingLeft = compileEbbPlan(plan, { profile: HSE, skipDraws: 3 });
+  assert.equal(nothingLeft.stats.penDowns, 0);
+  assert.equal(motionCommands(nothingLeft).length, 0, "nothing to draw, nothing to move");
+}
+
+// When the page goes away mid-plot there is no time for replies: one write
+// with stop, pen up, motors off, then the transport is dead.
+async function testEmergencyStop() {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const written = [];
+  const port = {
+    readable: new ReadableStream({ start() {} }),
+    writable: new WritableStream({ write(chunk) { written.push(decoder.decode(chunk)); } }),
+    async close() {}
+  };
+  const transport = createWebSerialTransport(port);
+  await transport.open();
+  const hanging = transport.send("LM,0,80,219902,0,80,219902,3");
+  await transport.stop();
+  assert.equal(written[written.length - 1], "ES\rSP,1\rEM,0,0\r");
+  await assert.rejects(hanging, /stopped/);
+  await assert.rejects(() => transport.send("QM"), /Open the transport/);
+  void encoder;
+
+  const log = createLogTransport();
+  const driver = new EbbDriver({ transport: log, profile: HSE });
+  await driver.emergencyStop();
+  assert.deepEqual(log.log, ["ES", "SP,1", "EM,0,0"]);
+}
+
 // The driver is public API: every documentation layer has to name it.
 function testDocumentationNamesTheDriver() {
   const root = new URL("../", import.meta.url);
@@ -542,4 +597,6 @@ testMicroSegmentsMerge();
 testNoDwellAtRest();
 await testPipelinedSends();
 await testTransportInFlight();
+testResumeSkipsStrokes();
+await testEmergencyStop();
 console.log("vanilla.penplotter ebb: ok");

@@ -57,6 +57,7 @@ export function mountPen(container, options) {
     <button type="button" class="secondary" data-pen="dry">Dry run (log only)</button>
     <button type="button" data-pen="connect">Connect plotter</button>
     <button type="button" data-pen="plot" disabled>Plot</button>
+    <button type="button" class="secondary" data-pen="resume" hidden>Resume</button>
     <button type="button" class="stop" data-pen="stop" disabled>Stop — pen up</button>
     <p class="pen-side">No EBB plotter at hand? Take the same plan with you as
       <a href="#" data-pen="svg">SVG</a>, <a href="#" data-pen="hpgl">HPGL</a> or <a href="#" data-pen="gcode">G-code</a>.</p>
@@ -68,6 +69,24 @@ export function mountPen(container, options) {
   let driver = null;
   let busy = false;
 
+  // An interrupted plot is remembered per drawing: how many strokes were
+  // acknowledged complete, and a signature of the drawing so a changed
+  // sketch never resumes into the wrong lines.
+  const RESUME_KEY = `vanilla.penplotter:resume:${name}`;
+  const signature = (c) => `${c.draws}:${c.stats.drawMm.toFixed(1)}:${c.stats.penDowns + c.skipDraws}`;
+  const readResume = () => {
+    try {
+      const record = JSON.parse(localStorage.getItem(RESUME_KEY));
+      return record && compiled && record.signature === signature(compiled) && record.done > 0 && record.done < compiled.draws ? record : null;
+    } catch {
+      return null;
+    }
+  };
+  const saveResume = (done) => {
+    try { localStorage.setItem(RESUME_KEY, JSON.stringify({ done, signature: signature(compiled), offset: { ...offset }, savedAt: Date.now() })); } catch { /* storage may be off */ }
+  };
+  const clearResume = () => { try { localStorage.removeItem(RESUME_KEY); } catch { /* storage may be off */ } };
+
   const status = (message) => { $("status").textContent = message; };
   const log = (message) => {
     status(message);
@@ -76,10 +95,14 @@ export function mountPen(container, options) {
     box.scrollTop = box.scrollHeight;
   };
   const buttons = () => {
+    const record = readResume();
     $("plot").disabled = !transport || !compiled || busy;
     $("connect").disabled = Boolean(transport) || busy;
     $("dry").disabled = !compiled || busy;
     $("stop").disabled = !busy;
+    $("resume").hidden = !record;
+    $("resume").disabled = !transport || !compiled || busy;
+    if (record) $("resume").textContent = `Resume at stroke ${record.done + 1} of ${compiled.draws}`;
   };
   const toolName = (toolId) => {
     const tool = getPlot().document.tools.find((t) => t.id === toolId);
@@ -94,7 +117,12 @@ export function mountPen(container, options) {
       const seconds = compiled.stats.durationMs / 1000;
       $("commands").textContent = String(compiled.commands.length);
       $("time").textContent = `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} s`;
-      if (!busy) status(transport ? "Connected. Ready when you are." : "Not connected. Park the carriage in the home corner first.");
+      const record = readResume();
+      if (!busy && record) {
+        status(`An earlier plot of this drawing stopped after stroke ${record.done} of ${compiled.draws}. Park the carriage at home again and resume, or plot from the start.`);
+      } else if (!busy) {
+        status(transport ? "Connected. Ready when you are." : "Not connected. Park the carriage in the home corner first.");
+      }
     } catch (error) {
       compiled = null;
       $("commands").textContent = "—";
@@ -131,10 +159,12 @@ export function mountPen(container, options) {
     buttons();
   }
 
-  async function run() {
+  // skipDraws > 0 resumes: the strokes already on paper are left out, and the
+  // plot starts from home again, where you parked the carriage by hand.
+  async function run(skipDraws = 0) {
     const ok = window.confirm(
-      "Plot now?\n\n" +
-      "• The carriage is parked in the home corner (next to the board).\n" +
+      (skipDraws > 0 ? `Resume at stroke ${skipDraws + 1} of ${compiled.draws}?\n\n` : "Plot now?\n\n") +
+      "• The carriage is parked in the home corner (next to the board)" + (skipDraws > 0 ? ", again, by hand" : "") + ".\n" +
       "• Paper is in place and no magnet lies on the drawing or on the way to it.\n" +
       "• Hands are clear of the arm."
     );
@@ -143,28 +173,34 @@ export function mountPen(container, options) {
     buttons();
     const started = performance.now();
     try {
-      const result = await driver.run(compiled, {
+      const job = skipDraws > 0 ? compileEbbPlan(shiftPlan(getPlot().plan(), offset), { profile, skipDraws }) : compiled;
+      const result = await driver.run(job, {
         confirmed: true,
-        onProgress: (index, total) => { if (index % 20 === 0 || index === total - 1) log(`${index + 1} / ${total}`); },
+        onProgress: (index, total, entry) => {
+          if (entry.completes !== undefined) saveResume(entry.completes + 1);
+          if (index % 20 === 0 || index === total - 1) log(`${index + 1} / ${total}`);
+        },
         // The pen is up and the motors hold; the plot waits until you press OK.
         onToolChange: (toolId) => {
           log(`Pen change: put in the ${toolName(toolId)}.`);
           window.confirm(`Pen change.\n\nPut in the ${toolName(toolId)}, then press OK to continue.`);
         }
       });
+      if (result.status === "complete") clearResume();
       log(`Plot ${result.status} after ${((performance.now() - started) / 1000).toFixed(0)} s.`);
     } catch (error) {
       log(`Stopped safely: ${error.message}`);
     }
     busy = false;
-    buttons();
+    refresh();
   }
 
   $("x").addEventListener("input", refresh);
   $("y").addEventListener("input", refresh);
   $("dry").addEventListener("click", dryRun);
   $("connect").addEventListener("click", connect);
-  $("plot").addEventListener("click", run);
+  $("plot").addEventListener("click", () => run(0));
+  $("resume").addEventListener("click", () => { const record = readResume(); if (record) run(record.done); });
   $("stop").addEventListener("click", () => {
     if (driver) driver.abort();
     log("Stop requested: pen up, motors off.");
@@ -172,7 +208,17 @@ export function mountPen(container, options) {
   $("svg").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.svg`, getPlot().exportSVG(), "image/svg+xml"); });
   $("hpgl").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.hpgl`, getPlot().exportHPGL(), "text/plain"); });
   $("gcode").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.gcode`, getPlot().exportGCode(), "text/plain"); });
-  window.addEventListener("pagehide", () => { if (transport) transport.close(); });
+  // Leaving the page mid-plot: the browser asks first, and if the page goes
+  // anyway the machine gets stop, pen up, motors off in one last write.
+  window.addEventListener("beforeunload", (event) => {
+    if (!busy) return;
+    event.preventDefault();
+    event.returnValue = "A plot is running. Leaving stops it with the pen up; you can resume later.";
+  });
+  window.addEventListener("pagehide", () => {
+    if (busy && driver) driver.emergencyStop();
+    else if (transport) transport.close();
+  });
 
   refresh();
   return { refresh };

@@ -51,7 +51,8 @@ A few things I learned the hard way, so you do not have to:
 
 - The machine has no home position. Park the carriage in the home corner by hand before you start; that spot is 0,0 of the plan.
 - Nothing is sent before every point has been checked against the bed, and units have to be mm, cm or inches.
-- `driver.abort()` and any error end the same way: motion stopped, pen up, motors off.
+- `driver.abort()` and any error end the same way: motion stopped, pen up, motors off. A page that is left mid-plot gets the browser's "leave site?" question first, and if it goes anyway the machine gets stop, pen up, motors off in one last write (`driver.emergencyStop()`).
+- An interrupted plot can go on where it stopped: every pen-up in the compiled list says which stroke it completes, and `compileEbbPlan(plan, { skipDraws: n })` leaves the first `n` strokes out and starts from home, where you park the carriage again by hand. The pen panel of every example remembers the count and offers "Resume at stroke n".
 - `compileEbbPlan(plan)` gives you the exact command list without sending it; `createLogTransport()` is the dry run. Do one the first time.
 - Web Serial only exists in Chrome and Edge, on `localhost` or https.
 

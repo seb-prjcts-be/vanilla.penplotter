@@ -189,6 +189,10 @@ export function compileEbbPlan(plan, options = {}) {
   const commandSet = options.commandSet || "LM";
   if (commandSet !== "LM" && commandSet !== "SM") throw new RangeError(`Unknown command set: ${commandSet}`);
   const returnHome = options.returnHome !== false;
+  // Resuming: the first skipDraws strokes are already on paper. The carriage
+  // is parked at home again by hand, so the plot starts there and travels to
+  // the first stroke still to do.
+  const skipDraws = Math.max(0, Math.floor(Number(options.skipDraws ?? 0)));
   const { width, height } = profile.travel;
   const point = (p) => ({ x: p.x * toMm, y: p.y * toMm });
 
@@ -209,11 +213,19 @@ export function compileEbbPlan(plan, options = {}) {
   const position = { x: 0, y: 0 };
   const steps = { a1: 0, a2: 0 }; // steps actually commanded so far
   let penDown = null;
+  let drawing = null; // index of the draw move the pen is down for
 
   const pen = (down) => {
     if (penDown === down) return;
     const delay = down ? profile.penDownDelay : profile.penUpDelay;
-    commands.push({ cmd: `SP,${down ? 0 : 1},${delay}`, kind: down ? "pen-down" : "pen-up", durationMs: delay });
+    const entry = { cmd: `SP,${down ? 0 : 1},${delay}`, kind: down ? "pen-down" : "pen-up", durationMs: delay };
+    // The pen-up after a stroke marks that stroke as complete: what a page
+    // remembers so an interrupted plot can go on from there.
+    if (!down && drawing !== null) {
+      entry.completes = drawing;
+      drawing = null;
+    }
+    commands.push(entry);
     stats.durationMs += delay;
     if (down) stats.penDowns += 1;
     penDown = down;
@@ -317,6 +329,7 @@ export function compileEbbPlan(plan, options = {}) {
   pen(false);
 
   let toolSeen = false;
+  let draws = 0;
   for (const move of plan.moves) {
     if (move.type === "tool-change") {
       if (toolSeen) {
@@ -326,11 +339,19 @@ export function compileEbbPlan(plan, options = {}) {
       }
       toolSeen = true;
     } else if (move.type === "travel") {
-      pen(false);
-      travelTo(point(move.to));
+      // Each draw travels to its own first point anyway; a plan's explicit
+      // travel is only honoured while nothing is being skipped.
+      if (draws >= skipDraws) {
+        pen(false);
+        travelTo(point(move.to));
+      }
     } else if (move.type === "draw") {
+      const index = draws;
+      draws += 1;
+      if (index < skipDraws) continue;
       pen(false);
       travelTo(point(move.points[0]));
+      drawing = index;
       pen(true);
       stroke(move.points.map(point), drawSpeed, acceleration);
     }
@@ -345,7 +366,9 @@ export function compileEbbPlan(plan, options = {}) {
     schema: "vanilla.penplotter/ebb@1",
     profile: profile.id,
     commandSet,
-    settings: { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation },
+    settings: { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation, minSpeed, simplifyTolerance },
+    draws,
+    skipDraws,
     commands,
     stats,
     end: { ...position }
@@ -380,6 +403,13 @@ export class EbbDriver {
         // keep going: the remaining commands matter more than the error
       }
     }
+  }
+
+  // For a page that is going away: no replies, one write, pen up first.
+  async emergencyStop() {
+    this.aborted = true;
+    if (this.transport.stop) await this.transport.stop();
+    else await this.safeStop();
   }
 
   async waitIdle() {
@@ -492,6 +522,9 @@ export function createLogTransport(options = {}) {
       if (cmd === "QU,2") return `QU,2,${fifoMax}`;
       if (cmd === "QU,3") return "QU,3,1";
       return "";
+    },
+    async stop() {
+      log.push("ES", "SP,1", "EM,0,0");
     }
   };
 }
@@ -584,6 +617,19 @@ export function createWebSerialTransport(port = null, options = {}) {
           .then(() => writer.write(encoder.encode(`${cmd}\r`)))
           .catch((error) => finish(item, null, error));
       });
+    },
+    // The page is going away: no time for replies. One write with stop, pen
+    // up and motors off, and the transport is dead from here on.
+    async stop() {
+      if (!active) return;
+      active = false;
+      failAll(new Error("The plot was stopped: pen up, motors off."));
+      try {
+        await writes;
+        if (writer) await writer.write(encoder.encode("ES\rSP,1\rEM,0,0\r"));
+      } catch {
+        // the port may already be gone; nothing more to do
+      }
     },
     async close() {
       active = false;
