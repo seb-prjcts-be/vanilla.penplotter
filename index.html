@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>vanilla.penplotter - a drawing in code, a pen on paper</title>
-  <meta name="description" content="A JavaScript engine that takes a drawing from code to a pen plotter without the detour through files: plan, optimize, and plot straight from the browser.">
-  <meta property="og:title" content="vanilla.penplotter - from code to the pen">
+  <meta name="description" content="A JavaScript library for planning pen drawings, previewing the route and plotting from the browser on the tested iDraw HSE / A2.">
+  <meta property="og:title" content="vanilla.penplotter - a drawing in code, a pen on paper">
   <meta property="og:description" content="Build paths in millimetres, let the engine plan the route, then send the drawing straight to the pen.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://seb-prjcts-be.github.io/vanilla.penplotter/">
   <meta property="og:image" content="https://seb-prjcts-be.github.io/vanilla.penplotter/docs/images/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="vanilla.penplotter - from code to the pen">
+  <meta name="twitter:title" content="vanilla.penplotter - a drawing in code, a pen on paper">
   <meta name="twitter:description" content="Build paths in millimetres, let the engine plan the route, then send the drawing straight to the pen.">
   <meta name="twitter:image" content="https://seb-prjcts-be.github.io/vanilla.penplotter/docs/images/og-image.png">
   <link rel="icon" href="docs/favicon.svg" type="image/svg+xml">
@@ -44,9 +44,9 @@
         <figure class="home-overview">
           <img src="docs/images/animations/overview.gif" width="600" height="400" alt="A JavaScript drawing is planned, then sent to a pen plotter after connecting and confirming.">
         </figure>
-        <div class="hero-badge">vanilla.penplotter &middot; plain JavaScript &middot; a real pen on real paper &middot; v0.3.1</div>
+        <div class="hero-badge">vanilla.penplotter &middot; JavaScript &middot; v0.3.1</div>
         <h1>A drawing in code, <span class="accent">a pen on paper</span></h1>
-        <p class="hero-sub">Build a drawing from points, or import supported SVG shapes.<br>Preview the route and estimate its duration. Direct plotting is tested on the iDraw HSE / A2.</p>
+        <p class="hero-sub">Build a drawing from points, or import supported SVG shapes.<br>See the pen’s route and an estimate of how long the drawing will take. Direct plotting is tested on the iDraw HSE / A2.</p>
         <div class="cta-row">
           <a href="#try" class="cta-btn">Start with a line and a circle &#8594;</a>
           <a href="#make" class="cta-btn secondary">See what it draws &#8595;</a>
@@ -58,7 +58,7 @@
   <section id="werkwijzen" class="section">
     <div class="section-header">
       <h2>Twee manieren van werken</h2>
-      <p>Alles tekenen en daarna plotten. Of één object tekenen en plotten, wachten tot het klaar is en dan het volgende maken. Het papier groeit mee met je werk.</p>
+      <p>Alles tekenen en daarna plotten. Of één object tekenen en plotten, wachten tot het klaar is en dan het volgende maken. Zo kun je verder werken op hetzelfde papier.</p>
     </div>
     <div style="max-width:760px; margin:0 auto;">
       <p>Een plot wist de opname niet. Zonder een nieuwe opname plot je ook eerdere objecten opnieuw. Je kiest dus zelf: het hele werk in één job, of afzonderlijke jobs op hetzelfde papier.</p>
@@ -70,7 +70,7 @@
   <section id="make" class="section section-dark">
     <div class="section-header">
       <div class="section-tag">what you can make</div>
-      <h2>Four <span class="accent">Drawings</span></h2>
+      <h2>Four <span class="accent">drawings</span></h2>
       <p class="section-desc">Drawn here the way the pen will draw them, the pen in the air in red. Click one to open it.</p>
     </div>
     <div class="make-grid">
@@ -85,7 +85,7 @@
   <section id="try" class="section">
     <div class="section-header">
       <div class="section-tag">try it</div>
-      <h2>A Line and a <span class="accent">Circle</span></h2>
+      <h2>A line and a <span class="accent">circle</span></h2>
       <p class="section-desc">The drawing needs one import, a page in millimetres and two shapes. The fragment below assumes an HTML canvas and a module script; the Guide provides a complete page.</p>
     </div>
     <div style="max-width:760px; margin:0 auto;">
@@ -107,12 +107,12 @@ console.log(plot.plan().stats);            // path count, distances and a time e
   <section id="change" class="section section-dark">
     <div class="section-header">
       <div class="section-tag">change one thing and look</div>
-      <h2>One <span class="accent">Change</span></h2>
-      <p class="section-desc">A fill, an order, a file. Each one shows you something about the pen.</p>
+      <h2>Things to <span class="accent">try</span></h2>
+      <p class="section-desc">Try adding a hatch, keeping your drawing order or importing a file.</p>
     </div>
     <ol class="pipeline-list">
       <li><span>01</span><strong>add a hatch</strong><p><code>plot.hatch([{ x: 30, y: 200 }, { x: 180, y: 200 }, { x: 180, y: 270 }, { x: 30, y: 270 }], { spacing: 2.4 })</code>: a dark rectangle made of lines. Change <code>2.4</code> to <code>1.2</code> and the lines sit closer together. The patch gets denser and usually takes longer to plot.</p></li>
-      <li><span>02</span><strong>keep your order</strong><p><code>plot.plan({ strategy: "drawn" })</code>: the pen draws in the order you wrote, and the route stays in input order. This can take more travel; the chaos game keeps its order on purpose.</p></li>
+      <li><span>02</span><strong>keep your order</strong><p><code>plot.plan({ strategy: "drawn" })</code>: the pen follows the order in which you added the paths. This can take more travel; the chaos game keeps its order on purpose.</p></li>
       <li><span>03</span><strong>bring a file</strong><p>Try a supported SVG in <a href="examples/svg_to_pen/index.html">SVG to pen</a> and pick a width: the same drawing, from a file.</p></li>
     </ol>
   </section>
@@ -121,11 +121,11 @@ console.log(plot.plan().stats);            // path count, distances and a time e
   <section id="paper" class="section">
     <div class="section-header">
       <div class="section-tag">put it on paper</div>
-      <h2>On <span class="accent">Paper</span></h2>
+      <h2>On <span class="accent">paper</span></h2>
       <p class="section-desc">Every example page has a pen panel: it shows the bed, lets you place and turn the sheet, counts the minutes, and remembers where a stopped plot can resume.</p>
     </div>
     <ol class="pipeline-list">
-      <li><span>01</span><strong>Chrome or Edge</strong><p>With the plotter on USB. Web Serial lives nowhere else.</p></li>
+      <li><span>01</span><strong>Chrome or Edge</strong><p>Connect the plotter by USB. These examples use Web Serial in Chrome or Edge on localhost or HTTPS.</p></li>
       <li><span>02</span><strong>Home corner</strong><p>Slide the carriage to the home corner by hand, and put the paper down.</p></li>
       <li><span>03</span><strong>Connect, then Plot</strong><p>Choose the plotter in the list that opens, check the bed drawing, press Plot.</p></li>
       <li><span>04</span><strong>Stop</strong><p>Stop requests a pen lift and motor release. The panel can resume after the last completed stroke of the same drawing, once you park the carriage at home again.</p></li>
@@ -140,8 +140,8 @@ console.log(plot.plan().stats);            // path count, distances and a time e
   <section id="further" class="section section-dark">
     <div class="section-header">
       <div class="section-tag">go further</div>
-      <h2>Go <span class="accent">Further</span></h2>
-      <p class="section-desc">When one drawing is not enough.</p>
+      <h2>More to <span class="accent">try</span></h2>
+      <p class="section-desc">Try changing pens, adding tone or exporting a file for another plotter.</p>
     </div>
     <ol class="pipeline-list">
       <li><span>files</span><strong>Files for other plotters</strong><p>The same plan as SVG, HPGL or G-code, for software that accepts those formats; configure it for your machine. <a href="docs/guide.html#animation-svg-files">See the file routes &rarr;</a></p></li>
@@ -155,8 +155,8 @@ console.log(plot.plan().stats);            // path count, distances and a time e
   <section id="hood" class="section" style="text-align:center; padding:4rem 2rem;">
     <div class="section-header">
       <div class="section-tag">under the hood</div>
-      <h2>Under the <span class="accent">Hood</span></h2>
-      <p class="section-desc">You give it points in physical units or supported SVG shapes. It can clean up paths, choose nearby strokes, preview the route and estimate its duration. The EBB driver sends a complete plan to the tested iDraw HSE / A2. SVG, HPGL, G-code and JSON exports are also available. Plain JavaScript ES modules.</p>
+      <h2>How it <span class="accent">works</span></h2>
+      <p class="section-desc">You give it points in physical units or supported SVG shapes. It can clean up paths, choose nearby strokes, preview the route and estimate how long the drawing will take. The EBB driver sends a complete plan to the tested iDraw HSE / A2. SVG, HPGL, G-code and JSON exports are also available. Plain JavaScript ES modules.</p>
     </div>
     <div class="cta-row">
       <a href="docs/guide.html" class="cta-btn secondary">Guide &#8594;</a>

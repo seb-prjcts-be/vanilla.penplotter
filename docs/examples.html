@@ -34,7 +34,7 @@
     <div class="section-header">
       <div class="section-tag">start here</div>
       <h2>Direct <span class="accent">plot</span></h2>
-      <p class="section-desc">A 40 by 25 millimetre frame with two waves inside. It is the drawing I used to check the machine, and the one to try first: small, quick, and if the frame measures 40 mm on paper, the scale is right. The dry run lists every command without sending one.</p>
+      <p class="section-desc">A 40 by 25 millimetre frame with two waves inside. It is the drawing I used to check the machine, and a small drawing to try first. Measure the 40 mm width and 25 mm height on paper to check the scale. The dry run lists every command without sending one.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-example="direct_plot" width="480" height="600" aria-label="Direct plot preview"></canvas></div>
@@ -67,7 +67,7 @@ const plan = plot.plan();</code></pre>
     <div class="section-header">
       <div class="section-tag">black first, then red</div>
       <h2>Two <span class="accent">pens</span></h2>
-      <p class="section-desc">Every layer names its pen. The engine draws all the black first, then holds the motors and waits until you have put in the red pen. One stop, at the right moment.</p>
+      <p class="section-desc">Every layer names its pen. The engine draws all the black first, then holds the motors and waits until you have put in the red pen.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-example="two_pens" width="480" height="600" aria-label="Two pens preview"></canvas></div>
@@ -83,7 +83,7 @@ plot.hatch(wedge, { spacing: 2.2 });</code></pre>
     <div class="section-header">
       <div class="section-tag">the same drawing with less travel</div>
       <h2>Route <span class="accent">lab</span></h2>
-      <p class="section-desc">Input made as bad as I could: shuffled fragments, duplicates, a 1 440-point circle. Switch each optimizer pass on and off and read what it buys in paths, pen lifts, travel and minutes. The pen gets whatever you settle on.</p>
+      <p class="section-desc">A drawing with shuffled fragments, duplicates, a 1 440-point circle. Switch each optimizer pass on and off and compare the path count, pen lifts, travel and estimated time.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-example="route_lab" width="480" height="600" aria-label="Route lab preview"></canvas></div>
@@ -98,7 +98,7 @@ plan.stats.travelDistance;   // 14 421 mm → 546 mm</code></pre>
     <div class="section-header">
       <div class="section-tag">thirty-two rows, one moment</div>
       <h2>Waves to <span class="accent">pen</span></h2>
-      <p class="section-desc">vanilla.waves animates; a plotter draws once. So time stops: 32 rows sampled at t = 0 become one sheet. That is the whole trick for plotting anything that moves.</p>
+      <p class="section-desc">This example samples 32 rows from vanilla.waves at t = 0 and plots that still drawing. Try another time to make a different sheet.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-example="waves_pen" width="480" height="600" aria-label="Waves to pen preview"></canvas></div>
@@ -140,7 +140,7 @@ for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;</co
   </section>
   <section class="section" style="padding:3rem 2rem;">
     <div style="max-width:760px; margin:0 auto;">
-      <p class="callout">Plotting needs Chrome or Edge on <code>localhost</code> or https, and for now one machine: an iDraw HSE / A2 with an EBB board. The wave examples load a pinned vanilla.waves build. If you draw in p5.js, the sister site has the same idea with a p5 face: <a href="https://seb-prjcts-be.github.io/p5.penplotter/docs/examples.html">p5.penplotter examples</a>.</p>
+      <p class="reading-note">Plotting needs Chrome or Edge on <code>localhost</code> or https, and for now one machine: an iDraw HSE / A2 with an EBB board. The wave examples load a pinned vanilla.waves build. If you draw in p5.js, the sister site records supported p5 shapes: <a href="https://seb-prjcts-be.github.io/p5.penplotter/docs/examples.html">p5.penplotter examples</a>.</p>
     </div>
   </section>
   </main>

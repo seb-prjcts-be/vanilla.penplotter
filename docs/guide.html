@@ -28,7 +28,7 @@
     <header class="page-header">
       <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
       <h1>Guide</h1>
-      <p class="guide-intro">Begin with a complete drawing page, preview it and export it. A dry run comes before physical plotting. Pens, fills, cleanup and direct module access are optional extensions.</p>
+      <p class="guide-intro">Start with a line and a circle. Preview the drawing and export it, or check a dry run before sending it to the plotter. The later sections cover pens, fills and route planning.</p>
     </header>
 
     <nav aria-label="On this page"><p><a href="#werkwijzen">Twee werkwijzen</a> · <a href="#start">Start</a> · <a href="#export">Export</a> · <a href="#plotting">Dry run and plot</a> · <a href="#paper">Paper</a> · <a href="#pens">Pens</a> · <a href="#fills">Fills</a> · <a href="#planning">Planning</a> · <a href="#starters">Fragments</a> · <a href="#modules">Modules</a> · <a href="#reference">Reference</a></p></nav>
@@ -89,7 +89,7 @@ volgende.circle(140, 100, 25);
     </figure>
 
     <h2 id="export">2. Export the drawing</h2>
-    <p>After drawing, export the same plan as SVG. HPGL and G-code need commands and settings suited to the receiving software and machine; an export does not establish driver support.</p>
+    <p>After drawing, export the same plan as SVG. HPGL and G-code need commands and settings suited to the receiving software and machine; exporting a file does not mean the library can drive that machine directly.</p>
     <pre><code class="language-javascript">plot.drawRoute(canvas.getContext("2d"), {
   showTravel: true
 });
@@ -107,7 +107,7 @@ const gcode = plot.exportGCode({
     </figure>
 
     <h2 id="plotting">3. Dry run, then plot</h2>
-    <p>This is where it was all going. One machine profile has a tested driver so far: the iDraw HSE / A2, an AxiDraw-style CoreXY plotter with an EBB board. The plan goes straight to it; nothing is written to disk on the way.</p>
+    <p>Direct plotting has been tested on one machine: the iDraw HSE / A2, an AxiDraw-style CoreXY plotter with an EBB board. The plan goes straight to it; nothing is written to disk on the way.</p>
     <p>First open the <a href="../examples/direct_plot/index.html">40 × 25 mm test</a> and use its dry run. To check your own drawing without hardware, add these imports at the top of the starter's module, then run the commands through the log transport:</p>
     <pre><code class="language-javascript">import { EbbDriver, compileEbbPlan, createLogTransport }
   from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/src/driver/ebb.js";
@@ -119,8 +119,8 @@ console.log(result); // commands checked and logged; no serial connection</code>
     <p>The example panel handles physical connection, sheet placement, confirmation and stopping. Use it for a first physical test. A custom application can use <code>createWebSerialTransport()</code> and <code>EbbDriver</code>; open the port from a user click and run only after checking the dry run and confirming the job. See <a href="architecture.html">Architecture</a> for the driver contract.</p>
 
     <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or an error requests the stop sequence: motion halted, pen up, motors off. A working connection is needed to deliver those commands. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
-    <p class="callout">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. The example panel can resume after completed strokes of the same drawing, after manual parking at home. There is no mid-stroke pause or resume. Exports for other machines need suitable software and configuration.</p>
-    <p class="callout">A complete drawing is prepared before plotting. <code>strategy: "drawn"</code> can preserve its order. <a href="live.html">Live drawing</a>, where new strokes arrive while the pen runs, is proposed work and has no current API.</p>
+    <p class="reading-note">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. The example panel can resume after completed strokes of the same drawing, after manual parking at home. There is no mid-stroke pause or resume. Exports for other machines need suitable software and configuration.</p>
+    <p class="reading-note">A complete drawing is prepared before plotting. <code>strategy: "drawn"</code> can preserve its order. <a href="live.html">Live drawing</a>, where new strokes arrive while the pen runs, is proposed work and has no current API.</p>
     <p>The HSE profile records manufacturer defaults separately from its operating settings. It retains the controller's pen calibration unless you supply <code>penLift</code>. For a known standard servo, height percentages are 0–100 and lift/lower rates are 1–100:</p>
     <pre><code class="language-javascript">import { compileEbbPlan } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/src/driver/ebb.js";
 
@@ -203,12 +203,12 @@ const plan = plot.plan({
 });
 
 console.log(plan.stats);</code></pre>
-    <p class="callout">Tolerances, coordinates and distance statistics use document units. Planner speeds use mm/s; G-code feed rates use mm/min. HPGL and G-code exports convert coordinates to physical units (96 CSS pixels = 1 inch). SVG retains the document units.</p>
+    <p class="reading-note">Tolerances, coordinates and distance statistics use document units. Planner speeds use mm/s; G-code feed rates use mm/min. HPGL and G-code exports convert coordinates to physical units (96 CSS pixels = 1 inch). SVG retains the document units.</p>
     <p>After editing the document, export, statistics and preview rebuild stale plans automatically, retaining the previous optimization and planning settings. This also covers edits to returned paths, layers and tools. Document data must remain JSON-serializable.</p>
 
     <figure class="doc-animation" id="animation-route">
       <img src="images/animations/route.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="Input order beside planned order, with shorter pen-up travel in the planned version.">
-      <figcaption>Cream solid lines show the input drawing; sage solid lines show the planned drawing. Ochre dotted lines are moves with the pen raised: they leave no ink. Same drawing, less travel with the pen raised: 2,404 mm becomes 422 mm in this example. Dotted lines are travel; solid lines are drawing.</figcaption>
+      <figcaption>Cream solid lines show the input drawing; sage solid lines show the planned drawing. Ochre dotted lines are moves with the pen raised: they leave no ink. Same drawing, less travel with the pen raised: 2,404 mm becomes 422 mm in this example. </figcaption>
     </figure>
 
     <figure class="doc-animation" id="animation-cleanup">
@@ -256,7 +256,7 @@ for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;
 console.log(plot.stats());</code></pre>
     <p>More directions on the <a href="possibilities.html">Possibilities</a> page; every example on <a href="examples.html">Examples</a> is a finished version of one of these.</p>
     <h2 id="modules">Use the modules directly</h2>
-    <p>Import from <code>src/geometry</code>, <code>src/optimizer</code>, <code>src/planner</code> or <code>src/renderer</code>. The root facade does not own a hidden representation: every stage accepts and returns the documented snapshots.</p>
+    <p>Import from <code>src/geometry</code>, <code>src/optimizer</code>, <code>src/planner</code> or <code>src/renderer</code>. Each stage accepts and returns the documented data objects. You can use these modules separately from <code>PlotterEngine</code>.</p>
 
     <h2 id="reference">Core reference</h2>
     <table><thead><tr><th>Call</th><th>Units and result</th></tr></thead><tbody>

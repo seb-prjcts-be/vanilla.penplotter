@@ -4,7 +4,7 @@
 
 **[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
 
-You supply polylines in physical units. This engine can clean up paths, plan a route, preview it and export files.
+You supply polylines in physical units. This engine can clean up paths, plan the pen’s route, preview it and export files.
 
 Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
 
@@ -73,11 +73,11 @@ Pen-up travel uses timed `SM` steps along the planned ramp. Drawing uses `LM` on
 
 Motion is planned with acceleration: every stroke ramps up from rest, cruises, slows into corners by how sharp they are, and ramps down again. The plan's `drawSpeed` and `travelSpeed` are the speeds the machine gets; the profile fills in the rest (40 mm/s drawing and travelling, 800 mm/s² drawing and 300 mm/s² travelling, a corner deviation of 0.05 mm), and every value can be overridden in `compileEbbPlan(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })` or `driver.run(plan, { ... })`.
 
-A stroke never aims at exactly zero speed (floor 2 mm/s, so the last step of a line is never left hanging with the pen on the paper), chords within 0.02 mm of a straight line are merged before planning (a circle of 360 chords is a few dozen commands, not 360), and commands go out ahead of their acknowledgements, so a run of short moves is never paced by the USB round trip.
+A stroke never aims at exactly zero speed (floor 2 mm/s, so the last step of a line is never left hanging with the pen on the paper), chords within 0.02 mm of a straight line are merged before planning (a circle of 360 chords is a few dozen commands, not 360), and commands go out ahead of their acknowledgements to reduce waiting between short moves.
 
 On firmware 3.x the driver also opens the board's motion queue to its full depth.
 
-The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, the seconds the plot takes: 681 estimated, 680 plotted, for the wave hatch.
+The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, close to the measured time in the wave hatch test: 681 seconds estimated, 680 plotted.
 
 **We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted on 2026-10-01. The iDraw HSE/A3 and standard-servo AxiDraw models are likely candidates, not tested profiles. NextDraw needs its own pen-lift and homing configuration. See the [machine notes](docs/architecture.html).
 
@@ -166,7 +166,7 @@ Every stage accepts and returns plain, JSON-serialisable snapshots: `vanilla.pen
 
 ## Examples
 
-Every example ends at the pen; the [examples page](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html) previews them live.
+Every example includes a plotting panel; the [examples page](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html) previews them live.
 
 - `direct_plot` - a 40 × 25 mm frame with two waves: the first thing to plot, and a scale check
 - `first_job` - a hatched shape, its outline and a circle: the smallest complete job
@@ -190,7 +190,7 @@ Measured: about 5 ms at 11 000 points, 20 ms at 50 000, 230 ms at 500 000. Negli
 
 ## Related work
 
-[p5.plotSvg](https://github.com/golanlevin/p5.plotSvg) by Golan Levin is the usual way to export a plotter-friendly SVG from p5.js. It deliberately does not optimise and drives no machine; for that it points to [vpype](https://vpype.readthedocs.io/). This engine starts where that road ends: it reads such a file, plans it and plots it (the `svg_to_pen` example).
+[p5.plotSvg](https://github.com/golanlevin/p5.plotSvg) by Golan Levin is the usual way to export a plotter-friendly SVG from p5.js. It deliberately does not optimise and drives no machine; for that it points to [vpype](https://vpype.readthedocs.io/). You can try importing its supported SVG paths here, inspect the plan and plot it with the `svg_to_pen` example.
 
 [p5.gysin](https://github.com/seb-prjcts-be/p5.gysin) writes plotter-safe SVG with one Inkscape layer per pen; this engine can read it. Wave samplers and [vanilla.waves](https://github.com/seb-prjcts-be/vanilla.waves) supply the numbers several examples draw with.
 
@@ -212,7 +212,7 @@ node tests/waves-integration.js path/to/waves-core.js waves-a4.svg
 
 ## How this was made
 
-Designed and directed by Sebastien Vanblaere, written with AI assistance, and held to one rule: nothing is claimed that a test or a plot on paper has not shown. See [About](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/about.html).
+Written with AI assistance, under the direction of Sebastien Vanblaere. Changes are checked in code and on the iDraw; physical tests cover that machine only. See [About](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/about.html).
 
 MIT License.
 

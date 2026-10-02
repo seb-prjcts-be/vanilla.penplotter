@@ -29,7 +29,7 @@
   <div class="ex-page-header">
     <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
     <h1>Possibilities</h1>
-    <p>A plotter has no pixels, no grey, no fill. It has one line at a time, a pen you can swap, and all the time in the world. I find that a good set of limits to draw inside. The previews below are drawn live by the engine; the pixel animations explain what the pen does. Take each one as a starting point for a drawing.</p>
+    <p>A pen plotter draws with strokes. Closer lines can make a darker patch; changing the pen changes the marks. The previews below run in the browser, and the animations explain the steps. You can try the examples without a plotter.</p>
   </div>
   <section id="tone" class="section section-dark">
     <div class="section-header">
@@ -47,7 +47,7 @@ plot.crossHatch(cell(5), { spacing: 1.2 });</code></pre>
     </div>
     <figure class="doc-animation" id="animation-hatching">
       <img src="images/animations/hatching.gif" width="600" height="400" loading="lazy" alt="A filled shape becomes parallel pen strokes.">
-      <figcaption>A dark patch is a small collection of lines. Try halving the spacing in the example above. The patch gets denser, and the pen has more work. Open <a href="../examples/wave_hatch/index.html">wave hatch</a> to let a sampler choose the density.</figcaption>
+      <figcaption>This dark patch is made of parallel lines. Try halving the spacing in the example above. The patch gets denser, and the pen has more work. Open <a href="../examples/wave_hatch/index.html">wave hatch</a> to let a sampler choose the density.</figcaption>
     </figure>
 
   </section>
@@ -82,7 +82,7 @@ plot.exportHPGL({ penMap: { black: 1, blue: 2, red: 3 } });</code></pre>
   <section id="route" class="section">
     <div class="section-header">
       <div class="section-tag">plot.plan({ strategy: "nearest" })</div>
-      <h2>Routes that <span class="accent">shrink</span></h2>
+      <h2>Planning the <span class="accent">route</span></h2>
       <p class="section-desc">Left: strokes in their input order, with pen-up travel in red. Right: the same strokes reordered and reversed by a greedy nearest-path planner. This example reduces travel; the strategy does not guarantee the shortest route. Use <code>strategy: "drawn"</code> when order matters.</p>
     </div>
     <div class="ex-preview">
@@ -125,7 +125,7 @@ compileEbbPlan(plot.plan(), { profile: "idraw-hse-a2" }).commands;</code></pre>
     <div class="section-header">
       <div class="section-tag">any function of x · wave sampling · vanilla.waves</div>
       <h2>A number in, a line <span class="accent">out</span></h2>
-      <p class="section-desc">The engine only wants points. Anything that returns a number for an x is a drawing: <code>Math.sin</code>, a noise function, or a custom sampler. Sample at a fixed time and the animation becomes a sheet; sample at ten times and you have a series.</p>
+      <p class="section-desc">You can build a line by sampling a function at successive x positions: <code>Math.sin</code>, a noise function, or a custom sampler. Sample at a fixed time and the animation becomes a sheet; sample at ten times and you have a series.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="waves" width="520" height="220" aria-label="Wave lines sampled at a fixed time"></canvas></div>
@@ -140,8 +140,8 @@ plot.polyline(points);</code></pre>
   <section id="series" class="section">
     <div class="section-header">
       <div class="section-tag">seeds · new PlotterEngine() per sheet</div>
-      <h2>Series, not <span class="accent">singles</span></h2>
-      <p class="section-desc">A plotter makes editions. One rule, one seed per sheet, four engines, four plans, four files with the same name and a number: the workflow of a print run, in a loop.</p>
+      <h2>A <span class="accent">series</span></h2>
+      <p class="section-desc">Keep the same drawing rule and change the seed for each sheet. This example makes four plans and exports four numbered SVG files.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="series" width="520" height="220" aria-label="Four variations of one rule, side by side"></canvas></div>
@@ -153,7 +153,7 @@ download(`sheet-${seed}.svg`, plot.exportSVG());
   </section>
   <section class="section" style="padding:3rem 2rem;">
     <div style="max-width:760px; margin:0 auto;">
-      <p class="callout">Everything here runs without hardware. With an iDraw HSE / A2 attached, <a href="../examples/direct_plot/index.html">Direct plot</a> takes any of these plans to paper; the <a href="roadmap.html">roadmap</a> says what the driver still lacks.</p>
+      <p class="reading-note">Everything here runs without hardware. With an iDraw HSE / A2 attached, <a href="../examples/direct_plot/index.html">Direct plot</a> takes any of these plans to paper; the <a href="roadmap.html">roadmap</a> says what the driver still lacks.</p>
     </div>
   </section>
   </main>
