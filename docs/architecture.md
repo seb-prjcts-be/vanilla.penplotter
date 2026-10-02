@@ -1,5 +1,9 @@
 # How vanilla.penplotter works
 
+## Twee werkwijzen
+
+Voor een volledige tekening bouw je één document en plot je één plan. Voor object voor object gebruik je per job een nieuw document met dezelfde units en papierplaatsing. De verbinding kan blijven bestaan. Wacht op een voltooide job voordat je de volgende start. Een plan opnieuw uitvoeren tekent dezelfde geometrie opnieuw. Beide werkwijzen gebruiken complete jobs; er is geen live streaming tijdens een lopende job. Zie de [Guide](guide.html#werkwijzen) voor de stappen en grenzen.
+
 ## From points to a plan
 
 You add lines and polylines in physical units. The engine keeps them in layers, with a tool for each layer. A tool describes a pen's colour and width; it does not choose or load a pen on the machine.

@@ -8,6 +8,10 @@ You supply polylines in physical units. This engine can clean up paths, plan a r
 
 Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
 
+## Twee manieren van werken
+
+Alles tekenen, dan plotten: één volledige tekening vormt één job. Of één object tekenen en plotten, wachten tot de job klaar is en daarna een nieuwe opname maken voor het volgende object op hetzelfde papier. Een plot wist de opgenomen geometrie niet automatisch. De [Guide](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/guide.html#werkwijzen) legt beide werkwijzen en hun grenzen uit. Dit zijn opeenvolgende complete jobs; live streaming tijdens een lopende job is nog niet geïmplementeerd.
+
 ## Which library?
 
 **vanilla.penplotter** is the engine. Use it for your own JavaScript, arrays of points or supported SVG geometry. It has no dependencies and works without p5.js.

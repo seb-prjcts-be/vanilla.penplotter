@@ -31,8 +31,34 @@
       <p class="guide-intro">Begin with a complete drawing page, preview it and export it. A dry run comes before physical plotting. Pens, fills, cleanup and direct module access are optional extensions.</p>
     </header>
 
-    <nav aria-label="On this page"><p><a href="#start">Start</a> · <a href="#export">Export</a> · <a href="#plotting">Dry run and plot</a> · <a href="#paper">Paper</a> · <a href="#pens">Pens</a> · <a href="#fills">Fills</a> · <a href="#planning">Planning</a> · <a href="#starters">Fragments</a> · <a href="#modules">Modules</a> · <a href="#reference">Reference</a></p></nav>
+    <nav aria-label="On this page"><p><a href="#werkwijzen">Twee werkwijzen</a> · <a href="#start">Start</a> · <a href="#export">Export</a> · <a href="#plotting">Dry run and plot</a> · <a href="#paper">Paper</a> · <a href="#pens">Pens</a> · <a href="#fills">Fills</a> · <a href="#planning">Planning</a> · <a href="#starters">Fragments</a> · <a href="#modules">Modules</a> · <a href="#reference">Reference</a></p></nav>
 
+    <h2 id="werkwijzen">Twee manieren van werken</h2>
+    <p>Je kunt eerst een volledige tekening maken en die daarna plotten. Je kunt ook één object tekenen, het plotten en pas daarna het volgende tekenen. In beide gevallen krijgt de machine een afgebakende job. Het verschil is wanneer jij beslist dat de tekening klaar is.</p>
+    <h3>Alles tekenen, dan plotten</h3>
+    <p>Je tekent alle lijnen en vormen, bekijkt het geheel en start één plot. De planner kan de route binnen die job ordenen. Kies <code>strategy: "drawn"</code> als de volgorde waarin je tekent ook op papier moet blijven staan.</p>
+    <h3>Eén object tekenen en plotten, dan het volgende</h3>
+    <p>Je tekent een object, plot het en wacht tot de job klaar is. Dan maak je een nieuwe opname voor het volgende object en plot je opnieuw, op hetzelfde papier. Zo groeit het werk terwijl je verder tekent. De planner kent telkens alleen de huidige job; hij kan de route niet over toekomstige objecten heen verbeteren.</p>
+    <p><strong>Na een plot blijft de opname bestaan.</strong> Opnieuw plotten zonder die opname te wissen tekent ook de vorige objecten opnieuw. Dat kan bewust zijn, bijvoorbeeld voor een tweede passage. Voor alleen het volgende object begin je een nieuwe opname. Wat al op papier staat, blijft daar staan.</p>
+    <p>Dit is werken in opeenvolgende jobs. Nieuwe lijnen aanleveren terwijl de machine nog tekent is live streaming; dat is nog niet geïmplementeerd. Een object kan één lijn zijn, maar ook een groep vormen die je samen wilt plotten.</p>
+    <h3>In vanilla.penplotter</h3>
+    <p>Voor één volledige tekening voeg je alle objecten aan één engine toe. Voor opeenvolgende objecten maak je per job een nieuwe <code>PlotterEngine</code> met dezelfde documentunits en papierpositie. De driver en verbinding kunnen blijven bestaan. De core heeft geen adapter-<code>plot.clear()</code>; een nieuwe engine geeft je een leeg document.</p>
+    <pre><code class="language-javascript">// Elke oproep begint een nieuwe opname met dezelfde pagina.
+function nieuwObject() {
+  return new PlotterEngine({
+    units: "mm", page: { width: 210, height: 297, margin: 12 }
+  });
+}
+
+const eerste = nieuwObject();
+eerste.rect(20, 20, 60, 40);
+// Controleer de preview en dry run, bevestig en plot eerste.plan().
+// Wacht op status "complete" voordat je het volgende object plot.
+
+const volgende = nieuwObject();
+volgende.circle(140, 100, 25);
+// Controleer en plot volgende.plan(), op hetzelfde papier.</code></pre>
+    <p>Dit fragment bouwt twee afzonderlijke documenten en stuurt niets naar hardware. De voorbeeldpanelen tonen één huidige job. Een eigen toepassing kan opeenvolgende jobs uitvoeren via dezelfde driver, telkens na dry run en bevestiging. De standaarddriver keert na een voltooide job terug naar home. Na een stop of fout controleer je de machine en parkeer je opnieuw bij home.</p>
     <h2 id="start">1. Draw and preview</h2>
     <p>Save this complete page as <code>index.html</code> and open it through localhost or HTTPS. It draws a line and a circle on a canvas, then prints the plan statistics. No plotter is needed. The import pins the source used by this guide.</p>
     <pre><code class="language-markup">&lt;!DOCTYPE html&gt;
