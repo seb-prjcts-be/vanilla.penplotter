@@ -74,4 +74,4 @@ Optional `penLift` configuration translates standard-servo height and rate perce
 
 The source separates core data, geometry, optimizer, planner, renderer, driver and plugin registry. Optimizer plugins can register a named function. Registries also exist for effects, renderers and drivers, but those extension points are not yet wired into the facade.
 
-The [guide](guide.html) shows the working API. The [handbook](handbook.html) carries the options and driver details. The [roadmap](roadmap.html) keeps proposed work separate from these implemented parts.
+The [guide](guide.html) shows the working API. The [roadmap](roadmap.html) keeps proposed work separate from these implemented parts.
