@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Two modes: draw everything, then plot; draw something, plot it - vanilla.penplotter</title>
+  <title>Live drawing: design notes - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261002c">
 </head>
 <body>
   <nav id="navbar">
@@ -26,93 +26,26 @@
   <main class="page">
     <header class="page-header">
       <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-      <h1>vanilla.<span class="accent">penplotter</span> Two modes: draw everything, then plot; draw something, plot it</h1>
-      <p class="guide-intro">Two modes · sheet mode is built, live mode is designed. Generated from <a href="live.md">live.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
+      <h1>Live drawing: design notes</h1>
+      <p class="guide-intro">A possible next step; live streaming is not implemented.</p>
     </header>
-<p>You know this from drawing by hand. There are two ways to make a picture with a pen.</p>
-<p><strong>The first way: you know the whole picture before you start.</strong> You have it in your head, or on a sketch. Then you pick up the pen and draw it, in a clever order: this line, then the one next to it, lifting the pen as little as you can. The picture was finished before the first line. We call this <strong>sheet mode</strong>: <em>draw everything, then plot.</em> Your program makes the whole drawing. The engine works out a good order. The plotter draws it, start to finish. This is what both libraries do today.</p>
-<p><strong>The second way: you draw and look, draw and look.</strong> You put down a line, see what it does, and decide the next one. The picture grows while you make it, and the order you made it in is part of the picture. Nobody knows what it will be until it is done. We call this <strong>live mode</strong>: <em>draw something, plot it.</em> Your program makes one thing, the plotter draws it, your program makes the next thing. The plotter is not printing a picture. It is drawing along with you.</p>
-<p>Why would you want the second way? Because some things only exist in time.</p>
-<ul><li><strong>Watch it appear.</strong> Take the chaos game: one point jumps halfway to a random corner and leaves a dot, over and over. After a few hundred dots a triangle is there that nobody drew. On a screen that takes a second. On paper, dot by dot, it takes half an hour, and you see it come out of nothing. In sheet mode the engine would put the dots in a clever order, and the surprise would be gone.</li><li><strong>Draw with your hands.</strong> A camera watches your hand. Pinch your fingers and the pen goes down; move your hand and the pen follows; open your hand and the pen lifts. The plotter draws what you draw in the air, a moment later, with the precision of a machine.</li><li><strong>Draw without looking.</strong> Switch the screen off. The paper is the only place the drawing exists. What the drawing is, is what the pen did.</li></ul>
-<p>A plotter can be a printer, or it can be an instrument. Sheet mode is the printer. Live mode is the instrument.</p>
-<table><thead><tr><th></th><th>sheet mode</th><th>live mode</th></tr></thead><tbody><tr><td>in one sentence</td><td>draw everything, then plot</td><td>draw something, plot it</td></tr><tr><td>who decides the order</td><td>the engine, to save pen lifts and travel</td><td>you, by the order you draw in</td></tr><tr><td>when the pen starts</td><td>when the whole drawing is ready</td><td>right away, and it keeps going</td></tr><tr><td>what you see</td><td>first a preview, then the plot</td><td>the drawing growing on paper</td></tr><tr><td>how many pens</td><td>as many as you like, the machine stops for each change</td><td>one</td></tr><tr><td>what it is good for</td><td>a finished design, a series, anything with more than one pen</td><td>things that happen over time: animation, gestures, chance</td></tr><tr><td>is it built</td><td>yes: version 0.3.1 of the engine, 0.2.0 of the p5 adapter</td><td>not yet: designed on this page</td></tr></tbody></table>
-<p>Everything else on this site is about sheet mode. The rest of this page is the design of live mode, and from here on the words get technical: it is written for whoever builds it, and for whoever wants to know exactly what the machine will do. Nothing of it is in the code yet. When it is, the last row of the table changes and this sentence goes.</p>
-<h2>What happens on the wire</h2>
-<p>The EBB board does not know about sheets. It knows pen up, pen down, and moves with a speed profile, queued a few at a time. Sheet mode compiles a whole plan into that stream and sends it from start to end. Live mode keeps the same stream open and appends to it one stroke at a time.</p>
-<p>One stroke in live mode, from the pen's point of view:</p>
-<ol><li>The pen is up and the carriage is where the previous stroke ended.</li><li>Travel with ramps to the first point of the new stroke.</li><li>Pen down, wait the pen-down delay.</li><li>The stroke itself with the same acceleration profile as sheet mode: ramp up, cruise, slow into corners, ramp down to the floor speed.</li><li>Pen up, wait the pen-up delay.</li></ol>
-<p>Nothing else changes: the bounds check per stroke, the step-rate limits, the floor speed that keeps the last step from hanging with the pen on the paper, the pipelined sends and the emergency stop are the same code. The difference is only where a stroke starts (the current position instead of a position the planner computed) and when it is compiled (now, instead of all at once).</p>
-<h2>What the engine needs</h2>
-<h3>A session</h3>
-<pre><code>import { EbbDriver, createWebSerialTransport } from "./src/driver/ebb.js";
-
-const transport = createWebSerialTransport();
-await transport.open();                                  // from a click
-const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
-
-const session = await driver.live({ confirmed: true });  // motors on, pen up, position = home
-await session.draw([{ x: 20, y: 20 }, { x: 80, y: 20 }, { x: 80, y: 60 }]);   // mm, on the bed
-await session.draw(circlePoints);
-await session.idle();                                    // the pen has caught up
-await session.close();                                   // back home, motors off</code></pre>
-<table><thead><tr><th>member</th><th>what it does</th></tr></thead><tbody><tr><td><code>driver.live(options)</code></td><td>opens the session: version check, FIFO depth, <code>EM,1,1</code>, <code>SP,1</code>; the carriage's position at that moment is <code>(0, 0)</code>, the home corner, exactly as in <code>run()</code></td></tr><tr><td><code>session.draw(points, options)</code></td><td>compiles one stroke from the current position (travel, pen down, stroke, pen up) and sends it; resolves when the stroke is <em>queued</em>, not when it is drawn; <code>options</code> may override <code>drawSpeed</code>, <code>travelSpeed</code>, <code>acceleration</code> for this stroke</td></tr><tr><td><code>session.move(point)</code></td><td>travel with the pen up, no stroke; for parking or for a gesture that lifts and moves</td></tr><tr><td><code>session.pending</code></td><td>seconds of motion queued and not yet drawn; what the adapter reads to pace a sketch</td></tr><tr><td><code>session.idle()</code></td><td>resolves when the queue is empty</td></tr><tr><td><code>session.position</code></td><td>where the carriage will be when the queue is empty, in mm</td></tr><tr><td><code>session.close()</code></td><td>waits for idle, travels home, <code>SP,1</code>, <code>EM,0,0</code>, closes nothing else (the transport stays yours)</td></tr><tr><td><code>session.stop()</code></td><td>the emergency stop of 0.3.0: <code>ES</code>, pen up, motors off, the session is dead</td></tr><tr><td><code>session.stats</code></td><td>strokes drawn, millimetres drawn and travelled, seconds of motion, since the session opened</td></tr></tbody></table>
-<p>The session is the only new object. <code>compileEbbPlan()</code> gets one more option so that it can serve it: <code>{ origin: position, returnHome: false }</code>, meaning "start from here and do not go back". Everything the compile already does per stroke stays.</p>
-<h3>Time is the order</h3>
-<p>Live mode does not run the planner. The order of the strokes is the order of the calls, because the order is part of the drawing. The one optimisation that stays is inside a stroke: chords within 0.02 mm of a straight line are merged before compiling, as in sheet mode.</p>
-<p>The adapter may order the few strokes of <em>one frame</em> nearest-first before handing them to the session, since inside a frame the order was never the artist's choice. That is an adapter option, off by default, not an engine feature.</p>
-<h3>The pen sets the pace</h3>
-<p>A frame takes a sixtieth of a second on screen and forty seconds on paper. Something has to wait, and it is the sketch. Rules:</p>
-<ul><li><code>session.draw()</code> never blocks on the pen; it queues and returns. The queue is bounded: the session refuses to queue more than <code>maxPending</code> seconds of motion (default 10 s) and <code>draw()</code> then waits until there is room. So a runaway <code>draw()</code> loop cannot put a minute of moves on the wire that an emergency stop would have to tear down.</li><li><code>session.pending</code> and <code>session.idle()</code> let a consumer pace itself. The adapter uses them: it calls the sketch's <code>draw()</code> only when the pen has less than one frame of work left.</li><li>A stroke that cannot be queued for <code>timeout</code> ms (default 30 s) throws; the session is then considered lost and does the safe stop.</li></ul>
-<h3>What stays out</h3>
-<ul><li><strong>No pen changes.</strong> One pen per session. Pens as layers remain a feature of sheet mode, where the planner can group them.</li><li><strong>No undo.</strong> Ink is ink.</li><li><strong>No speed.</strong> Live mode is not a faster way to plot. Every stroke starts and ends at rest, and the pen waits for the sketch between frames.</li><li><strong>No homing.</strong> As everywhere in this engine: the carriage is parked in the home corner by hand before the session opens, and <code>(0, 0)</code> is wherever it was then.</li></ul>
-<h2>What the adapter needs</h2>
-<pre><code>let plot;
-
-function setup() {
-  createCanvas(600, 600);
-  frameRate(0.5);                                 // one frame every two seconds
-  plot = createPlot({ x: 147, y: 66, width: 300, liveMode: true });
-}
-
-function draw() {
-  // no background(), no plot.clear(): the sheet remembers everything
-  const x = random(width), y = random(height);
-  plot.circle(x, y, random(10, 60));             // on the canvas now, on paper when the pen gets there
-}
-
-function keyPressed() {
-  if (key === "l") plot.liveMode(true);          // connect, confirm, start following
-  if (key === "s") plot.stop();                  // emergency stop
-  if (key === "e") plot.liveMode(false);         // wait for the pen, go home, motors off
-}</code></pre>
-<table><thead><tr><th>call</th><th>sheet mode</th><th>live mode</th></tr></thead><tbody><tr><td><code>createPlot({ liveMode: true })</code></td><td>n/a</td><td>the plot will follow the sketch once <code>plot.liveMode(true)</code> has opened the session</td></tr><tr><td><code>plot.line()</code> and the others</td><td>draw on the canvas, remember in mm</td><td>draw on the canvas, remember in mm, and go out at the end of this frame</td></tr><tr><td><code>plot.clear()</code></td><td>forget the recorded frame</td><td>forget nothing on paper; marks where the next frame's additions start</td></tr><tr><td><code>plot.go()</code></td><td>plan and plot the last frame as a sheet</td><td>not available while a live session is open</td></tr><tr><td><code>plot.liveMode(true)</code></td><td>n/a</td><td>connect (port picker), confirm, open the session; like <code>loop()</code> and <code>noLoop()</code>, a switch</td></tr><tr><td><code>plot.liveMode(false)</code></td><td>n/a</td><td>wait for the pen, return home, motors off</td></tr><tr><td><code>plot.stop()</code></td><td>emergency stop</td><td>emergency stop</td></tr><tr><td><code>plot.pending()</code></td><td>n/a</td><td>seconds of motion still queued</td></tr><tr><td><code>plot.liveMode()</code></td><td>false</td><td>with no argument: true while the session is open</td></tr></tbody></table>
-<p>How a frame goes out: p5 calls <code>draw()</code>, the sketch records strokes, and when <code>draw()</code> returns the adapter hands that frame's strokes to the session in the order they were recorded. Then it holds the next frame until <code>session.pending</code> is below one frame's worth of motion. With <code>frameRate(0.5)</code> and small frames the pen keeps up and the sketch never waits; with <code>frameRate(30)</code> the sketch is throttled to the pen, which is still correct, only no longer an animation on screen. The adapter says so in its status line.</p>
-<p>The on-screen preview stays available in live mode, because without it nobody learns the trade. Switching it off is the artist's choice, not the library's.</p>
-<h2>The three uses, each with its recipe</h2>
-<h3>No preview</h3>
-<pre><code>function setup() {
-  noCanvas();                                      // or createCanvas and never look
-  plot = createPlot({ width: 300, liveMode: true });
-}
-function draw() { plot.line(/* … */); }</code></pre>
-<p>Without a canvas the plot still records in millimetres, because the adapter never needed the canvas for that. Keep a log: <code>plot.stats()</code> after <code>plot.liveMode(false)</code> tells what was drawn.</p>
-<h3>Hands</h3>
-<p>ml5 handPose gives 21 landmarks per hand at camera rate. The recipe:</p>
-<ol><li><strong>Pinch</strong> is the pen: pen down when the distance between thumb tip and index tip drops under a threshold, pen up when it opens again. Hysteresis on the threshold, or the pen chatters.</li><li><strong>Smooth</strong> the index tip with an exponential moving average; hand tracking jitters by a few pixels and the pen would draw every one.</li><li><strong>Map</strong> the camera frame to the sheet: mirror horizontally (a camera faces you), scale to the plot's width. A small dead zone at the camera's edge keeps the stroke on the paper.</li><li><strong>Cut</strong> the stroke when the pinch opens, simplify it (RDP, 0.3 mm) and resample it, then <code>plot.polyline(points)</code>; the adapter sends it at the end of the frame.</li><li><strong>Latency</strong> of a few hundred milliseconds is fine. The pen is behind anyway. What matters is that a stroke is one stroke, not twenty short ones.</li></ol>
-<p>Nothing in this recipe touches the engine. ml5 is a page's choice, loaded from its CDN by that page, never a dependency of either library.</p>
-<h3>Slow animation</h3>
-<ul><li>Never redraw. A sketch that clears and redraws every frame plots the same objects again and again; live mode is for sketches that <em>add</em>.</li><li>Seed your randomness, so a run can be repeated on a second sheet.</li><li>Let time be a parameter: the frame number is the only clock the pen can follow, so what changes from frame to frame is the drawing.</li><li><code>frameRate()</code> is the knob. Below one frame per second the pen keeps up and the screen shows the same thing as the paper, a little ahead.</li></ul>
-<h2>Safety</h2>
-<p>The rules of sheet mode apply, and two things are stricter.</p>
-<ul><li>The confirm dialog ("carriage parked, paper in place, hands clear") appears once, when the session opens. It is not asked per stroke; after that the sketch owns the pen.</li><li>Leaving the page is an emergency stop, as since 0.3.0. In live mode this is more likely to happen mid-stroke, so the pen-up on stop stays the first thing sent.</li><li>The bounded queue is a safety feature: a stop never has more than <code>maxPending</code> seconds to tear down.</li><li>The hand recipe keeps the pen up whenever tracking is lost. A hand that leaves the camera lifts the pen; it does not freeze it on the paper.</li></ul>
-<h2>Order of work</h2>
-<ol><li><strong>Engine:</strong> <code>driver.live()</code>, the session, the <code>origin</code> option on <code>compileEbbPlan()</code>. Tested dry against the log transport with the tick-exact firmware simulation of <code>tests/ebb.js</code>, including the bounded queue and the pace of <code>pending</code>.</li><li><strong>A plain example on the engine's site:</strong> draw with the mouse, the pen follows. The mouse is the hand. ml5 comes later and changes nothing below it.</li><li><strong>The adapter:</strong> <code>createPlot({ liveMode: true })</code>, <code>plot.liveMode(true)</code>, <code>plot.liveMode(false)</code>, the frame protocol and the pacing; a slow-animation example with <code>frameRate(0.5)</code>.</li><li><strong>The hands:</strong> the ml5 handPose example, pinch to draw, as a page that loads ml5 from its CDN.</li></ol>
-<p>Each step is plotted on the iDraw before the next starts, and the "is it built" row of the table at the top of this page is updated with what is real.</p>
-<p><em>Design written on 2026-10-01 from three questions I asked: what if you could make art without the canvas preview, what if you could draw with your hands through ml5, what if you set the frame rate low and watched the animation appear on the plotter, object by object.</em></p>
+<h2>Draw first, then plot</h2>
+<p>Both libraries currently build a complete drawing before the pen starts. The planner can choose nearby paths or preserve the order in which you drew them. The chaos game example uses that second option: its dots appear in the game's order, but the whole point set is prepared before plotting.</p>
+<h2>The idea</h2>
+<p>Live drawing would let a program add a stroke while the plotter is already drawing earlier strokes. A slow animation could grow on paper. A mouse or tracked hand could contribute new lines as you move.</p>
+<p>This is a proposal. There is no <code>liveMode()</code> or <code>driver.live()</code> API in either library. The existing examples do not stream new geometry during a plot.</p>
+<h2>What it would need</h2>
+<p>A driver session would keep its position between strokes, check each new stroke against the bed and limit the amount of queued motion. The sketch would have to wait when the pen falls behind. A frame rate alone cannot guarantee that the machine keeps up: stroke length, corners and pen lifts all take time.</p>
+<p>The first version would use one pen. Strokes would arrive in drawing order, with no undo on paper. Losing the input or leaving the page would request a stop and pen lift; physical behaviour would still depend on a working connection.</p>
+<p>Hand tracking would belong in an example, not in the core. That example would need smoothing, a clear drawing gesture and a pen-up state when tracking is lost.</p>
+<h2>Before calling it working</h2>
+<p>Build and test the driver session with the log transport, then plot a small mouse-drawing example on the iDraw. Add the p5 adapter and a slow animation only after those checks. A hand-tracking example can follow.</p>
+<p>Until then, use the current complete-plan workflow. See the <a href="guide.html">guide</a> for available calls and the <a href="roadmap.html">roadmap</a> for other proposed work.</p>
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

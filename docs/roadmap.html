@@ -6,8 +6,8 @@
   <title>Roadmap - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261002c">
 </head>
 <body>
   <nav id="navbar">
@@ -26,25 +26,25 @@
   <main class="page">
     <header class="page-header">
       <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-      <h1>vanilla.<span class="accent">penplotter</span> Roadmap</h1>
-      <p class="guide-intro">Roadmap · where the work goes. Generated from <a href="roadmap.md">roadmap.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
+      <h1>Roadmap</h1>
+      <p class="guide-intro">Working parts and proposed work.</p>
     </header>
-<p>Direction since 2026-09-21: <strong>the sketch goes straight to the pen, with no SVG in between.</strong> <code>vanilla.penplotter</code> is the engine and the driver; <code>p5.penplotter</code> is the thin p5.js layer on top. SVG, HPGL and G-code export remain, but are no longer the main path.</p>
-<h2>Present in 0.3.1</h2>
-<ul><li>document, layers, tools and polyline paths</li><li>primitives, transforms, simple offsets</li><li>hatch, crosshatch and deterministic stippling</li><li>browser SVG import with flattening</li><li>path deduplication, line merging, RDP and resampling</li><li>nearest-neighbour routing, reversal and closed-path reloop</li><li>SVG, HPGL, G-code, JSON and canvas preview, with conversion to physical units</li><li>distance, pen-up/down, pen changes and a time estimate with the machine's own ramps and pen delays (0.3.1), so a page and the pen panel say the same seconds</li><li>plan that refreshes itself after every change to the document</li><li>simulator, generic Web Serial text transport and machine profiles</li><li><strong>EBB driver: plotting directly on an iDraw HSE / A2</strong> (CoreXY, bounds checking, flow control per command, safe stop), physically tested on 2026-09-21</li><li><strong>acceleration in the EBB driver</strong> (0.3.0): ramps, cornering by junction deviation, exact-step <code>LM</code> moves, the board's full motion queue on firmware 3.x, <code>SM</code> slices on older firmware</li><li>examples: direct plot, first job, two pens, route lab, waves to pen, wave hatch, SVG to pen</li><li>plugin host; the p5 adapter lives in <code>p5.penplotter</code></li></ul>
-<h2>Live: the plotter as an output device</h2>
-<p>Two ways to draw. <em>Sheet mode</em>: draw everything, then plot; your program makes the whole drawing, the engine finds a good order, the plotter draws it. That is 0.3.1. <em>Live mode</em>: draw something, plot it; the plotter draws along while your program is still drawing, so the picture grows on paper in the order you made it. For things that happen over time: an animation appearing dot by dot, a hand drawing in the air. <a href="live.html">Two modes</a> explains both in plain words, then carries the design: the driver session, the adapter's <code>createPlot({ liveMode: true })</code>, the pacing rules, the order of work. Nothing of it is built yet; that page says what is real.</p>
-<h2>Next: strengthening the direct route</h2>
-<ul><li>pause; resume from an acknowledged command mid-stroke (resuming per completed stroke is in 0.3.0: the pen panel remembers the count, <code>skipDraws</code> leaves them out); profile version alongside the plan</li><li>pen heights configurable from the profile</li><li>Node transport alongside Web Serial, so a script can plot without a browser</li><li>more p5 primitives in <code>p5.penplotter</code> (arcs, curves)</li></ul>
-<h2>Parked</h2>
-<p>Not dropped, just not a priority: existing tools (vpype, the AxiDraw software) already cover this, and it does not bring the sketch closer to the pen.</p>
-<ul><li>curve-rich <code>GeometryDocument</code>, full SVG/CSS support, booleans and robust offsets</li><li>production planner: spatial index, 2-opt/3-opt, boustrophedon hatch routing, layer dependencies, wet-ink delay</li><li>drivers for other families (GRBL + servo, classic HPGL, iDraw 2.0); those only come once there is a physical machine to test on</li></ul>
-<h2>1.0</h2>
-<p>Stable schemas and migrations, TypeScript declarations and npm distribution, stable adapter contracts for <code>p5.penplotter</code>, and a support matrix in which every profile has been tested on real hardware.</p>
+<h2>Working now</h2>
+<p>The current source records polylines in layers, generates simple fills, imports a subset of SVG, cleans up paths and plans a route. It previews the plan and exports SVG, HPGL, G-code and JSON.</p>
+<p>Direct plotting uses the EBB driver. Physical tests cover the iDraw HSE / A2 with firmware 3.0.2: axes and scale on 2026-09-21, acceleration and queued low-level moves on 2026-10-01. The examples' pen panel places the sheet, offers a dry run and remembers completed strokes for resuming the same drawing.</p>
+<p>The latest tagged releases are core 0.3.1 and p5 adapter 0.2.1. The site's current source also includes the <code>pen()</code> and <code>drawRoute()</code> aliases and bed preview helpers. These additions are not a new tagged release.</p>
+<h2>Proposed next work</h2>
+<ul><li>Pause and resume within a stroke. Completed-stroke resume already exists in the example panel.</li><li>Configurable pen heights in the machine profile.</li><li>A Node serial transport for plotting from a script.</li><li>More curve support in the p5 adapter; arcs are already implemented.</li><li><a href="live.html">Live drawing</a>, with a bounded queue and pacing that follows the pen.</li></ul>
+<p>These are directions, not available APIs or release dates.</p>
+<h2>Larger work</h2>
+<p>Full SVG/CSS support, robust polygon operations, spatial indexing and more advanced route planning would require substantial work. They are outside the current implementation.</p>
+<p>Other machine drivers need tests on the actual hardware before being described as supported. A profile entry or an exported file alone is not that test.</p>
+<p>A future 1.0 would need stable schemas, migration rules, type declarations and a tested support matrix. The <a href="architecture.html">architecture</a> describes what exists today.</p>
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

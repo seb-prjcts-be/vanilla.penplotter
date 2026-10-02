@@ -16,8 +16,9 @@
   <meta name="twitter:image" content="https://seb-prjcts-be.github.io/vanilla.penplotter/docs/images/og-image.png">
   <link rel="icon" href="docs/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="docs/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs/style.css?v=20261002c">
+  <link rel="stylesheet" href="docs/home-overview.css">
 </head>
 <body>
 
@@ -36,14 +37,16 @@
     </ul>
   </nav>
 
-  <!-- HERO: the pen's route, drawn behind one sentence -->
+  <!-- HERO: from code to paper -->
   <section id="hero">
-    <div id="hero-canvas"><canvas id="hero-plot" aria-label="A planned A4 plot being drawn, path by path"></canvas></div>
     <div class="hero-overlay">
       <div class="hero-text">
+        <figure class="home-overview">
+          <img src="docs/images/animations/overview.gif" width="600" height="400" alt="A JavaScript drawing is planned, then sent to a pen plotter after connecting and confirming.">
+        </figure>
         <div class="hero-badge">vanilla.penplotter &middot; plain JavaScript &middot; a real pen on real paper &middot; v0.3.1</div>
         <h1>A drawing in code, <span class="accent">a pen on paper</span></h1>
-        <p class="hero-sub">Write a drawing in JavaScript, or load an SVG you already have.<br>See the route the pen will take, count the minutes, and send it to the plotter from the browser.</p>
+        <p class="hero-sub">Build a drawing from points, or import supported SVG shapes.<br>Preview the route and estimate its duration. Direct plotting is tested on the iDraw HSE / A2.</p>
         <div class="cta-row">
           <a href="#try" class="cta-btn">Start with a line and a circle &#8594;</a>
           <a href="#make" class="cta-btn secondary">See what it draws &#8595;</a>
@@ -62,7 +65,7 @@
     <div class="make-grid">
       <a class="make-card" href="examples/wave_hatch/index.html"><div class="ex-canvas"><canvas data-example="wave_hatch" width="480" height="600" aria-label="Wave hatch"></canvas></div><p>Ten metres of ink, no grey anywhere.</p></a>
       <a class="make-card" href="examples/two_pens/index.html"><div class="ex-canvas"><canvas data-example="two_pens" width="480" height="600" aria-label="Two pens"></canvas></div><p>Black first, then red; the machine waits for you once.</p></a>
-      <a class="make-card" href="examples/route_lab/index.html"><div class="ex-canvas"><canvas data-example="route_lab" width="480" height="600" aria-label="Route lab"></canvas></div><p>The same drawing, five times less travel.</p></a>
+      <a class="make-card" href="examples/route_lab/index.html"><div class="ex-canvas"><canvas data-example="route_lab" width="480" height="600" aria-label="Route lab"></canvas></div><p>The same drawing with less pen-up travel.</p></a>
       <a class="make-card" href="examples/svg_to_pen/index.html"><div class="ex-canvas"><canvas data-example="svg_to_pen" width="480" height="600" aria-label="SVG to pen"></canvas></div><p>A file you already have, on paper.</p></a>
     </div>
   </section>
@@ -72,7 +75,7 @@
     <div class="section-header">
       <div class="section-tag">try it</div>
       <h2>A Line and a <span class="accent">Circle</span></h2>
-      <p class="section-desc">This is complete. One import, a page in millimetres, two shapes, and the route the pen will take, drawn on any canvas.</p>
+      <p class="section-desc">This is complete. One import, a page in millimetres, two shapes, and the route the pen will take, drawn on a canvas you supply.</p>
     </div>
     <div style="max-width:760px; margin:0 auto;">
       <pre class="code-block"><code class="language-javascript">import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.1/vanilla.penplotter.js";
@@ -81,8 +84,8 @@ const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } 
 plot.line(20, 20, 190, 20);
 plot.circle(105, 145, 52);
 
-plot.drawRoute(canvas.getContext("2d"));   // the pen's route, red where it travels
-console.log(plot.plan().stats);            // paths, metres, minutes</code></pre>
+plot.drawPreview(canvas.getContext("2d"), { showTravel: true });   // the pen's route, red where it travels
+console.log(plot.plan().stats);            // path count, distances and a time estimate</code></pre>
     </div>
     <div class="cta-row">
       <a href="examples/first_job/index.html" class="cta-btn">Open it as a page &#8594;</a>
@@ -97,9 +100,9 @@ console.log(plot.plan().stats);            // paths, metres, minutes</code></pre
       <p class="section-desc">A fill, an order, a file. Each one shows you something about the pen.</p>
     </div>
     <ol class="pipeline-list">
-      <li><span>01</span><strong>add a hatch</strong><p><code>plot.hatch([{ x: 30, y: 200 }, { x: 180, y: 200 }, { x: 180, y: 270 }, { x: 30, y: 270 }], { spacing: 2.4 })</code>: a dark rectangle made of lines. Change <code>2.4</code> to <code>1.2</code> and it is twice as dark, and twice as long to plot.</p></li>
-      <li><span>02</span><strong>keep your order</strong><p><code>plot.plan({ strategy: "drawn" })</code>: the pen draws in the order you wrote, and the minutes go up. That is the price of order; the chaos game pays it on purpose.</p></li>
-      <li><span>03</span><strong>bring a file</strong><p>Paste an SVG in <a href="examples/svg_to_pen/index.html">SVG to pen</a> and pick a width: the same drawing, from a file.</p></li>
+      <li><span>01</span><strong>add a hatch</strong><p><code>plot.hatch([{ x: 30, y: 200 }, { x: 180, y: 200 }, { x: 180, y: 270 }, { x: 30, y: 270 }], { spacing: 2.4 })</code>: a dark rectangle made of lines. Change <code>2.4</code> to <code>1.2</code> and the lines sit closer together. The patch gets denser and usually takes longer to plot.</p></li>
+      <li><span>02</span><strong>keep your order</strong><p><code>plot.plan({ strategy: "drawn" })</code>: the pen draws in the order you wrote, and the route stays in input order. This can take more travel; the chaos game keeps its order on purpose.</p></li>
+      <li><span>03</span><strong>bring a file</strong><p>Try a supported SVG in <a href="examples/svg_to_pen/index.html">SVG to pen</a> and pick a width: the same drawing, from a file.</p></li>
     </ol>
   </section>
 
@@ -114,9 +117,9 @@ console.log(plot.plan().stats);            // paths, metres, minutes</code></pre
       <li><span>01</span><strong>Chrome or Edge</strong><p>With the plotter on USB. Web Serial lives nowhere else.</p></li>
       <li><span>02</span><strong>Home corner</strong><p>Slide the carriage to the home corner by hand, and put the paper down.</p></li>
       <li><span>03</span><strong>Connect, then Plot</strong><p>Choose the plotter in the list that opens, check the bed drawing, press Plot.</p></li>
-      <li><span>04</span><strong>Stop</strong><p>The pen comes up, the motors let go. Resume later from the stroke where it stopped.</p></li>
+      <li><span>04</span><strong>Stop</strong><p>Stop requests a pen lift and motor release. The panel can resume after the last completed stroke of the same drawing, once you park the carriage at home again.</p></li>
     </ol>
-    <p class="section-desc" style="max-width:760px; margin:2rem auto 0;">Tested on one machine: an iDraw HSE / A2 with EBB firmware 3.0.2. No plotter? Everything above works without one, and the same plan comes out as SVG, HPGL or G-code for any other machine.</p>
+    <p class="section-desc" style="max-width:760px; margin:2rem auto 0;">Direct plotting has been tested on an iDraw HSE / A2 with EBB firmware 3.0.2. Without hardware you can preview and export SVG, HPGL or G-code. Those files need software and settings suited to the receiving machine.</p>
     <div class="cta-row">
       <a href="examples/direct_plot/index.html" class="cta-btn secondary">Direct plot: a 40 by 25 mm test &#8594;</a>
     </div>
@@ -130,10 +133,10 @@ console.log(plot.plan().stats);            // paths, metres, minutes</code></pre
       <p class="section-desc">When one drawing is not enough.</p>
     </div>
     <ol class="pipeline-list">
-      <li><span>files</span><strong>Files for other plotters</strong><p>The same plan as SVG, HPGL or G-code, the files those machines read. <a href="docs/guide.html">Guide &rarr;</a></p></li>
+      <li><span>files</span><strong>Files for other plotters</strong><p>The same plan as SVG, HPGL or G-code, for software that accepts those formats; configure it for your machine. <a href="docs/guide.html#animation-svg-files">See the file routes &rarr;</a></p></li>
       <li><span>pens</span><strong>Two pens</strong><p>Every layer names its pen; the machine stops once per change and waits for you. <a href="examples/two_pens/index.html">Two pens &rarr;</a></p></li>
-      <li><span>tone</span><strong>Tone from lines</strong><p>Hatching, cross-hatching and dots that never collide: the only fills a pen knows. <a href="docs/possibilities.html">Possibilities &rarr;</a></p></li>
-      <li><span>time</span><strong>Watch it appear</strong><p>Live mode, where the pen follows you while you draw, is designed and not built yet. <a href="docs/live.html">Two modes &rarr;</a></p></li>
+      <li><span>tone</span><strong>Tone from lines</strong><p>Hatching, cross-hatching and seeded dots with space between their centres. <a href="docs/possibilities.html">Possibilities &rarr;</a></p></li>
+      <li><span>time</span><strong>Watch it appear</strong><p>The current workflow prepares a whole drawing before plotting. <a href="docs/live.html">Live drawing</a> would accept new strokes while the machine runs; it is proposed work, not an available feature.</p></li>
     </ol>
   </section>
 
@@ -142,14 +145,14 @@ console.log(plot.plan().stats);            // paths, metres, minutes</code></pre
     <div class="section-header">
       <div class="section-tag">under the hood</div>
       <h2>Under the <span class="accent">Hood</span></h2>
-      <p class="section-desc">You give it shapes in millimetres, or an SVG. It tidies them up, finds the shortest route for the pen, shows you that route, counts the minutes, and drives the plotter. For another machine it writes the same drawing as SVG, HPGL or G-code. Plain JavaScript, nothing else to install.</p>
+      <p class="section-desc">You give it points in physical units or supported SVG shapes. It can clean up paths, choose nearby strokes, preview the route and estimate its duration. The EBB driver sends a complete plan to the tested iDraw HSE / A2. SVG, HPGL, G-code and JSON exports are also available. Plain JavaScript ES modules.</p>
     </div>
     <div class="cta-row">
       <a href="docs/guide.html" class="cta-btn secondary">Guide &#8594;</a>
       <a href="docs/handbook.html" class="cta-btn secondary">Handbook &#8594;</a>
       <a href="docs/architecture.html" class="cta-btn secondary">Architecture &#8594;</a>
       <a href="docs/roadmap.html" class="cta-btn secondary">Roadmap &#8594;</a>
-      <a href="docs/live.html" class="cta-btn secondary">Two modes &#8594;</a>
+      <a href="docs/live.html" class="cta-btn secondary">Live drawing &#8594;</a>
       <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" class="cta-btn secondary" target="_blank">GitHub &#8594;</a>
     </div>
     <p class="section-desc" style="margin-top:2.5rem;">Sketching in p5.js? There is a small extension for that: <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a>.</p>
@@ -164,6 +167,5 @@ console.log(plot.plan().stats);            // paths, metres, minutes</code></pre
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
   <script type="module" src="docs/examples.js"></script>
-  <script type="module" src="docs/app.js"></script>
 </body>
 </html>

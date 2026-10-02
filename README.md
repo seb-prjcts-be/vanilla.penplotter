@@ -1,26 +1,28 @@
 # vanilla.penplotter
 
-**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[Handbook (PDF)](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/vanilla.penplotter-handbook.pdf)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
+**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[Handbook](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/handbook.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
 
-You write a drawing in JavaScript. This engine works out the route, lifts the pen as little as it can, and sends the drawing to your plotter from the browser. No SVG, no vpype, no Inkscape in between.
+You supply polylines in physical units. This engine can clean up paths, plan a route, preview it and export files. Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
 
 **Which of the two do you need?**
 
 | | vanilla.penplotter (this repository) | p5.penplotter |
 |---|---|---|
-| what it is | the engine: geometry in millimetres, optimizer, route planner, time estimate, machine driver | three methods on p5.js that call this engine |
+| what it is | the engine: geometry in millimetres, optimizer, route planner, time estimate, machine driver | a p5.js adapter that calls this engine |
 | needs | nothing; plain ES modules, no p5.js | p5.js and this engine |
-| you draw with | your own code, arrays of points, Paper.js, an SVG file | p5 as you always do: `plot.line()` instead of `line()` |
+| you draw with | your own code, arrays of points, Paper.js, an SVG file | supported p5 shapes: `plot.line()` instead of `line()` |
 | to the pen | `driver.run(plot.plan())` | `plot.go()` |
 | take it if | you work without p5, or want to build your own layer on top | you sketch in p5.js |
 
-**Two ways to draw, two modes.** *Sheet mode*: draw everything, then plot. Your program makes the whole drawing, the engine finds a good order, the plotter draws it start to finish. That is what 0.3.1 does, and what every page here describes. *Live mode*: draw something, plot it. Your program makes one thing, the plotter draws it, your program makes the next; the drawing grows on paper while you watch, in the order you made it. That is for things that happen over time: an animation appearing dot by dot, a hand drawing in the air, a drawing nobody looks at on a screen. Live mode is designed, not built: [Two modes](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/live.html) explains both in plain words first, then the design.
+The libraries prepare a complete drawing before plotting. Live streaming is not implemented; [live drawing notes](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/live.html) describe the proposed direction.
 
-**Plots for real on one machine so far:** an iDraw HSE / A2 with an EBB board, over Web Serial, straight from Chrome or Edge. For every other plotter the same plan comes out as SVG, HPGL or G-code; that is the side door, not the road.
+**Direct plotting is physically tested on one profile:** iDraw HSE / A2, EBB firmware 3.0.2, over Web Serial in Chrome or Edge. SVG, HPGL and G-code exports need software and settings suited to the receiving machine.
 
-This is version **0.3.1**: a tested vertical slice of Geometry → Optimizer → Planner → Renderer → Driver. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) is deliberately larger than the code; the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html) says which part exists.
+The version field is **0.3.1**. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) describes the current implementation. Proposed work is on the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html).
 
 ## Install
+
+The site uses current source. The latest tags are core `v0.3.1` and adapter `v0.2.1`; newer `pen()`, `drawRoute()` and bed preview helpers are available on `main`, not in all tagged builds. The [handbook](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/handbook.html) describe this current source.
 
 ```html
 <script type="module">
@@ -54,7 +56,7 @@ A few things I learned the hard way, so you do not have to:
 - The machine has no home position. Park the carriage in the home corner by hand before you start; that spot is 0,0 of the plan.
 - The machine's X runs along the long rail, so a portrait sheet drawn on screen lies sideways on a portrait sheet on the bed. The pen panel of every example shows the bed as the machine sees it (home, the sheet at its offsets, the drawing inside) and has "Turn on the bed" (0, 90, 180, 270°), so what you see there is what lands on paper.
 - Nothing is sent before every point has been checked against the bed, and units have to be mm, cm or inches.
-- `driver.abort()` and any error end the same way: motion stopped, pen up, motors off. While a plot runs, every link that leaves the page is greyed out; whoever leaves anyway gets the browser's "leave site?" question first, and if the page goes the machine gets stop, pen up, motors off in one last write (`driver.emergencyStop()`).
+- `driver.abort()` and errors attempt the same stop sequence: motion stopped, pen up, motors off. Delivery depends on a working connection. While a plot runs, every link that leaves the page is greyed out; whoever leaves anyway gets the browser's "leave site?" question first, and if the page goes the panel attempts stop, pen up, motors off in one last write (`driver.emergencyStop()`).
 - An interrupted plot can go on where it stopped: every pen-up in the compiled list says which stroke it completes, and `compileEbbPlan(plan, { skipDraws: n })` leaves the first `n` strokes out and starts from home, where you park the carriage again by hand. The pen panel of every example remembers the count and offers "Resume at stroke n".
 - `compileEbbPlan(plan)` gives you the exact command list without sending it; `createLogTransport()` is the dry run. Do one the first time.
 - Web Serial only exists in Chrome and Edge, on `localhost` or https.
@@ -75,14 +77,14 @@ This table is literally identical in the README of `p5.penplotter`; a test guard
 | `p5.penplotter` | p5.js ≥ 2.2.2 | tested with 2.2.2, in global and instance mode |
 | direct plotting | Chrome or Edge, on `localhost` or https | Web Serial; the browser shows its port list only after a click or keypress |
 | direct plotting | iDraw HSE / A2 with EBB firmware 3.0.2 | the only physically tested profile (`idraw-hse-a2`) |
-| examples | p5.waves 3.4.0, vanilla.waves (pinned commit) | examples only; neither library depends on them |
+| examples | wave formulas, vanilla.waves (pinned commit) | examples only; neither library depends on them |
 
 Tested together: `vanilla.penplotter` 0.3.1 with `p5.penplotter` 0.2.1.
 
 Publishing: always `vanilla.penplotter` first, then `p5.penplotter`. The examples of
 `p5.penplotter` load the core as a sibling folder (`../vanilla.penplotter/`), locally under
 `htdocs` and online on GitHub Pages. They therefore always get the latest core, not a
-pinned one; the version check in the adapter catches a core that does not match.
+pinned one; the version check refuses a core below the required minimum.
 <!-- vereisten:end -->
 
 ## The facade
@@ -93,10 +95,10 @@ pinned one; the version check in the adapter catches a core that does not match.
 |---|---|
 | `line`, `polyline`, `polygon`, `rect`, `circle`, `arc` | add paths to the active layer, in document units |
 | `hatch`, `crossHatch`, `stipple` | fill a polygon with lines or seeded dots (`spacing`, `angle`, `count`, `minDistance`, `seed`) |
-| `pen({ id, color, width })` (also `tool()`), `layer(id, { toolId })` | pens and layers; the planner finishes one pen before the next and the driver pauses for the swap |
+| `pen({ id, color, width })` (also `tool()`), `layer(id, { toolId })` | pens and layers; layers stay in document order; a changed tool requests a pen swap |
 | `importSVG(text)` | paths, lines, polygons, rects, circles and nested transforms; curves flattened |
 | `optimize({ passes, mergeTolerance, duplicateTolerance, simplifyTolerance, maxSegmentLength })` | deduplicate, merge, simplify, resample, clean |
-| `plan({ strategy, drawSpeed, travelSpeed, acceleration, travelAcceleration, liftDelay, toolChangeDelay })` | `"nearest"`: the shortest route, with reversal and closed-path reloop; `"drawn"`: the order you drew |
+| `plan({ strategy, drawSpeed, travelSpeed, acceleration, travelAcceleration, liftDelay, toolChangeDelay })` | `"nearest"`: greedy nearest-path routing, with reversal and closed-path reloop; `"drawn"`: the order you drew |
 | `stats()` | paths, points, draw and travel distance, pen lifts, pen changes, estimated seconds |
 | `drawRoute(context, { showTravel })` | the route on a canvas, the pen in the air in red (also `drawPreview`) |
 | `drawBed(context, { bed, sheet })` | the bed as the machine sees it: the home corner, the sheet where it lies, the drawing on it |
@@ -144,7 +146,7 @@ Every example ends at the pen; the [examples page](https://seb-prjcts-be.github.
 - `route_lab` - input made bad on purpose; switch optimizer passes on and off and read what each one buys
 - `waves_pen` - 32 lines from vanilla.waves, sampled at a fixed time: a still from an animation
 - `wave_hatch` - seventy cells hatched at a spacing and angle two waves decide: tone from lines
-- `svg_to_pen` - any SVG (p5.plotSvg, Inkscape) fitted to a width and plotted, without vpype
+- `svg_to_pen` - supported SVG paths and basic shapes fitted to a width, previewed and plotted
 
 ## Behaviour and limits
 
@@ -160,7 +162,7 @@ Every example ends at the pen; the [examples page](https://seb-prjcts-be.github.
 
 [p5.plotSvg](https://github.com/golanlevin/p5.plotSvg) by Golan Levin is the usual way to export a plotter-friendly SVG from p5.js. It deliberately does not optimise and drives no machine; for that it points to [vpype](https://vpype.readthedocs.io/). This engine starts where that road ends: it reads such a file, plans it and plots it (the `svg_to_pen` example).
 
-[p5.gysin](https://github.com/seb-prjcts-be/p5.gysin) writes plotter-safe SVG with one Inkscape layer per pen; this engine can read it. [p5.waves](https://github.com/seb-prjcts-be/p5.waves) and [vanilla.waves](https://github.com/seb-prjcts-be/vanilla.waves) supply the numbers several examples draw with.
+[p5.gysin](https://github.com/seb-prjcts-be/p5.gysin) writes plotter-safe SVG with one Inkscape layer per pen; this engine can read it. Wave samplers and [vanilla.waves](https://github.com/seb-prjcts-be/vanilla.waves) supply the numbers several examples draw with.
 
 ## Test
 
@@ -171,7 +173,7 @@ npm run manifest
 npm run handbook
 ```
 
-`npm test` runs the snapshot, driver, regression and version tests, checks every local link on the site, builds every example composition and live preview headlessly, and fails when a generated docs page is stale. `npm run docs` renders `docs/architecture.md` and `docs/roadmap.md` to HTML; `npm run manifest` regenerates `docs/vanilla.penplotter.manifest.json`; `npm run handbook` prints `docs/handbook.html`, the in-depth handbook, to `docs/vanilla.penplotter-handbook.pdf` with a headless Chrome or Edge. The optional vanilla.waves check stays off the network: download `waves-core.js` from vanilla.waves commit `4fad55570d9dab243e99f40181f12b5aede2c5be` and run:
+`npm test` runs the snapshot, driver, regression and version tests, checks every local link on the site, builds every example composition and live preview headlessly, and fails when a generated docs page is stale. `npm run docs` renders `docs/architecture.md` and `docs/roadmap.md` to HTML; `npm run manifest` regenerates `docs/vanilla.penplotter.manifest.json`; The optional vanilla.waves check stays off the network: download `waves-core.js` from vanilla.waves commit `4fad55570d9dab243e99f40181f12b5aede2c5be` and run:
 
 ```powershell
 node tests/waves-integration.js path/to/waves-core.js waves-a4.svg

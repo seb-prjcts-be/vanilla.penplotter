@@ -6,8 +6,9 @@
   <title>Guide - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261002c">
+  <link rel="stylesheet" href="animations.css">
 </head>
 <body>
   <nav id="navbar">
@@ -26,12 +27,12 @@
   <main class="page">
     <header class="page-header">
       <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-      <h1>vanilla.<span class="accent">penplotter</span> Guide</h1>
+      <h1>Guide</h1>
       <p class="guide-intro">Seven short steps and a page of starters. The first four give you a planned job; the seventh sends it to the machine. You only need the modules underneath when your sketch asks for them.</p>
     </header>
 
     <h2>1. Create geometry</h2>
-    <pre><code>import { PlotterEngine } from "../vanilla.penplotter.js";
+    <pre><code class="language-javascript">import { PlotterEngine } from "../vanilla.penplotter.js";
 
 const plot = new PlotterEngine({
   units: "mm",
@@ -42,8 +43,13 @@ plot.line(20, 20, 190, 20);
 plot.circle(105, 145, 52);</code></pre>
     <p>The active layer starts as <code>default</code>. Geometry is stored directly; no canvas or SVG has to exist first.</p>
 
+    <figure class="doc-animation" id="animation-shapes">
+      <img src="images/animations/shapes.gif" width="600" height="400" loading="lazy" alt="Basic shapes are recorded directly in millimetres.">
+      <figcaption>A line, a circle, a rectangle: enough to begin. Try changing the circle’s radius from <code>52</code> to <code>26</code>. Here the numbers are millimetres; <code>circle()</code> takes a radius.</figcaption>
+    </figure>
+
     <h2>2. Add pens and layers</h2>
-    <pre><code>plot.tool({ id: "blue", name: "Blue fineliner", color: "#234f84", width: 0.3 });
+    <pre><code class="language-javascript">plot.tool({ id: "blue", name: "Blue fineliner", color: "#234f84", width: 0.3 });
 plot.layer("waves", { toolId: "blue" });
 plot.polyline(points);
 
@@ -51,8 +57,13 @@ plot.tool({ id: "red", name: "Red fineliner", color: "#d94b39", width: 0.3 });
 plot.layer("accents", { toolId: "red" });
 plot.circle(105, 145, 24);</code></pre>
 
+    <figure class="doc-animation" id="animation-pens-and-layers">
+      <img src="images/animations/pens-and-layers.gif" width="600" height="400" loading="lazy" alt="Two pens draw separate layers and one layer is switched off.">
+      <figcaption>Let one pen draw the outline and another draw the texture. Try setting a returned layer’s <code>visible</code> property to <code>false</code> and rebuilding the plan. Its paths stay in the document, but leave the job. The driver waits for a manual pen change.</figcaption>
+    </figure>
+
     <h2>3. Generate fills</h2>
-    <pre><code>const boundary = [
+    <pre><code class="language-javascript">const boundary = [
   { x: 30, y: 40 },
   { x: 180, y: 40 },
   { x: 165, y: 230 },
@@ -70,8 +81,13 @@ plot.stipple(boundary, {
   seed: 42
 });</code></pre>
 
+    <figure class="doc-animation" id="animation-fills">
+      <img src="images/animations/fills.gif" width="600" height="400" loading="lazy" alt="Hatch, cross-hatch and stipple shown as three different ways to fill a shape with pen strokes.">
+      <figcaption>A fill becomes pen strokes: hatch in one direction, cross-hatch in two, or tiny dashes for stipple. The spacing changes the density.</figcaption>
+    </figure>
+
     <h2>4. Optimize and plan</h2>
-    <pre><code>plot.optimize({
+    <pre><code class="language-javascript">plot.optimize({
   duplicateTolerance: 0.01,
   mergeTolerance: 0.05,
   simplifyTolerance: 0.03
@@ -91,8 +107,18 @@ console.log(plan.stats);</code></pre>
     <p class="callout">Tolerances, coordinates and distance statistics use document units. Planner speeds use mm/s; G-code feed rates use mm/min. HPGL and G-code exports convert coordinates to physical units (96 CSS pixels = 1 inch). SVG retains the document units.</p>
     <p>After editing the document, export, statistics and preview rebuild stale plans automatically, retaining the previous optimization and planning settings. This also covers edits to returned paths, layers and tools. Document data must remain JSON-serializable.</p>
 
+    <figure class="doc-animation" id="animation-route">
+      <img src="images/animations/route.gif" width="600" height="400" loading="lazy" alt="Input order beside planned order, with shorter pen-up travel in the planned version.">
+      <figcaption>Same drawing, less travel with the pen raised: 2,404 mm becomes 422 mm in this example. Dotted lines are travel; solid lines are drawing.</figcaption>
+    </figure>
+
+    <figure class="doc-animation" id="animation-cleanup">
+      <img src="images/animations/cleanup.gif" width="600" height="400" loading="lazy" alt="The same outline before and after deduplication, merging and simplification.">
+      <figcaption>Remove duplicate paths, join touching paths and simplify straight segments. Here, 6 paths with 126 points become 1 path with 6 points. This cleans the geometry before the route is planned.</figcaption>
+    </figure>
+
     <h2>5. Preview, and files for other machines</h2>
-    <pre><code>plot.drawRoute(canvas.getContext("2d"), {
+    <pre><code class="language-javascript">plot.drawRoute(canvas.getContext("2d"), {
   showTravel: true
 });
 
@@ -103,25 +129,35 @@ const gcode = plot.exportGCode({
   penDown: "M3 S1000"
 });</code></pre>
 
+    <figure class="doc-animation" id="animation-svg-files">
+      <img src="images/animations/svg-files.gif" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
+      <figcaption>Bring a drawing you already have. Supported SVG shapes become pen paths; the same engine can write SVG, HPGL and G-code. Try a simple file in <a href="../examples/svg_to_pen/index.html">SVG to pen</a>. A filled silhouette needs pen strokes to give it tone.</figcaption>
+    </figure>
+
     <h2>6. Use the modules directly</h2>
     <p>Import from <code>src/geometry</code>, <code>src/optimizer</code>, <code>src/planner</code> or <code>src/renderer</code>. The root facade does not own a hidden representation: every stage accepts and returns the documented snapshots.</p>
 
     <h2>7. To the pen</h2>
     <p>This is where it was all going. One machine profile has a tested driver so far: the iDraw HSE / A2, an AxiDraw-style CoreXY plotter with an EBB board. The plan goes straight to it; nothing is written to disk on the way.</p>
-    <pre><code>import { EbbDriver, createWebSerialTransport } from "./src/driver/ebb.js";
+    <pre><code class="language-javascript">import { EbbDriver, createWebSerialTransport } from "./src/driver/ebb.js";
 
 const transport = createWebSerialTransport();
 await transport.open();   // from a click: the browser shows its port list
 const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
 await driver.run(plot.plan(), { confirmed: true });</code></pre>
-    <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or any error ends in the same safe stop: motion halted, pen up, motors off. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
-    <p class="callout">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. There is no pause and resume yet. For every other machine, keep using SVG, HPGL or G-code export.</p>
-    <p class="callout">This is <em>sheet mode</em>: draw everything, then plot. Your program makes the whole drawing, the engine finds a good order, the plotter draws it start to finish. The other way, <em>live mode</em>, is draw something, plot it: the plotter draws along while your program is still drawing, so the picture grows on paper in the order you made it. Live mode is designed and not yet built; <a href="live.html">Two modes</a> explains both, in plain words first.</p>
+    <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or an error requests the stop sequence: motion halted, pen up, motors off. A working connection is needed to deliver those commands. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
+    <p class="callout">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. The example panel can resume after completed strokes of the same drawing, after manual parking at home. There is no mid-stroke pause or resume. Exports for other machines need suitable software and configuration.</p>
+    <p class="callout">A complete drawing is prepared before plotting. <code>strategy: "drawn"</code> can preserve its order. <a href="live.html">Live drawing</a>, where new strokes arrive while the pen runs, is proposed work and has no current API.</p>
+
+    <figure class="doc-animation" id="animation-screen-to-paper">
+      <img src="images/animations/screen-to-paper.gif" width="600" height="400" loading="lazy" alt="A complete JavaScript drawing is planned and then plotted on paper.">
+      <figcaption>The whole drawing comes first; the machine follows its plan afterwards. The screen is a preview, and the moving arm is an illustration. Try the <a href="../examples/direct_plot/index.html">40 by 25 mm test</a> before a larger sheet.</figcaption>
+    </figure>
 
     <h2>8. Copy-paste starters</h2>
-    <p>Four complete sketches. Each one is an ES module: save it as <code>sketch.js</code> next to a copy of the repository and load it from a <code>&lt;script type="module"&gt;</code> tag, or replace the import with the jsDelivr URL from the README.</p>
+    <p>Start with the complete ES-module example below. The following fragments reuse its <code>plot</code> object; provide the points or SVG text they refer to. The full example pages include the preview and pen panel.</p>
     <h3>A wave on A4, as SVG</h3>
-    <pre><code>import { PlotterEngine } from "./vanilla.penplotter.js";
+    <pre><code class="language-javascript">import { PlotterEngine } from "./vanilla.penplotter.js";
 
 const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297, margin: 15 } });
 for (let row = 0; row &lt; 20; row += 1) {
@@ -136,20 +172,20 @@ link.href = URL.createObjectURL(new Blob([plot.exportSVG()], { type: "image/svg+
 link.download = "waves.svg";
 link.click();</code></pre>
     <h3>Tone from lines</h3>
-    <pre><code>const cell = (x, y, size) =&gt; [{ x, y }, { x: x + size, y }, { x: x + size, y: y + size }, { x, y: y + size }];
+    <pre><code class="language-javascript">const cell = (x, y, size) =&gt; [{ x, y }, { x: x + size, y }, { x: x + size, y: y + size }, { x, y: y + size }];
 for (let index = 0; index &lt; 8; index += 1) {
   plot.hatch(cell(20 + index * 22, 40, 20), { spacing: 6 - index * 0.65, angle: Math.PI / 4 });
 }</code></pre>
     <h3>Two pens</h3>
-    <pre><code>plot.tool({ id: "black", color: "#171815", width: 0.3 });
+    <pre><code class="language-javascript">plot.tool({ id: "black", color: "#171815", width: 0.3 });
 plot.tool({ id: "red", color: "#c8402c", width: 0.8 });
 plot.layer("outline", { toolId: "black" });
 plot.circle(105, 148, 60);
 plot.layer("fill", { toolId: "red" });
 plot.hatch([{ x: 60, y: 120 }, { x: 150, y: 120 }, { x: 150, y: 176 }, { x: 60, y: 176 }], { spacing: 2 });
 const hpgl = plot.exportHPGL({ penMap: { black: 1, red: 2 } });</code></pre>
-    <h3>Any SVG, planned</h3>
-    <pre><code>import { PlotterEngine, Geometry } from "./vanilla.penplotter.js";
+    <h3>Supported SVG paths, planned</h3>
+    <pre><code class="language-javascript">import { PlotterEngine, Geometry } from "./vanilla.penplotter.js";
 
 const imported = Geometry.importSVG(await (await fetch("drawing.svg")).text(), { curveSteps: 24 });
 const fitted = Geometry.transformDocument(imported, Geometry.Matrix.scale(0.25)); // 800 px → 200 mm

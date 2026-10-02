@@ -6,8 +6,9 @@
   <title>Direct plot - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../showcase.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../showcase.css?v=20261002b">
+  <link rel="stylesheet" href="../../docs/animations.css">
 </head>
 <body>
   <nav id="navbar">
@@ -44,6 +45,11 @@
       <div id="pen"></div>
       </div>
     </div>
+    <figure class="doc-animation" id="animation-sheet-placement">
+      <img src="../../docs/images/animations/sheet-placement.gif" width="600" height="400" loading="lazy" alt="A square sheet is placed on the bed and rotated through four quarter-turn positions.">
+      <figcaption>Turn the sheet, not the drawing’s handedness. The animation places a square at 147/66 mm and turns it by quarter turns on the 594 by 432 mm bed. The panel above lets you place your own job. In code, <code>placePlan()</code> transforms machine moves; the original <code>routes</code> remain unchanged.</figcaption>
+    </figure>
+
   </main>
   <footer>
     <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>

@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Examples - vanilla.penplotter</title>
-  <meta name="description" content="Seven examples that all end at the pen: from a first hatched job to an SVG that skips the usual detour.">
+  <meta name="description" content="Seven examples of polylines, fills, route planning and supported SVG import, with preview and plotting controls.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261002c">
 </head>
 <body>
   <nav id="navbar">
@@ -27,8 +27,8 @@
     <main>
   <div class="ex-page-header">
     <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-    <h1>vanilla.<span class="accent">penplotter</span> Examples</h1>
-    <p>Every one of these ends the same way: connect, confirm, plot. The previews below are the engine running in this page, so what you see is the plan the machine would get. Open an example for the full page and its source. No plotter at hand? Each page can also hand you the plan as SVG, HPGL or G-code; I just did not want that to be the headline.</p>
+    <h1>Examples</h1>
+    <p>The previews use the example compositions. Open a page for its source, file exports and pen panel. You can inspect each plan without hardware. For the tested iDraw, start with a dry run before connecting and plotting.</p>
   </div>
   <section id="direct_plot" class="section section-dark">
     <div class="section-header">
@@ -43,6 +43,7 @@ await transport.open();                       // from a click
 const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
 await driver.run(plot.plan(), { confirmed: true });</code></pre>
 <a class="ex-full-link" href="../examples/direct_plot/index.html">-&gt; full example</a>
+<a class="ex-full-link" href="../examples/direct_plot/index.html#animation-sheet-placement">-&gt; see where the sheet goes</a>
     </div>
   </section>
 
@@ -50,7 +51,7 @@ await driver.run(plot.plan(), { confirmed: true });</code></pre>
     <div class="section-header">
       <div class="section-tag">a hatched shape, its outline, a circle</div>
       <h2>First <span class="accent">job</span></h2>
-      <p class="section-desc">A hatched shape, its outline and a circle. Enough to watch the engine join the hatch lines, order them, and show in red where the pen still has to lift.</p>
+      <p class="section-desc">A hatched shape, its outline and a circle. Enough to watch the engine order separate hatch strokes, and show in red where the pen still has to lift.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-example="first_job" width="480" height="600" aria-label="First job preview"></canvas></div>
@@ -80,7 +81,7 @@ plot.hatch(wedge, { spacing: 2.2 });</code></pre>
 
   <section id="route_lab" class="section">
     <div class="section-header">
-      <div class="section-tag">the same drawing, five times less travel</div>
+      <div class="section-tag">the same drawing with less travel</div>
       <h2>Route <span class="accent">lab</span></h2>
       <p class="section-desc">Input made as bad as I could: shuffled fragments, duplicates, a 1 440-point circle. Switch each optimizer pass on and off and read what it buys in paths, pen lifts, travel and minutes. The pen gets whatever you settle on.</p>
     </div>
@@ -127,7 +128,7 @@ plot.hatch(cell, { spacing, angle });</code></pre>
     <div class="section-header">
       <div class="section-tag">a file you already have, on paper</div>
       <h2>SVG to <span class="accent">pen</span></h2>
-      <p class="section-desc">You already have drawings as SVG, from p5.plotSvg or Inkscape. Paste one, pick a width, and it goes to the pen like everything else here. The detour through vpype and Inkscape is the part I wanted to skip.</p>
+      <p class="section-desc">Paste an SVG or choose a file, set the drawing width and inspect the plan. Supported paths and basic shapes can be plotted; SVG text, images, styling, clipping and viewBox mapping are not reproduced.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-example="svg_to_pen" width="480" height="600" aria-label="SVG to pen preview"></canvas></div>

@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Technical architecture: vanilla.penplotter - vanilla.penplotter</title>
+  <title>How vanilla.penplotter works - vanilla.penplotter</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261002c">
 </head>
 <body>
   <nav id="navbar">
@@ -26,117 +26,41 @@
   <main class="page">
     <header class="page-header">
       <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-      <h1>vanilla.<span class="accent">penplotter</span> Technical architecture: vanilla.penplotter</h1>
-      <p class="guide-intro">Architecture · the target model. Generated from <a href="architecture.md">architecture.md</a>; edit the Markdown and run <code>npm run docs</code>.</p>
+      <h1>How vanilla.penplotter works</h1>
+      <p class="guide-intro">The current geometry, planner and driver, with their limits.</p>
     </header>
-<h2>1. Product promise</h2>
-<p><code>vanilla.penplotter</code> is not an export button but a programmable compiler for plotter jobs:</p>
-<pre><code>p5.js / p5.waves / vanilla JS / SVG
-                  ↓
-          GeometryDocument
-                  ↓
-     effects + normalization
-                  ↓
-               PlotJob
-                  ↓
-       optimization + planning
-                  ↓
-               PlotPlan
-                  ↓
-      renderer + machine profile
-                  ↓
-            MachineProgram
-                  ↓
-         driver + transport
-                  ↓
-              hardware</code></pre>
-<p>Every arrow is a public module. An expert can replace the whole chain; a beginner only uses <code>new PlotterEngine()</code>.</p>
-<h2>2. Four representations, not one universal object</h2>
-<h3>GeometryDocument</h3>
-<p>The authoring layer. It stores lines, polylines, Bézier curves, arcs, compound paths, closedness, layers, tools, units and metadata. Curves stay curves here. Objects have stable ids and <code>source</code>/<code>lineage</code> metadata.</p>
-<p>The current v0.1 code already uses the document/layer/tool model, but still normalizes geometry to polylines early. V0.2 formally splits the curve authoring layer from the plot job.</p>
-<h3>PlotJob</h3>
-<p>The machine-independent production geometry. Everything here is an explicit sequence of points in physical units. A path has a <code>layerId</code>, <code>toolId</code>, <code>closed</code>, <code>reversible</code>, constraints and provenance. This is the level for hatch, clipping, deduplication and line merging.</p>
-<p>For small jobs, plain <code>{x, y}</code> objects are understandable and plugin-friendly. From roughly 100,000 points onwards, a <code>Float64Array</code> plus offset table can be used internally. The public snapshot stays serializable.</p>
-<h3>PlotPlan</h3>
-<p>An ordered, immutable list of actions: <code>tool-change</code>, <code>travel</code>, <code>draw</code>, <code>pause</code>, <code>home</code> and later <code>checkpoint</code>. The plan contains distances, pen lifts, estimated time and the exact route that preview and driver share.</p>
-<h3>MachineProgram</h3>
-<p>Protocol-specific output: SVG, HPGL, G-code or a binary/textual command stream. A renderer produces the program; a driver sends it. That way a planner needs to know nothing about serial ports, and a driver no longer needs to understand geometry.</p>
-<h2>3. Modules</h2>
-<table><thead><tr><th>Module</th><th>Responsibility</th><th>Not responsible for</th></tr></thead><tbody><tr><td><code>core</code></td><td>schemas, ids, units, layers, tools, validation, snapshots</td><td>geometric algorithms</td></tr><tr><td><code>geometry</code></td><td>primitives, curves, transformations, offsets, clipping</td><td>route order</td></tr><tr><td><code>io-svg</code></td><td>SVG read/write, transforms, viewBox, layers</td><td>machine control</td></tr><tr><td><code>effects</code></td><td>hatch, crosshatch, stipple, contours, artistic passes</td><td>pen changes</td></tr><tr><td><code>optimizer</code></td><td>clean, fuse, dedupe, simplify, resample</td><td>hardware protocol</td></tr><tr><td><code>planner</code></td><td>order, reversal, seams, layers, pen schedule, time</td><td>SVG parsing</td></tr><tr><td><code>renderer</code></td><td>preview, SVG, HPGL, G-code, JSON</td><td>serial flow control</td></tr><tr><td><code>driver</code></td><td>connection, capabilities, streaming, pause/resume/abort</td><td>creative geometry</td></tr><tr><td><code>plugins</code></td><td>lifecycle and named extension points</td><td>global monkey patches</td></tr><tr><td>external adapters</td><td>separate repositories such as <code>p5.penplotter</code> and future canvas-sketch integrations</td><td>core logic</td></tr></tbody></table>
-<p>Every transformation returns a new snapshot. No optimizer may silently mutate the original artwork. That makes comparison, undo, caching, workers and reproducible exports possible.</p>
-<p>The v0.1 facade keeps the optimization and the plan as long as the document stays the same. Before every reuse it compares the full document (as JSON) with the previous state; any difference, including a direct mutation of the public document or of returned paths and layers, invalidates both caches. Rebuilding uses the most recently passed optimization and plan settings. Previously returned plans are not modified. There is deliberately only one mechanism: no separate invalidation per drawing method. The price is one comparison per call (± 5 ms at 11,000 points, ± 230 ms at 500,000); document data must therefore remain JSON-serializable.</p>
-<h2>4. Geometry and topology</h2>
-<h3>Connected segments and line merging</h3>
-<p>For a small document, endpoint comparison is enough. For large jobs:</p>
-<ol><li>snap endpoints into a spatial hash with an explicit tolerance;</li><li>build a graph with points as nodes and segments as edges;</li><li>use union-find to identify connected components;</li><li>walk nodes of degree 1 first, then cycles;</li><li>keep source ids in <code>lineage</code> and mark reversals.</li></ol>
-<p>This is stronger than searching two arrays each time: T-junctions, loops and thousands of segments become visible as topology. An R-tree or uniform grid limits the neighbour search to local work.</p>
-<h3>Duplicate lines</h3>
-<p>Exactly identical paths are only the simple case, already present in v0.1. The full approach canonicalizes individual segments after snapping:</p>
-<ul><li>sort each segment independently of direction;</li><li>group collinear segments by normalized line equation;</li><li>project them onto a single axis;</li><li>perform an interval union to find full as well as partial overlap;</li><li>reconstruct only the unique intervals.</li></ul>
-<p>For curves, comparison happens only after controlled flattening, so that the error margin remains measurable.</p>
-<h3>Simplification and resampling</h3>
-<ul><li>Ramer–Douglas–Peucker: fast maximum-deviation simplification for polylines.</li><li>Visvalingam–Whyatt: visually more even on organic lines.</li><li>arc-length resampling: even motor movement and stable effects.</li><li>adaptive Bézier flattening: subdivision until the chord error is below tolerance.</li><li>curve fitting after Schneider: optionally rebuild compact Béziers for SVG, never for the machine plan.</li></ul>
-<p>The user chooses tolerance in physical units, not on an abstract “quality” slider.</p>
-<h3>Offset curves</h3>
-<p>A naive normal offset is usable for open sketch lines but fails at cusps, self-intersections and sharp corners. The production version uses a robust integer-based offset/boolean kernel, comparable to Clipper2, with configurable joins, miter limit and explicit cleanup. That kernel belongs behind the same API as an optional geometry backend, so that the light build can stay small.</p>
-<h2>5. Fills</h2>
-<h3>Hatch</h3>
-<ol><li>rotate polygons into hatch space;</li><li>intersect parallel scanlines with outer contours and holes;</li><li>apply the even-odd or nonzero fill rule;</li><li>rotate segments back;</li><li>order boustrophedon: left→right, then right→left;</li><li>connect only where a bridge demonstrably stays inside the shape.</li></ol>
-<p>Crosshatching is two or more separate hatch passes. They can share the same pen or each get their own layer/tool. Spacing can be a function, so that p5.waves can drive a field, angle or local density without the core knowing p5.js.</p>
-<h3>Stippling</h3>
-<ul><li>Bridson Poisson-disc sampling for a uniform minimum distance;</li><li>weighted rejection or a density map for tonal values;</li><li>Lloyd relaxation for more even cells;</li><li>deterministic PRNG for reproducibility;</li><li>output modes <code>tap</code>, <code>dash</code>, <code>circle</code> and later pen-specific marks.</li></ul>
-<p>The stipple points are then planned again as a routing problem. So they are not special preview pixels.</p>
-<h2>6. Route and pen planning</h2>
-<p>The path problem is a directed/asymmetric TSP variant: open paths can often be reversed, closed paths can move their start seam, and some tools or layers impose ordering constraints.</p>
-<p>Recommended cascade:</p>
-<ol><li>group by hard constraints and tool;</li><li>cluster spatially (grid, k-d tree or Hilbert order) for very large jobs;</li><li>nearest-neighbour as a fast, good start;</li><li>2-opt for route improvement;</li><li>optionally 3-opt/Lin–Kernighan for expensive repeat jobs;</li><li>optimize direction and seam at the same time;</li><li>keep a maximum time/passes as a predictable stop condition.</li></ol>
-<p>The cost function is time-based:</p>
-<pre><code>cost = travelTime
-     + penLiftTime
-     + toolChangeTime
-     + cornerSlowdown
-     + constraintPenalty</code></pre>
-<p>Shortest distance is not always the fastest plot. Acceleration, sharp turns, servo delay and pen changes are measurable in a machine profile.</p>
-<p>Layers get a dependency DAG (<code>before</code>, <code>after</code>, <code>keepTogether</code>). Within those constraints the planner can minimize pen changes. That way a black contour can be forced to come after a wet fountain-pen layer without switching off the whole optimization.</p>
-<h2>7. Machine profiles and drivers</h2>
-<p>A profile is data: bed dimensions, origin, units, speeds, acceleration, pen mechanism, protocol and capabilities. A driver is behaviour: connecting, handshake, streaming, flow control, status, pause, resume and abort.</p>
-<p>A reliable driver is a state machine:</p>
-<pre><code>disconnected → connecting → ready → running → paused → complete
-                         ↘ error ↗       ↘ aborted</code></pre>
-<p>Mandatory safety rules:</p>
-<ul><li>bounds check before the first byte;</li><li>connection only after a user action;</li><li>dry run/preview and explicit confirmation;</li><li>protocol-specific ACK/flow control, no blind “write everything”;</li><li>an abort that raises the pen when the protocol allows it;</li><li>checkpoints and resuming from a confirmed command number;</li><li>storing the profile version alongside the plan.</li></ul>
-<p>Web Serial is a transport, not a universal driver. AxiDraw/EBB, iDraw, GRBL and classic HPGL machines get separate implementations and a hardware-tested support matrix.</p>
-<h3>EBB driver (<code>src/driver/ebb.js</code>)</h3>
-<p>The first machine driver. Three layers, each testable separately:</p>
-<ul><li><code>compileEbbPlan(plan)</code> is pure: a <code>PlotPlan</code> becomes a list of EBB commands (the <code>MachineProgram</code>). CoreXY mixing <code>motor1 = X + Y</code>, <code>motor2 = X − Y</code>; step targets are absolute so that rounding never accumulates into drift; an axis that would run slower than the firmware minimum is held back and caught up later. Unit and bounds checking happen here, before anything exists to send.</li><li><code>EbbDriver</code> streams with one reply per command as flow control, refuses without <code>confirmed: true</code> and without an EBB version reply, and on abort or error always ends in the same safe stop (<code>ES</code>, pen up, motors off).</li><li>A transport is only <code>send(cmd) → reply</code>: <code>createLogTransport()</code> for the dry run, <code>createWebSerialTransport()</code> for the browser.</li></ul>
-<p>Support matrix as of 2026-09-21:</p>
-<table><thead><tr><th>profile</th><th>board</th><th>status</th></tr></thead><tbody><tr><td><code>idraw-hse-a2</code></td><td>EBB, firmware 3.0.2</td><td>physically tested: axes, scale (40 mm verified by measurement), full plot from Chrome</td></tr><tr><td>others</td><td>n/a</td><td>no driver; use SVG, HPGL or G-code export</td></tr></tbody></table>
-<p>Of the safety rules above, these are still missing: checkpoints and resuming, pause, and storing the profile version alongside the plan. Acceleration is in place since 0.3.0: the profile carries speeds, accelerations and a junction deviation, and the driver plans every stroke as ramps and corners.</p>
-<h2>8. Plugins</h2>
-<p>A plugin has a name, semver compatibility, capabilities and <code>install(host)</code>. Registration is explicit:</p>
-<pre><code>const weavePlugin = {
-  name: "weave-order",
-  install(host) {
-    host.register("optimizer", "weave", function weave(paths, options) {
-      return paths;
-    });
-  }
-};</code></pre>
-<p>Plugins receive snapshots and context, no access to hidden mutable state. Workers become possible because plugin input is serializable. A plugin must declare determinism and can receive a seed.</p>
-<h2>9. Integration with p5.js and p5.waves</h2>
-<p>The core does not import p5.js. The separate repository <code>p5.penplotter</code> adds <code>createPlotterEngine()</code>, <code>drawPlotPlan()</code> and <code>createPlot()</code>, whose <code>plot.go()</code> hands the plan to the driver. p5.waves remains a sampler: a sketch builds points with <code>Waves.wave(y, { t })</code> and feeds those points to the geometry layer. Later a convenience effect can accept a callback such as <code>spacingAt(x, y)</code>; it remains plain JavaScript dependency injection.</p>
-<h2>10. Inspiration and deliberate new choices</h2>
-<ul><li><a href="https://github.com/abey79/vpype">vpype</a>: strong reference for <code>linemerge</code>, <code>linesort</code>, <code>reloop</code>, simplification and a composable pipeline. Inspiration, but not a runtime basis: it is Python/CLI-oriented.</li><li><a href="https://github.com/mattdesl/canvas-sketch-util">canvas-sketch-util penplot</a>: shows how small a creative JavaScript entry point can be. The engine goes further with a job model, pen planning and drivers.</li><li><a href="https://paperjs.org/reference/path/">Paper.js</a>: mature SVG and curve API; interesting as an optional import/geometry adapter, too large as a mandatory core.</li><li><a href="https://github.com/golanlevin/p5.plotSvg">p5.plotSvg</a>: useful p5 capture and interoperability; its explicit focus is export, not the whole machine chain.</li><li><a href="https://axidraw.com/doc/py_api/">AxiDraw Python API</a>: behavioural reference for SVG and interactive motion contexts and reliable device control.</li><li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API">Web Serial</a>: browser transport with secure-context and compatibility limitations.</li></ul>
-<p>What deserves entirely new attention above all: a time-based optimizer, immutable job snapshots, restartable hardware jobs, real capability negotiation, a shared preview/driver plan and an API that can start as small as p5.js without hiding the expert layers.</p>
-<h2>11. Scalability</h2>
-<ul><li>fewer than 2,000 paths: simple arrays and O(n²) nearest-neighbour are fine;</li><li>2,000–50,000: spatial hash/k-d tree, clustering and workers;</li><li>more than 50,000: typed geometry buffers, streaming passes, progress/cancel and bounded local search;</li><li>every heavy pass reports before/after statistics and never silently loses geometry outside the specified tolerance.</li></ul>
-<h2>12. Version boundary</h2>
-<p>V0.1 proves the chain. The only hardware claim is the <code>idraw-hse-a2</code> profile from the support matrix in §7; there is no claim for AxiDraw and other iDraw models. It is also not yet a complete SVG renderer. V1.0 requires fixture files, property tests, cross-browser tests, hardware tests per profile and a compatibility policy for document, plan and plugin schemas.</p>
+<h2>From points to a plan</h2>
+<p>You add lines and polylines in physical units. The engine keeps them in layers, with a tool for each layer. A tool describes a pen's colour and width; it does not choose or load a pen on the machine.</p>
+<p>The pipeline is geometry, optional cleanup, route planning, preview or export, and a separate machine driver. The core uses plain JavaScript objects and ES modules. It does not depend on p5.js.</p>
+<h2>Geometry</h2>
+<p>The document contains a page, tools, layers and polyline paths. Circles, arcs and imported curves become sampled points. There are no native curve objects, text layout, polygon booleans or clipping.</p>
+<p><code>hatch()</code> and <code>crossHatch()</code> make separate line segments inside a simple polygon. They do not join the stripes into a continuous zigzag or handle compound shapes with holes. <code>stipple()</code> places short dashes with a seeded generator and a minimum distance between centres. Crowded regions can produce fewer dots than requested.</p>
+<p>Transforms return new geometry. Drawing methods add paths to the current document. The simple offset helper is not a robust polygon offsetter.</p>
+<h2>Cleanup</h2>
+<p>The optimizer can remove duplicate paths, merge endpoints within a tolerance, simplify polylines, resample long segments and remove very short paths. Tolerances use document units. Simplification changes the geometry within its tolerance, so inspect the result before plotting.</p>
+<p>Duplicate removal handles complete paths, including reversed paths, rather than partially overlapping lines. Merging compares paths pair by pair; large drawings can take time. There is no spatial index or worker implementation.</p>
+<h2>Route planning</h2>
+<p>The planner visits visible layers in document order. It asks for a tool change when the next layer uses a different tool; it does not regroup all layers by pen.</p>
+<p>Within each layer, <code>strategy: "nearest"</code> chooses the next nearby path greedily. It can reverse open paths and move the starting corner of closed paths. This often reduces travel, but does not find the shortest possible route. <code>strategy: "drawn"</code> preserves the path order and direction.</p>
+<p>A plan contains routes, travel and draw moves, tool changes, and statistics. The time is an estimate based on speeds, ramps and pen delays. Manual pen changes and communication delays can change the actual duration.</p>
+<p>The engine checks the document before returning a cached result. An edit invalidates the old optimized document and plan. Previously returned plans remain separate objects, but they are not frozen against changes by your code.</p>
+<h2>Preview and files</h2>
+<p>Canvas preview and SVG, HPGL, G-code and JSON export use the planned geometry. SVG is a line drawing, not a reproduction of arbitrary screen styling. HPGL and G-code are generic outputs; pen commands, units and tool numbers must match the software and machine that receive them.</p>
+<p>The browser SVG importer reads paths and basic shapes, including nested transform attributes. Curves are sampled with fixed step counts. It does not reproduce SVG text, images, CSS, masks, clipping, <code>use</code> elements, viewBox mapping or filled compound shapes. Imported content becomes one layer unless your code separates it. Check the preview and scale; this is not a full SVG renderer.</p>
+<p><code>drawBed()</code> previews the sheet on the machine bed. <code>placePlan()</code> moves or rotates the plan's machine moves; it does not rewrite its route array. Use the bed preview for that placed plan rather than assuming every renderer applies the placement.</p>
+<h2>Direct plotting</h2>
+<p><code>EbbDriver</code> from <code>src/driver/ebb.js</code> compiles a complete plan into commands, checks units and bed bounds, and sends commands through a transport with acknowledgement handling. Motion uses acceleration ramps and corner speeds. The driver uses low-level moves on supported firmware and sliced moves on older firmware.</p>
+<p>Physical tests cover one profile: <strong>iDraw HSE / A2, EBB firmware 3.0.2</strong>. Other profile entries and the generic text transport do not establish support for other machines. A log transport is available for a dry run without hardware.</p>
+<p>The carriage must be parked at home by hand. On abort or error, the driver attempts to stop motion, lift the pen and release the motors. A disconnected or unresponsive machine cannot be guaranteed to receive those commands.</p>
+<p>The examples' pen panel remembers completed strokes in local storage. It can resume the same drawing with <code>skipDraws</code>, after you park the carriage at home again. This is not a pause or a mid-stroke resume. Live streaming and a Node serial transport are not implemented.</p>
+<h2>Modules and extensions</h2>
+<p>The source separates core data, geometry, optimizer, planner, renderer, driver and plugin registry. Optimizer plugins can register a named function. Registries also exist for effects, renderers and drivers, but those extension points are not yet wired into the facade.</p>
+<p>The <a href="guide.html">guide</a> shows the working API. The <a href="handbook.html">handbook</a> carries the options and driver details. The <a href="roadmap.html">roadmap</a> keeps proposed work separate from these implemented parts.</p>
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

@@ -7,10 +7,10 @@
   <meta name="description" content="The vanilla.penplotter handbook: how the engine works, stage by stage, from the document model to the EBB commands on the wire.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261002c">
   <style>
-    .hb-cover { padding: 4rem 0 3rem; border-bottom: 2px solid #000; margin-bottom: 2rem; }
+    .hb-cover { padding: 4rem 0 3rem;  margin-bottom: 2rem; }
     .hb-cover h1 { font-size: 3.4rem; font-weight: 400; margin: 0.6rem 0 0.4rem; }
     .hb-cover .hb-sub { font-family: 'Oswald', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
     .hb-meta { font-family: 'Courier New', monospace; font-size: .82rem; color: var(--text-muted); margin-top: 1.4rem; }
@@ -24,10 +24,12 @@
     .page table { font-size: .82rem; }
     .page th:first-child, .page td:first-child { width: 28%; }
     .page th:nth-child(2) { width: auto; }
+    .hb table { table-layout: fixed; }
+    .hb td:first-child { white-space: normal; overflow-wrap: anywhere; }
     @media print {
       @page { size: A4; margin: 18mm 17mm 20mm; }
       html, body { background: #fff; padding: 0; }
-      #navbar, .no-print { display: none !important; }
+      #navbar, footer, .no-print { display: none !important; }
       .page { max-width: none; padding: 0; }
       .hb-cover { page-break-after: always; border: 0; padding-top: 6rem; }
       .toc { page-break-after: always; columns: 2; }
@@ -61,7 +63,7 @@
       <h1>vanilla.penplotter</h1>
       <p class="hb-sub">How the engine works, stage by stage</p>
       <p class="lead">Between a drawing written in JavaScript and the stepper commands on the wire: the document model, the optimizer, the planner, the renderers, the EBB driver, and the decisions behind each of them. Written for anyone who wants to use the engine well, extend it, or check what it really does.</p>
-      <p class="hb-meta">Sebastien Vanblaere · 2026-09-30 · MIT · seb-prjcts-be.github.io/vanilla.penplotter · PDF of docs/handbook.html<br>Also available as a page on the site; this PDF is printed from it with <code>npm run handbook</code>.</p>
+      <p class="hb-meta">Sebastien Vanblaere · 2026-10-02 · MIT · seb-prjcts-be.github.io/vanilla.penplotter</p>
     </header>
 
     <section class="toc no-break">
@@ -88,23 +90,25 @@
     </section>
 
     <h2 id="c1"><span class="num">1</span>The engine</h2>
-    <p>A pen plotter is a machine that moves a pen over paper along lines you give it. The usual way to feed it from a generative sketch is a chain of four programs: record the sketch as an SVG, clean and sort the lines in vpype, open the file in Inkscape, send it with the plotter's own extension. Each step works. Together they lose what the sketch knew: which lines belong together, which pen they want, in which order they should be drawn.</p>
-    <p><code>vanilla.penplotter</code> keeps that knowledge in one place. You build geometry in millimetres; the engine removes wasted travel, orders the paths, estimates the time, previews the result, and either streams the plan straight to a tested machine or writes the file another machine needs. It is a compiler for plotter jobs, with five stages that can each be used on their own:</p>
-    <pre><code>Geometry  →  Optimizer  →  Planner  →  Renderer  →  Driver
+    <p>I wanted to build a drawing and inspect its route in the same browser page, then send it to my iDraw. Files remain useful for other workflows; direct plotting is one option.</p>
+    <p>You build geometry in physical units. The engine can clean up paths, order them, estimate the duration and preview the result. It can export files or send a complete plan through the tested EBB driver. These stages can also be imported separately:</p>
+    <pre><code class="language-javascript">Geometry  →  Optimizer  →  Planner  →  Renderer  →  Driver
   paths        clean         order      preview      EBB commands
   fills        merge         reverse    SVG          Web Serial
   import       simplify      reloop     HPGL         dry run
   transforms   resample      pens       G-code       safe stop</code></pre>
-    <p>It is not a drawing library: no curves, no text, no booleans; draw elsewhere and hand over points. It is not p5.plotSvg, which captures p5 sketches as SVG and stops there, and not vpype, the mature command-line reference for line sorting. And it is not a universal driver: one machine profile has been plotted with, and the engine says so wherever it can.</p>
-    <div class="fact"><strong>Two libraries, one direction</strong>The engine knows nothing about p5.js. <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> adds three methods to p5 and calls this engine for everything else. Its own handbook covers that side. The dependency runs one way: the adapter checks the engine's version, never the reverse.</div>
+    <p>The geometry is made of polylines. Curves become sampled points; text layout, polygon booleans and clipping are not implemented. SVG import covers a subset of shapes and attributes. Direct plotting has been physically tested on one machine profile.</p>
+    <div class="fact"><strong>Two libraries, one direction</strong>The engine knows nothing about p5.js. <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> adds helpers to p5 and calls this engine for everything else. Its own handbook covers that side. The dependency runs one way: the adapter checks the engine's version, never the reverse.</div>
 
     <h2 id="c2"><span class="num">2</span>Install and the first job</h2>
+    <p>This handbook covers current source. The latest tags are core <code>v0.3.1</code> and adapter <code>v0.2.1</code>. Newer <code>pen()</code>, <code>drawRoute()</code> and bed helpers are not all in those tags; use the earlier <code>tool()</code>, <code>drawPreview()</code> or <code>drawPlotPlan()</code> names with a tagged build.</p>
+
     <p>The engine is a set of ES modules with no dependencies and no build step. The root module <code>vanilla.penplotter.js</code> imports from its own <code>src/</code> folder, so it has to be loaded from somewhere that serves the whole repository: a jsDelivr tag, GitHub Pages, or a local clone.</p>
-    <pre><code>&lt;script type="module"&gt;
+    <pre><code class="language-markup">&lt;script type="module"&gt;
   import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.1/vanilla.penplotter.js";
 &lt;/script&gt;</code></pre>
     <p>The smallest complete job: a page, two shapes, a plan, and a look at the statistics.</p>
-    <pre><code>const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297, margin: 12 } });
+    <pre><code class="language-javascript">const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297, margin: 12 } });
 plot.line(20, 30, 190, 30);
 plot.circle(105, 145, 48);
 const plan = plot.plan();
@@ -113,8 +117,8 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
     <p>Everything the engine exports is reachable from the root module: the class <code>PlotterEngine</code>, the constant <code>VERSION</code>, every function of <code>src/core/model.js</code>, the class <code>PluginHost</code>, and the namespaces <code>Geometry</code>, <code>Optimizer</code>, <code>Planner</code>, <code>Renderer</code> and <code>Driver</code>. The driver module <code>src/driver/ebb.js</code> is also importable on its own, and that is how the examples do it.</p>
 
     <h2 id="c3"><span class="num">3</span>The document model</h2>
-    <p>Everything the engine works on is a plain object that survives <code>JSON.stringify</code>. That one rule makes the rest possible: stages can compare snapshots, return new copies, and never mutate what they were given. The authoring object is the <em>document</em>:</p>
-    <pre><code>{
+    <p>The document is plain data that can be serialised with <code>JSON.stringify</code>. Authoring methods change that document. Transforms, optimization and planning return separate objects. Returned objects are not frozen, so avoid changing a plan while another part of your program uses it. The document has this shape:</p>
+    <pre><code class="language-none">{
   schema: "vanilla.penplotter/document@1",
   units: "mm",                          // mm | cm | in | px
   page: { width: 210, height: 297, margin: 10, origin: "top-left" },
@@ -123,7 +127,7 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
   metadata: {}
 }</code></pre>
     <p>A <em>path</em> is a list of points with a few flags:</p>
-    <pre><code>{ id: "path_12", points: [{ x, y }, …], closed: false, reversible: true, metadata: {} }</code></pre>
+    <pre><code class="language-none">{ id: "path_12", points: [{ x, y }, …], closed: false, reversible: true, metadata: {} }</code></pre>
     <ul>
       <li><strong>Points</strong> are <code>{ x, y }</code> in the document's unit. Every coordinate is checked to be a finite number when the path is created; <code>NaN</code> never gets in.</li>
       <li><strong>closed</strong>: a closed path ends where it started. <code>createPath</code> appends a copy of the first point when a closed path does not already end there, so a closed path of <em>n</em> corners has <em>n + 1</em> points.</li>
@@ -166,21 +170,21 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
     </table>
     <h3>How the facade knows the plan is stale</h3>
     <p>There is exactly one mechanism, and it is deliberately blunt. Before any reuse of the cached optimisation or plan, the facade serialises the whole document to JSON and compares the string with the one it kept. Any difference, whether it came from a drawing method, from <code>tool()</code> or <code>layer()</code>, from <code>importSVG()</code>, or from a direct edit of <code>plot.document</code> or of a path or layer it returned earlier, drops both caches. The next call to <code>plan()</code>, <code>stats()</code>, an export or the preview rebuilds them with the last optimisation and planning options. A plan you were handed earlier is a separate object and is never touched.</p>
-    <p>The cost is one comparison per call: about 5 ms at 11 000 points, 20 ms at 50 000 and 230 ms at 500 000, measured on the development machine. For one plot or export that is nothing. Redrawing a very large plan as a live preview every frame is the one case where it shows; keep the plan object you were given and draw that instead. The rule this buys is worth it: no hidden state, no separate invalidation per method, and document data that must stay serialisable anyway.</p>
+    <p>Checking the whole document takes more work as it grows. For a repeated preview of a large drawing, keep the returned plan and render that rather than asking the facade to compare the document every frame. Measure performance with your own drawing and environment.</p>
 
     <h2 id="c5"><span class="num">5</span>Geometry: primitives, fills, transforms, SVG import</h2>
     <h3>Primitives</h3>
     <p>All primitives produce polylines; there are no curve objects in this version. A <code>circle</code> is a closed polygon of <code>segments</code> points, at least 12, by default 96. An <code>arc</code> takes a centre, a radius and two angles in radians and samples one point per 7.5 degrees (π/24), at least two segments. A <code>rectangle</code> refuses a zero or negative width or height. <code>polygon</code> is <code>polyline</code> with <code>closed: true</code>.</p>
     <h3>Hatch</h3>
-    <p><code>hatchPolygon(layer, points, { spacing, angle })</code> fills a simple polygon with parallel lines. The algorithm rotates the polygon by <code>−angle</code> so the hatch direction becomes horizontal, walks scanlines from <code>floor(minY / spacing) · spacing</code> to <code>maxY</code>, intersects each scanline with every edge (the half-open test <code>a.y ≤ y &lt; b.y</code> avoids double hits at vertices), sorts the crossings, pairs them even-odd, and rotates each pair back into place as a two-point path tagged <code>effect: "hatch"</code>. Consequences worth knowing: a concave polygon is filled correctly; holes are not supported (pass the hole as its own polygon and it will be hatched too); the lines are separate paths, so the optimizer's merge pass and the planner's reversal are what turn them into a boustrophedon route. Spacing must be positive; the default is 2 mm and the default angle 45 degrees.</p>
+    <p><code>hatchPolygon(layer, points, { spacing, angle })</code> fills a simple polygon with parallel lines. The algorithm rotates the polygon by <code>−angle</code> so the hatch direction becomes horizontal, walks scanlines from <code>floor(minY / spacing) · spacing</code> to <code>maxY</code>, intersects each scanline with every edge (the half-open test <code>a.y ≤ y &lt; b.y</code> avoids double hits at vertices), sorts the crossings, pairs them even-odd, and rotates each pair back into place as a two-point path tagged <code>effect: "hatch"</code>. Consequences worth knowing: a concave polygon is filled correctly; holes are not supported (pass the hole as its own polygon and it will be hatched too); the lines remain separate strokes. The planner can reorder and reverse them, but does not add connecting hatch strokes. Spacing must be positive; the default is 2 mm and the default angle 45 degrees.</p>
     <p><code>crossHatchPolygon</code> is two hatch passes: <code>angle</code> and <code>angleB</code>, which defaults to <code>angle + 90°</code>.</p>
     <h3>Stipple</h3>
     <p><code>stipplePolygon(layer, points, { count, minDistance, radius, seed, attempts })</code> scatters short dashes. A seeded generator (a 32-bit mixing function, the same algorithm as the examples' <code>randomFactory</code>) proposes points in the polygon's bounding box; a point is kept when it lies inside the polygon (ray casting) and no accepted point is closer than <code>minDistance</code> (default 1.2). It stops at <code>count</code> points (default 200) or after <code>attempts</code> proposals (default 40 × count, at least 20 × count). Each dot becomes a horizontal dash of <code>2 × radius</code>, default 0.24 mm, because a pen cannot make a dot: it has to move to leave ink. Same seed, same dots, on every machine.</p>
     <h3>Transforms</h3>
-    <p>A matrix is the SVG six-tuple <code>[a, b, c, d, e, f]</code>. <code>Matrix.translate</code>, <code>scale</code>, <code>rotate</code> (radians) and <code>multiply(a, b)</code> build them; <code>multiply(a, b)</code> means "apply b, then a", so to scale a drawing and then move it, write <code>multiply(translate(tx, ty), scale(s))</code>. <code>transformPoint</code> applies a matrix to one point; <code>transformDocument</code> returns a transformed copy of a whole document and leaves the original alone. <code>offsetPolyline</code> is a naive normal offset that is fine for open sketch lines and wrong at cusps and self-intersections; the architecture document names the robust replacement it should get one day.</p>
+    <p>A matrix is the SVG six-tuple <code>[a, b, c, d, e, f]</code>. <code>Matrix.translate</code>, <code>scale</code>, <code>rotate</code> (radians) and <code>multiply(a, b)</code> build them; <code>multiply(a, b)</code> means "apply b, then a", so to scale a drawing and then move it, write <code>multiply(translate(tx, ty), scale(s))</code>. <code>transformPoint</code> applies a matrix to one point; <code>transformDocument</code> returns a transformed copy of a whole document and leaves the original alone. <code>offsetPolyline</code> is a naive normal offset that is fine for open sketch lines and wrong at cusps and self-intersections; a robust offset implementation is outside the current scope.</p>
     <h3>SVG import</h3>
     <p><code>importSVG(text, options)</code> parses with the browser's <code>DOMParser</code> (in Node, pass one in <code>options.DOMParser</code>) and walks the element tree, multiplying <code>transform</code> attributes as it descends. Supported: <code>path</code> (M, L, H, V, C, S, Q, T, A, Z, absolute and relative), <code>line</code>, <code>polyline</code>, <code>polygon</code>, <code>rect</code>, <code>circle</code> and <code>ellipse</code>; transforms <code>matrix</code>, <code>translate</code>, <code>scale</code>, <code>rotate</code> (with or without a centre), <code>skewX</code>, <code>skewY</code>. Cubic and quadratic curves are flattened to <code>curveSteps</code> points each (default 16, at least 4); elliptical arcs follow the SVG centre-parameter conversion and are sampled at <code>arcSteps</code> per full turn (default 64); circles at <code>circleSegments</code> (default 96). Every path lands on one layer, <code>svg</code> by default, with <code>source: "svg"</code>, the tag and the element id in its metadata.</p>
-    <p>Two limits to keep in mind. The importer reads <code>width</code> and <code>height</code> as bare numbers and adopts <code>options.units</code>, <code>mm</code> by default; an SVG in pixels is therefore imported at one unit per pixel, and the <code>svg_to_pen</code> example fits it to a chosen width afterwards with a transform, which is the intended way. And styles are ignored on purpose: fills, stroke widths and colours do not survive, only centrelines, which is what a pen draws.</p>
+    <p>Two limits to keep in mind. The importer reads <code>width</code> and <code>height</code> as bare numbers and adopts <code>options.units</code>, <code>mm</code> by default; an SVG in pixels is therefore imported at one unit per pixel, and the <code>svg_to_pen</code> example fits it to a chosen width afterwards with a transform, which is the intended way. Styles, source layers, text, images, viewBox mapping, use elements, masks and clipping are not reproduced. Filled compound shapes are not converted into equivalent pen fills. Check the resulting centrelines and dimensions in the preview.</p>
 
     <h2 id="c6"><span class="num">6</span>The optimizer</h2>
     <p><code>optimizeDocument(document, options, pluginHost)</code> returns a new document in which every visible layer's paths have gone through a list of passes. The default list is <code>["deduplicate", "merge", "simplify", "resample", "clean"]</code>; give <code>passes</code> to change the order, leave some out, or insert a plugin pass by name. An unknown name throws.</p>
@@ -195,12 +199,12 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
         <tr><td><em>name</em></td><td>a plugin registered as an optimizer under that name: <code>(paths, options, layer) → paths</code>.</td><td></td></tr>
       </tbody>
     </table>
-    <p>Two details that came out of real drawings. The simplifier measures the distance to the finite segment, not to the infinite line through its ends; a polyline that goes out and comes back along the same line (a backtrack) would otherwise collapse to nothing. And the merge pass is quadratic in the number of paths per layer, which is fine for the thousands of hatch lines a sheet has and would not be for hundreds of thousands; the architecture document describes the spatial-hash version that would replace it.</p>
+    <p>Two details that came out of real drawings. The simplifier measures the distance to the finite segment, not to the infinite line through its ends; a polyline that goes out and comes back along the same line (a backtrack) would otherwise collapse to nothing. And the merge pass is quadratic in the number of paths per layer, which is fine for the thousands of hatch lines a sheet has and would not be for hundreds of thousands; a spatial index is not implemented.</p>
     <p>The <code>route_lab</code> example is the optimizer's test bench: shuffled fragments, duplicates and a 1 440-point circle, with each pass switchable. On that input the passes together take 141 paths and 2 141 points down to 15 paths and 464 points, before the planner even starts.</p>
 
     <h2 id="c7"><span class="num">7</span>The planner</h2>
-    <p><code>planDocument(document, options)</code> turns a document into a <em>plan</em>: an ordered list of moves that the preview, the exports and the driver all consume, so they can never disagree about what will be drawn.</p>
-    <pre><code>{
+    <p><code>planDocument(document, options)</code> turns a document into a <em>plan</em>: an ordered list of moves that the preview, the exports and the driver all consume, so consumers share one planned geometry.</p>
+    <pre><code class="language-none">{
   schema: "vanilla.penplotter/plan@1",
   units, page, tools,
   routes: [ { layerId, toolId, path } ],                    // the paths in drawing order
@@ -210,16 +214,16 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
   stats:  { paths, points, drawDistance, travelDistance, penLifts, penDowns, penChanges (also toolChanges), estimatedSeconds },
   options
 }</code></pre>
-    <p>Layers are planned in document order; a layer whose tool differs from the previous one emits a <code>tool-change</code> move first, so all work for one pen is grouped and the plot stops as few times as possible. Within a layer the strategy decides the order:</p>
+    <p>Layers are planned in document order; a layer whose tool differs from the previous one emits a <code>tool-change</code> move first, without regrouping layers by pen. Put layers using the same pen together yourself to reduce swaps. Within a layer the strategy decides the order:</p>
     <ul>
       <li><strong>nearest</strong> (default): greedy nearest neighbour from the current pen position, starting at <code>options.origin</code> (0,0). For an open, reversible path the closer of its two ends is chosen and the path is reversed when needed. For a closed path the seam is moved: the polygon is rotated so it starts at the corner nearest the pen (<em>reloop</em>), unless <code>reloop: false</code>. A path with <code>reversible: false</code> is only ever approached at its start.</li>
       <li><strong>drawn</strong>: draw in the order given, no reversal, no reloop. Use it when the order is the drawing, or to see what the planner saves. <code>input</code> is accepted as the same word.</li>
     </ul>
     <p>Every drawn path counts one pen-down and one pen-up. The time estimate, in seconds, gives every stroke and every hop its own ramps, with distances converted to millimetres first:</p>
-    <pre><code>Σ ramps(stroke, drawSpeed, acceleration)  +  Σ ramps(hop, travelSpeed, travelAcceleration)  +  penLifts · liftDelay  +  (toolChanges − 1) · toolChangeDelay
+    <pre><code class="language-none">Σ ramps(stroke, drawSpeed, acceleration)  +  Σ ramps(hop, travelSpeed, travelAcceleration)  +  penLifts · liftDelay  +  (toolChanges − 1) · toolChangeDelay
 ramps(L, v, a) = L / v + v / a  when L ≥ v² / a,  otherwise 2 · √(L / a)
 defaults: drawSpeed 40 mm/s, travelSpeed 120 mm/s, acceleration 800 mm/s², travelAcceleration 1200 mm/s², liftDelay 0.6 s, toolChangeDelay 15 s</code></pre>
-    <p>The defaults are the machine's: the speeds, ramps and pen delays of the EBB profile for the iDraw HSE / A2, so the estimate on an example page and the time in the pen panel agree, and so does the plot (wave hatch: 681 s estimated, 680 s plotted). The first tool is in the holder when the plot starts, so only a swap costs a tool change. With <code>acceleration: 0</code> the estimate is the plain distance over speed again. The planner never mutates its input and always returns fresh point objects, so a plan can be kept, compared or serialised while the document moves on.</p>
+    <p>The estimate uses the iDraw profile speeds, ramps and pen delays. It is approximate: communication, manual swaps and settings affect the duration. The first tool is already in the holder, so only later swaps count as tool changes. <code>acceleration: 0</code> gives a plain distance-over-speed estimate. The planner returns separate point objects rather than editing its input.</p>
 
     <h2 id="c8"><span class="num">8</span>The renderers</h2>
     <p>A renderer turns a plan into a machine program or a picture. They all read the same <code>moves</code> and <code>routes</code>, so the SVG, the HPGL and the preview show the same order and the same seams the pen will follow.</p>
@@ -261,13 +265,13 @@ defaults: drawSpeed 40 mm/s, travelSpeed 120 mm/s, acceleration 800 mm/s², trav
     <p>A stroke is one polyline, travelled from rest to rest. Before planning, chords within <code>simplifyTolerance</code> (0.02 mm, under two steps) of a straight line are merged, so a circle drawn as 360 chords of 0.2 mm becomes a few dozen commands rather than 360 commands of 5 ms that the board cannot parse in time. <code>planStroke(points, settings)</code> then gives every vertex the speed it may be passed at: the floor <code>minSpeed</code> (2 mm/s) at both ends, never exactly zero, because a step rate of zero leaves the last step to rounding luck and the pen would sit on the paper waiting for it; and in between GRBL's <em>junction deviation</em> rule, <code>v² = a · δ · sin(θ/2) / (1 − sin(θ/2))</code>, where θ is the turn at the vertex and δ the profile's 0.05 mm. A straight continuation never slows, a 45° bend passes at about 22 mm/s with the default 800 mm/s², a right angle at about 10 mm/s, a reversal drops to the floor. A forward and a backward pass then cap every vertex speed by what the ramps can reach over the neighbouring segments (<code>v² ≤ v₀² + 2 a L</code>). Each segment becomes a trapezoid, accelerate, cruise, brake, or a triangle when it is too short to reach cruise speed; each of those phases is one constant-acceleration piece from one point to another with a start and an end speed. A phase shorter than 4 ms (a ramp from 39.9 to 40 mm/s, say) is not worth a command of its own: its neighbour takes over the distance and the speed makes that tiny jump at the boundary instead, so a long segment never produces a command the board cannot parse in time. The cruise speed is the plan's draw or travel speed, further limited so that neither motor exceeds the board's 24.995 steps per millisecond (on CoreXY a motor sees |vx| + |vy|).</p>
     <p>Every phase is sent against <em>absolute</em> step targets: the phase's end position in steps is rounded, and the command carries the difference from the steps already commanded. Rounding therefore never accumulates; after any plan the step totals return exactly to where they started, which the tests check. With <code>commandSet: "LM"</code> (the default) a phase is one <code>LM</code>: duration in 40 µs ticks from the average speed, and per motor an initial rate and an acceleration in the firmware's units (2³¹ × 40 µs per step/s), chosen so that the rate runs from the start speed to the end speed and the accumulator lands a quarter step past the step count, so rounding makes the last step fall a tick early rather than leave it hanging; both motors therefore finish together and consecutive commands hand the speed over without a jump. A test replays the firmware's own tick-by-tick arithmetic on every command to prove it. A motor with no steps gets zeros; a moving motor whose numbers round to nothing gets an acceleration of 1 so the firmware cannot stall; a phase so short that integer steps would push the rate past the limit is stretched by a tick. <code>LM</code> has no minimum rate, so the nearly-diagonal line that used to lose steps to the 1.31 steps/s floor now gets every step. With <code>commandSet: "SM"</code>, chosen by the driver for firmware older than 2.7, each phase is cut into slices of at most 25 ms, each a constant-speed <code>SM</code> at the speed the profile has at that moment: the ramps survive as a staircase, and a single step in 25 ms stays above the floor. The compiled object carries the profile id, the command set, the settings used, the commands with their kind and duration, statistics (<code>drawMm</code>, <code>travelMm</code>, <code>penDowns</code>, <code>durationMs</code>) and the end position.</p>
     <h3>Running it</h3>
-    <p><code>new EbbDriver({ transport, profile }).run(planOrCompiled, options)</code> refuses without <code>confirmed: true</code>: the caller states that the carriage is parked, the paper is in place and hands are clear. It sends <code>V</code> and refuses a device that does not answer with an EBB version; the version decides the command set (a plan is compiled for it, a precompiled <code>LM</code> list is refused on firmware older than 2.7 with a message that says so). On firmware 3.x it asks the board for its largest motion queue (<code>QU,2</code>, 32 commands on the iDraw HSE) and opens it (<code>CU,4,n</code>); the profile's <code>fifoDepth</code> caps the request. Then it streams the commands: it keeps sending while at least two are still unacknowledged and the unacknowledged ones add up to less than the profile's <code>aheadMs</code> (250 ms) of motion, never more than the board's queue holds. The EBB answers when a command is queued, and with a full queue only after the oldest queued move has finished, so the acknowledgements are the flow control, a run of 5 ms moves is not paced by the USB round trip, and a stop stays quick because the <code>ES</code> behind the few commands in flight is parsed as soon as they are. Per command the timeout is 5 s plus the durations of everything that may still be queued. <code>onProgress(index, total, entry)</code> is called as each command is <em>acknowledged</em>, not executed; <code>onToolChange(toolId)</code> is awaited on a pen-change marker after the queue has drained, with the pen up and the motors holding, which is where a page asks you to swap pens. <code>abort()</code> sets a flag that the loop checks before every command. Abort and any error, including an <code>!</code> reply, end the same way: <code>ES</code>, <code>SP,1</code>, <code>EM,0,0</code>, each sent even if the previous one fails. The result is <code>{ status: "complete" | "aborted", commands, durationMs }</code>.</p>
+    <p><code>new EbbDriver({ transport, profile }).run(planOrCompiled, options)</code> refuses without <code>confirmed: true</code>: the caller states that the carriage is parked, the paper is in place and hands are clear. It sends <code>V</code> and refuses a device that does not answer with an EBB version; the version decides the command set (a plan is compiled for it, a precompiled <code>LM</code> list is refused on firmware older than 2.7 with a message that says so). On firmware 3.x it asks the board for its largest motion queue (<code>QU,2</code>, 32 commands on the iDraw HSE) and opens it (<code>CU,4,n</code>); the profile's <code>fifoDepth</code> caps the request. Then it streams the commands: it keeps sending while at least two are still unacknowledged and the unacknowledged ones add up to less than the profile's <code>aheadMs</code> (250 ms) of motion, never more than the board's queue holds. The EBB answers when a command is queued, and with a full queue only after the oldest queued move has finished, so the acknowledgements are the flow control, a run of 5 ms moves is not paced by the USB round trip, and a stop stays quick because the <code>ES</code> behind the few commands in flight is parsed as soon as they are. Per command the timeout is 5 s plus the durations of everything that may still be queued. <code>onProgress(index, total, entry)</code> is called as each command is <em>acknowledged</em>, not executed; <code>onToolChange(toolId)</code> is awaited on a pen-change marker after the queue has drained, with the pen up and the motors holding, which is where a page asks you to swap pens. <code>abort()</code> sets a flag that the loop checks before every command. Abort and any error, including an <code>!</code> reply, attempt the same stop sequence: <code>ES</code>, <code>SP,1</code>, <code>EM,0,0</code>, each sent even if the previous one fails. The result is <code>{ status: "complete" | "aborted", commands, durationMs }</code>.</p>
     <h3>Transports</h3>
     <p>A transport is only <code>open()</code>, <code>send(cmd, { timeoutMs }) → reply</code> and <code>close()</code>. Two exist.</p>
     <p><code>createLogTransport({ version, failOn })</code> is the dry run: it records every command in <code>log</code>, answers <code>V</code> and <code>QM</code> plausibly and everything else with an empty reply. Every example's "Dry run" button uses it, and so do the tests, including the ones that simulate a firmware error.</p>
     <p><code>createWebSerialTransport(port, { filters, baudRate })</code> is the browser transport. Without a port it calls <code>navigator.serial.requestPort</code>, which only works from a user gesture and only in Chrome and Edge on <code>localhost</code> or https; with a port granted earlier (from <code>navigator.serial.getPorts()</code>) it reuses it. It opens at 115200 baud, starts a reader loop that appends everything received to a buffer, and answers <code>send</code> by writing the command plus <code>\r</code> at once and handing out replies the moment their lines arrive (no polling timer): a line starting with <code>!</code> is an error reply, everything before an <code>OK</code> line is the reply, and for <code>V</code> and <code>QM</code>, which firmware 3.x answers without <code>OK</code>, the first line is. Several commands may be in flight; the EBB answers in the order it receives, so replies go to the waiting callers in send order. A reply that never comes fails everything behind it, because the order would be lost. The test suite drives this transport with a fake port built from the same WHATWG streams a browser hands out, answering exactly as the machine did on 2026-09-21, including a reply that arrives in two chunks.</p>
     <h3>The pen panel</h3>
-    <p><code>examples/pen.js</code> is the reference consumer of all of the above and the panel every example page shows: it places the plan on the bed, turned by 0, 90, 180 or 270 degrees and moved so the sheet's corner lies at a chosen offset from home (<code>placePlan</code>, a pure function over the plan's moves, unit-aware, a rotation and never a mirror), draws the bed as the machine sees it (home in the corner by the board, X along the long rail, the sheet at its offsets, the drawing inside, so a portrait sheet that would land sideways is seen before it is plotted), compiles it, shows the command count and the machine's own time estimate, offers the dry run, connect, plot and stop, pauses for pen changes with a dialog, and keeps the SVG, HPGL and G-code exports as a side door. It also remembers, per drawing and in <code>localStorage</code>, how many strokes an interrupted plot had completed (each pen-up in the compiled list carries <code>completes</code>, the index of the stroke it ends), guarded by a signature of the drawing, and offers "Resume at stroke n": a compile with <code>skipDraws: n</code> leaves those strokes out and starts from home, where you park the carriage again by hand. While a plot runs, <code>lockLinks</code> greys out every link that leaves the page (navigation, GitHub, the rest of the site; the panel's own download links stay) and restores them afterwards. Leaving the page anyway gets the browser's "leave site?" question first; if the page goes anyway, <code>driver.emergencyStop()</code> writes <code>ES</code>, <code>SP,1</code> and <code>EM,0,0</code> in one go without waiting for replies, so the pen comes up. That gap was found the hard way on 2026-10-01, with a half-finished plot on the paper. The panel contains no protocol knowledge; everything it needs is in the driver.</p>
+    <p><code>examples/pen.js</code> is the reference consumer of all of the above and the panel every example page shows: it places the plan on the bed, turned by 0, 90, 180 or 270 degrees and moved so the sheet's corner lies at a chosen offset from home (<code>placePlan</code>, a pure function over the plan's moves, unit-aware, a rotation and never a mirror), draws the bed as the machine sees it (home in the corner by the board, X along the long rail, the sheet at its offsets, the drawing inside, so a portrait sheet that would land sideways is seen before it is plotted), compiles it, shows the command count and the machine's own time estimate, offers the dry run, connect, plot and stop, pauses for pen changes with a dialog, and keeps the SVG, HPGL and G-code exports as a side door. It also remembers, per drawing and in <code>localStorage</code>, how many strokes an interrupted plot had completed (each pen-up in the compiled list carries <code>completes</code>, the index of the stroke it ends), guarded by a signature of the drawing, and offers "Resume at stroke n": a compile with <code>skipDraws: n</code> leaves those strokes out and starts from home, where you park the carriage again by hand. While a plot runs, <code>lockLinks</code> greys out every link that leaves the page (navigation, GitHub, the rest of the site; the panel's own download links stay) and restores them afterwards. Leaving the page anyway gets the browser's "leave site?" question first; if the page goes anyway, <code>driver.emergencyStop()</code> writes <code>ES</code>, <code>SP,1</code> and <code>EM,0,0</code> in one go without waiting for replies, to request a pen lift and motor release. Delivery depends on the connection still working. That gap was found the hard way on 2026-10-01, with a half-finished plot on the paper. The panel contains no protocol knowledge; everything it needs is in the driver.</p>
 
     <h2 id="c10"><span class="num">10</span>Machine facts and safety rules</h2>
     <table>
@@ -291,18 +295,18 @@ defaults: drawSpeed 40 mm/s, travelSpeed 120 mm/s, acceleration 800 mm/s², trav
 
     <h2 id="c11"><span class="num">11</span>Plugins</h2>
     <p>A <code>PluginHost</code> keeps named implementations in four registries: <code>optimizer</code>, <code>effect</code>, <code>renderer</code> and <code>driver</code>. A plugin is an object with <code>install(host)</code> that calls <code>host.register(type, name, fn)</code>; registering the same name twice throws. The engine's <code>use(plugin)</code> installs into its own host, and the optimizer looks up any pass name it does not know in the host's optimizer registry. That is the only extension point wired in today; the other three registries exist so that effects, renderers and drivers can be added the same way later.</p>
-    <pre><code>const weave = {
+    <pre><code class="language-javascript">const weave = {
   install(host) {
     host.register("optimizer", "weave", (paths, options, layer) => paths.slice().reverse());
   }
 };
 plot.use(weave);
 plot.optimize({ passes: ["deduplicate", "merge", "weave"] });</code></pre>
-    <p>Plugins receive snapshots and return new arrays; they never see the engine's private state. Because their input is plain data, a heavy pass could run in a worker without changing the contract.</p>
+    <p>Optimizer plugins receive path data and return arrays. The registry does not enforce purity or provide a worker runtime; plugin authors must avoid unexpected mutations themselves.</p>
 
     <h2 id="c12"><span class="num">12</span>Waves, series and other sources</h2>
-    <p>The engine wants points and nothing else, so anything that gives a number for an x is a drawing. <code>Math.sin</code> works; so does a noise function; so do p5.waves and vanilla.waves, whose <code>createSampler({ wave, range, frequency })</code> returns an object with <code>sample(x, t)</code>. The one idea to hold on to when plotting something that animates: pick a time and keep it. Every wave example on the site samples at <code>t = 0</code>; sample at ten different times and you have a series of ten sheets from one sketch.</p>
-    <pre><code>const sampler = waves.createSampler({ wave: "triangle sine", range: [-3, 3], frequency: 0.08 });
+    <p>The engine wants points and nothing else, so anything that gives a number for an x is a drawing. <code>Math.sin</code> works; so does a noise function; so does a sampler, whose <code>createSampler({ wave, range, frequency })</code> returns an object with <code>sample(x, t)</code>. The one idea to hold on to when plotting something that animates: pick a time and keep it. Every wave example on the site samples at <code>t = 0</code>; sample at ten different times and you have a series of ten sheets from one sketch.</p>
+    <pre><code class="language-javascript">const sampler = waves.createSampler({ wave: "triangle sine", range: [-3, 3], frequency: 0.08 });
 for (let row = 0; row &lt; 32; row += 1) {
   const points = [];
   for (let x = 18; x &lt;= 192; x += 0.5) points.push({ x, y: 40 + row * 7 + sampler.sample(x + row * 2, 0) });
@@ -328,30 +332,30 @@ for (let row = 0; row &lt; 32; row += 1) {
 
     <h2 id="c14"><span class="num">14</span>Recipes</h2>
     <h3>Tone from lines</h3>
-    <pre><code>const cell = (x, y, s) =&gt; [{ x, y }, { x: x + s, y }, { x: x + s, y: y + s }, { x, y: y + s }];
+    <pre><code class="language-javascript">const cell = (x, y, s) =&gt; [{ x, y }, { x: x + s, y }, { x: x + s, y: y + s }, { x, y: y + s }];
 [6, 4, 2.6, 1.7, 1.2].forEach((spacing, i) =&gt; plot.hatch(cell(20 + i * 30, 40, 26), { spacing, angle: Math.PI / 4 }));
 plot.crossHatch(cell(170, 40, 26), { spacing: 1.2 });   // darker still</code></pre>
     <h3>Two pens, one stop</h3>
-    <pre><code>plot.tool({ id: "black", color: "#111", width: 0.3 });
+    <pre><code class="language-javascript">plot.tool({ id: "black", color: "#111", width: 0.3 });
 plot.tool({ id: "red", color: "#c8402c", width: 0.8 });
 plot.layer("outline", { toolId: "black" }); plot.circle(105, 148, 60);
 plot.layer("fill", { toolId: "red" });      plot.hatch(square, { spacing: 2 });
 // the driver pauses once, between the two layers; HPGL gets SP1 and SP2 with:
 plot.exportHPGL({ penMap: { black: 1, red: 2 } });</code></pre>
-    <h3>Any SVG, fitted and plotted</h3>
-    <pre><code>const imported = Geometry.importSVG(svgText, { curveSteps: 24 });
+    <h3>Supported SVG paths, fitted and plotted</h3>
+    <pre><code class="language-javascript">const imported = Geometry.importSVG(svgText, { curveSteps: 24 });
 const b = documentBounds(imported);
 const s = 120 / (b.maxX - b.minX);                              // 120 mm wide
 const fitted = Geometry.transformDocument(imported,
   Geometry.Matrix.multiply(Geometry.Matrix.translate(-b.minX * s, -b.minY * s), Geometry.Matrix.scale(s)));
 for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;</code></pre>
     <h3>A dry run in Node</h3>
-    <pre><code>import { EbbDriver, createLogTransport } from "./src/driver/ebb.js";
+    <pre><code class="language-javascript">import { EbbDriver, createLogTransport } from "./src/driver/ebb.js";
 const dry = createLogTransport();
 await new EbbDriver({ transport: dry, profile: "idraw-hse-a2" }).run(plot.plan(), { confirmed: true });
 console.log(dry.log.length, "commands;", dry.log.slice(0, 5));</code></pre>
     <h3>A plotting animation</h3>
-    <pre><code>let progress = 0;
+    <pre><code class="language-javascript">let progress = 0;
 function frame() {
   progress = Math.min(1, progress + 0.004);
   Renderer.drawRoute(context, plan, { progress, showTravel: false });
@@ -362,18 +366,18 @@ frame();</code></pre>
     <h2 id="c15"><span class="num">15</span>Tests, tooling and the site</h2>
     <p><code>npm test</code> runs four Node scripts with no framework: <code>tests/snapshot.js</code> (the pipeline end to end, the fills, the facade's staleness rule for every editing method and every consumer, SVG import through an injected parser, the plugin host, the renderer, every local link on the site, the freshness of the generated pages, every example composition, and every live preview of the site drawn into a recording canvas), <code>tests/ebb.js</code> (CoreXY mixing, the command sequence, rounding drift, step-rate limits, bounds and units, the driver's run, abort and error paths, and the Web Serial transport against a fake port), <code>tests/regressions.js</code> (bugs that once happened: edits after planning, options surviving edits, units, backtracking) and <code>tests/version.js</code> (every place that states the version agrees). <code>tests/waves-integration.js</code> is an opt-in check against a downloaded vanilla.waves build, so the suite stays off the network.</p>
     <p><code>npm run docs</code> renders <code>docs/architecture.md</code> and <code>docs/roadmap.md</code> to HTML pages in the site's chrome with <code>tools/build-docs.js</code>, a small Markdown converter without dependencies; the test fails when a page is stale. <code>npm run manifest</code> regenerates <code>docs/vanilla.penplotter.manifest.json</code>, the machine-readable summary other tools read. <code>npm run handbook</code> prints this handbook to PDF with a headless Chrome. The GitHub Actions workflow runs the tests and refuses a commit whose generated files are out of date. The site is served straight from <code>main</code> by GitHub Pages; there is no build.</p>
-    <p>The <em>Requirements</em> table is identical in this README and in p5.penplotter's, and a test in the adapter's repository compares the two blocks byte for byte. Publishing order is always the engine first, then the adapter, because the adapter's examples load the engine as a sibling folder and its version check would otherwise refuse the mismatch.</p>
+    <p>The <em>Requirements</em> table is identical in this README and in p5.penplotter's, and a test in the adapter's repository compares the two blocks byte for byte. Publishing order is always the engine first, then the adapter, because the adapter examples load the engine as a sibling folder. The minimum-version check does not test every possible pair.</p>
 
     <h2 id="c16"><span class="num">16</span>Limits and roadmap</h2>
     <ul>
       <li><strong>Geometry</strong>: polylines only; curves are flattened at import; the offset is naive; no booleans, no clipping, no holes in fills.</li>
       <li><strong>Optimizer</strong>: exact and reversed duplicates only, no partial overlap; merge is quadratic.</li>
       <li><strong>Planner</strong>: greedy nearest neighbour; no 2-opt, no time-based cost, no layer dependencies.</li>
-      <li><strong>Driver</strong>: no pause or resume from a checkpoint; one tested profile; no Node transport yet, so plotting needs a browser; the acceleration profile is per stroke, so a pen-up travel always comes to rest before the pen goes down.</li>
-      <li><strong>Facade</strong>: the whole-document comparison costs milliseconds on huge documents.</li>
+      <li><strong>Driver</strong>: completed-stroke resume exists in the example panel, but no pause or mid-stroke resume; one tested profile; no Node transport yet, so plotting needs a browser; the acceleration profile is per stroke, so a pen-up travel always comes to rest before the pen goes down.</li>
+      <li><strong>Facade</strong>: the whole-document comparison grows with document size; large documents need measurement in their actual environment.</li>
     </ul>
-    <p>Everything in this handbook is <em>sheet mode</em>: draw everything, then plot. Your program makes the whole drawing, the engine finds a good order, the plotter draws it start to finish. The other way is <em>live mode</em>: draw something, plot it. The plotter draws along while your program is still drawing, so the picture grows on paper in the order you made it; that is for things that happen over time, an animation appearing dot by dot or a hand drawing in the air. Live mode is designed on the <a href="live.html">Two modes</a> page, in plain words first, and not yet built. When it lands it gets its own chapter here.</p>
-    <p>The roadmap's direction is fixed: strengthen the direct route. Acceleration landed in 0.3.0; next are pause and resume, pen heights from the profile, a Node transport, and reading p5.gysin's plotter-SVG with its pen map. Parked, because vpype and the AxiDraw software already cover them: a curve-rich document, full SVG/CSS, robust offsets, a production planner, and drivers for machines nobody here can test on. Version 1.0 means stable schemas, TypeScript declarations, npm, and a support matrix where every profile has been plotted with.</p>
+    <p>The current workflow builds a complete drawing before plotting. The planner can preserve its input order or choose nearby paths. <a href="live.html">Live drawing</a> would accept new strokes while plotting, but that mode is not implemented.</p>
+    <p>Proposed work includes mid-stroke pause and resume, configurable pen heights, a Node transport and live drawing. Full SVG/CSS support, robust offsets and more advanced routing are outside the current implementation. See the <a href="roadmap.html">roadmap</a> for the current directions.</p>
 
     <h2 id="c17"><span class="num">17</span>Reference tables</h2>
     <h3>Optimizer options</h3>
@@ -425,7 +429,7 @@ frame();</code></pre>
     <h3>Schemas</h3>
     <p><code>vanilla.penplotter/document@1</code> (chapter 3), <code>vanilla.penplotter/plan@1</code> (chapter 7), <code>vanilla.penplotter/ebb@1</code> (the compiled command list, chapter 9). The adapter validates the plan schema before drawing; a plan from another version would be refused in plain words rather than drawn wrong.</p>
 
-    <p class="callout">This handbook describes version 0.3.1 as tested on 2026-10-01. Where the code and this text disagree, the code and its tests are right, and the text needs a fix: open an issue on GitHub.</p>
+
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="handbook.html">Handbook</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>

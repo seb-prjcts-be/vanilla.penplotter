@@ -7,8 +7,9 @@
   <meta name="description" content="What a pen plotter can do once the sketch owns the plan: tone from lines, pens as layers, routes that shrink, files in, pen out.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261002c">
+  <link rel="stylesheet" href="animations.css">
 </head>
 <body>
   <nav id="navbar">
@@ -27,14 +28,14 @@
     <main>
   <div class="ex-page-header">
     <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-    <h1>vanilla.<span class="accent">penplotter</span> Possibilities</h1>
-    <p>A plotter has no pixels, no grey, no fill. It has one line at a time, a pen you can swap, and all the time in the world. I find that a good set of limits to draw inside. Everything below is drawn live by the engine in this page; take each one as a starting point, not a feature list.</p>
+    <h1>Possibilities</h1>
+    <p>A plotter has no pixels, no grey, no fill. It has one line at a time, a pen you can swap, and all the time in the world. I find that a good set of limits to draw inside. The previews below are drawn live by the engine; the pixel animations explain what the pen does. Take each one as a starting point for a drawing.</p>
   </div>
   <section id="tone" class="section section-dark">
     <div class="section-header">
       <div class="section-tag">plot.hatch() · plot.crossHatch()</div>
       <h2>Tone from <span class="accent">lines</span></h2>
-      <p class="section-desc">Grey does not exist; density does. Hatch spacing in millimetres is the only tone control a pen respects, and it is honest: 6 mm reads light, 1 mm reads dark, and a second pass at right angles goes darker still. Let a wave, a noise field or an image decide the spacing per cell and you have a tonal drawing.</p>
+      <p class="section-desc">Closer lines usually make a darker patch. Pen width, ink, paper and angle also affect the tone. Let a wave or another sampler choose spacing per cell, then plot a small swatch to find the range you like.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="tone" width="520" height="220" aria-label="Six squares hatched at decreasing spacing"></canvas></div>
@@ -44,13 +45,18 @@ plot.hatch(cell(index), { spacing, angle: Math.PI / 4 });
 plot.crossHatch(cell(5), { spacing: 1.2 });</code></pre>
 <a class="ex-full-link" href="../examples/wave_hatch/index.html">-&gt; full example</a>
     </div>
+    <figure class="doc-animation" id="animation-hatching">
+      <img src="images/animations/hatching.gif" width="600" height="400" loading="lazy" alt="A filled shape becomes parallel pen strokes.">
+      <figcaption>A dark patch is a small collection of lines. Try halving the spacing in the example above. The patch gets denser, and the pen has more work. Open <a href="../examples/wave_hatch/index.html">wave hatch</a> to let a sampler choose the density.</figcaption>
+    </figure>
+
   </section>
 
   <section id="stipple" class="section">
     <div class="section-header">
       <div class="section-tag">plot.stipple({ count, minDistance, seed })</div>
-      <h2>Dots that never <span class="accent">collide</span></h2>
-      <p class="section-desc">A stipple is a quarter-millimetre dash, placed by a seeded generator that keeps a minimum distance. The same seed gives the same dots tomorrow, on paper. Vary the count per region and the sheet gets a grain.</p>
+      <h2>Dots with <span class="accent">space</span></h2>
+      <p class="section-desc">A stipple is a short dash. The seeded generator keeps a minimum distance between dash centres and repeats the same placement for the same input. A crowded region can yield fewer dots than requested. Pen width and paper decide how the marks read.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="stipple" width="520" height="220" aria-label="Stippled band with increasing density"></canvas></div>
@@ -62,7 +68,7 @@ plot.crossHatch(cell(5), { spacing: 1.2 });</code></pre>
     <div class="section-header">
       <div class="section-tag">plot.tool() · plot.layer() · penMap</div>
       <h2>Pens as <span class="accent">layers</span></h2>
-      <p class="section-desc">A tool is a pen: colour and width. A layer names its tool. The planner finishes one pen before asking for the next, HPGL gets pen numbers from a map, SVG gets one group per layer with the pen colour in its metadata. Three pens, one plan, two stops.</p>
+      <p class="section-desc">A tool describes a pen; a layer names its tool. The planner visits layers in document order and requests a swap when the tool changes. Group layers using the same pen yourself to avoid unnecessary swaps. HPGL pen numbers come from your map, and SVG stores tool metadata per layer.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="pens" width="520" height="220" aria-label="Three-pen composition"></canvas></div>
@@ -77,7 +83,7 @@ plot.exportHPGL({ penMap: { black: 1, blue: 2, red: 3 } });</code></pre>
     <div class="section-header">
       <div class="section-tag">plot.plan({ strategy: "nearest" })</div>
       <h2>Routes that <span class="accent">shrink</span></h2>
-      <p class="section-desc">Left: strokes drawn in the order the sketch produced them, pen-up travel in red. Right: the same strokes, reordered and reversed by the planner. The drawing is identical; the plot is minutes shorter. Every example on this site is planned this way.</p>
+      <p class="section-desc">Left: strokes in their input order, with pen-up travel in red. Right: the same strokes reordered and reversed by a greedy nearest-path planner. This example reduces travel; the strategy does not guarantee the shortest route. Use <code>strategy: "drawn"</code> when order matters.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="route" width="520" height="220" aria-label="The same strokes, planned in input order and in nearest order"></canvas></div>
@@ -91,7 +97,7 @@ plot.plan({ strategy: "nearest" }).stats.travelDistance;  // short</code></pre>
     <div class="section-header">
       <div class="section-tag">Geometry.importSVG() · transformDocument()</div>
       <h2>Files <span class="accent">in</span></h2>
-      <p class="section-desc">Paths, lines, polygons, rects, circles and nested transforms come in from any SVG, curves flattened at a tolerance you choose. So a p5.plotSvg capture, an Inkscape drawing or a p5.gysin plotter-SVG can be fitted onto the bed, planned and plotted here, without leaving the browser.</p>
+      <p class="section-desc">The importer reads SVG paths and basic shapes, including nested transform attributes. Curves become sampled points with fixed step counts. Text, images, CSS, viewBox mapping, clipping and compound fills are not reproduced. Inspect the preview and dimensions before plotting an imported drawing.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="import" width="520" height="220" aria-label="An imported SVG next to its planned version"></canvas></div>
@@ -104,8 +110,8 @@ const fitted = Geometry.transformDocument(doc, Geometry.Matrix.scale(0.3));</cod
   <section id="programs" class="section">
     <div class="section-header">
       <div class="section-tag">exportHPGL() · exportGCode() · compileEbbPlan()</div>
-      <h2>One plan, four <span class="accent">machines</span></h2>
-      <p class="section-desc">The plan is the contract, and the EBB command list is what I actually send. The other three are the side door: HPGL for a vintage HP or Roland plotter, G-code for a GRBL machine with a servo, an SVG for AxiDraw's own software. Same route, same order, same seams, whichever way it leaves.</p>
+      <h2>One plan, several <span class="accent">formats</span></h2>
+      <p class="section-desc">The EBB driver compiles the plan for the tested iDraw. SVG, HPGL and G-code exports provide other routes through software that accepts those formats. Pen commands and tool numbers need to match your setup; an export does not establish direct driver support for that machine.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><pre class="ex-text" data-possibility="programs" aria-label="The same plan as HPGL, G-code and EBB commands"></pre></div>
@@ -117,9 +123,9 @@ compileEbbPlan(plot.plan(), { profile: "idraw-hse-a2" }).commands;</code></pre>
 
   <section id="waves" class="section section-dark">
     <div class="section-header">
-      <div class="section-tag">any function of x · p5.waves · vanilla.waves</div>
+      <div class="section-tag">any function of x · wave sampling · vanilla.waves</div>
       <h2>A number in, a line <span class="accent">out</span></h2>
-      <p class="section-desc">The engine only wants points. Anything that returns a number for an x is a drawing: <code>Math.sin</code>, a noise function, or one of the 35 shapes in p5.waves and vanilla.waves. Sample at a fixed time and the animation becomes a sheet; sample at ten times and you have a series.</p>
+      <p class="section-desc">The engine only wants points. Anything that returns a number for an x is a drawing: <code>Math.sin</code>, a noise function, or a custom sampler. Sample at a fixed time and the animation becomes a sheet; sample at ten times and you have a series.</p>
     </div>
     <div class="ex-preview">
       <div class="ex-canvas"><canvas data-possibility="waves" width="520" height="220" aria-label="Wave lines sampled at a fixed time"></canvas></div>

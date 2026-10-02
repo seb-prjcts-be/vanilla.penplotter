@@ -6,8 +6,8 @@
   <title>SVG to pen - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../showcase.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../showcase.css?v=20261002b">
   <style>
     textarea { width:100%; min-height:120px; margin:0 0 10px; padding:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font:11px/1.5 "DM Mono",monospace; resize:vertical; }
     .file { display:block; margin:0 0 14px; color:var(--muted); font-size:13px; }
@@ -33,7 +33,7 @@
     <div class="demo-header">
       <div class="demo-number">Import · plan · pen</div>
       <h1>SVG to pen</h1>
-      <p>You already have drawings as SVG: from p5.plotSvg, from Inkscape, from a text editor. Paste one here or pick the file. It gets read, fitted to the width you want, cleaned up and planned, and then it goes to the pen like everything else on this site. The usual detour through vpype and Inkscape is the part I wanted to skip.</p>
+      <p>Paste an SVG or choose a file, then set the drawing width. The importer reads paths and basic shapes and the preview shows the planned result. Text, images, styling, clipping and viewBox mapping are not reproduced. Check scale and geometry before plotting.</p>
     </div>
     <div class="demo-layout">
       <div class="demo-code">
