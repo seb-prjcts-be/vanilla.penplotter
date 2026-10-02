@@ -42,6 +42,14 @@ const plot = new PlotterEngine({
 plot.line(20, 20, 190, 20);
 plot.circle(105, 145, 52);</code></pre>
     <p>The active layer starts as <code>default</code>. Geometry is stored directly; no canvas or SVG has to exist first.</p>
+    <p><strong>Paper, drawing and bed have separate sizes.</strong> A4 is 210 × 297 mm in portrait, or 297 × 210 mm in landscape. The drawing occupies only the area covered by its strokes. The bed is the machine’s working area; “A2” in a model name does not set your drawing’s size.</p>
+    <pre><code class="language-javascript">import { PlotterEngine, paperSize } from "../vanilla.penplotter.js";
+
+const plot = new PlotterEngine({
+  units: "mm",
+  page: { ...paperSize("A4", "landscape"), margin: 12 }
+});</code></pre>
+    <p><code>paperSize()</code> supports A0–A6. It sets the sheet dimensions without scaling the geometry. A3 is 297 × 420 mm; A2 is 420 × 594 mm. On the 594 × 432 mm HSE/A2 bed, A2 fits with its 594 mm edge along X, at X = 0 and Y between 0 and 12 mm. The example panel shows the paper, the stroke bounds and whether the sheet fits. Turning the sheet swaps its X/Y dimensions; position moves it from the home corner.</p>
 
     <figure class="doc-animation" id="animation-shapes">
       <img src="images/animations/shapes.gif" width="600" height="400" loading="lazy" alt="Basic shapes are recorded directly in millimetres.">

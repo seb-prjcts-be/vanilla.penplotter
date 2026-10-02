@@ -7,6 +7,28 @@ export function millimetersPerUnit(units = "mm") {
   return scales[units];
 }
 
+const PAPER_SIZES = { A0: [841, 1189], A1: [594, 841], A2: [420, 594], A3: [297, 420], A4: [210, 297], A5: [148, 210], A6: [105, 148] };
+
+// Paper dimensions only: choosing a sheet does not scale the drawing.
+export function paperSize(format, orientation = "portrait", units = "mm") {
+  const size = PAPER_SIZES[String(format).toUpperCase()];
+  if (!size) throw new RangeError(`Unknown paper format: ${format}`);
+  if (!["portrait", "landscape"].includes(orientation)) throw new RangeError("Use portrait or landscape.");
+  const scale = millimetersPerUnit(units);
+  const [short, long] = size;
+  return orientation === "portrait" ? { width: short / scale, height: long / scale } : { width: long / scale, height: short / scale };
+}
+
+export function describePaper(page, units = "mm") {
+  const scale = millimetersPerUnit(units);
+  const width = finite(page.width, "page width") * scale;
+  const height = finite(page.height, "page height") * scale;
+  if (width <= 0 || height <= 0) throw new RangeError("Paper dimensions must be positive.");
+  const short = Math.min(width, height), long = Math.max(width, height);
+  const format = Object.entries(PAPER_SIZES).find(([, size]) => Math.abs(size[0] - short) < 1e-6 && Math.abs(size[1] - long) < 1e-6)?.[0] || "Custom";
+  return { format, orientation: width === height ? "square" : width > height ? "landscape" : "portrait", width, height };
+}
+
 let nextId = 1;
 
 function finite(value, label) {

@@ -4,7 +4,7 @@
 // sheet lies on the bed, a dry run, connect, plot, stop, and, as a side door
 // for anyone without an EBB plotter, the same plan as SVG, HPGL or G-code.
 // The example itself only builds geometry; nothing here changes its plan.
-import { millimetersPerUnit } from "../src/core/model.js";
+import { millimetersPerUnit, describePaper } from "../src/core/model.js";
 import { placePlan } from "../src/planner/index.js";
 import { drawBed as renderBed } from "../src/renderer/index.js";
 import {
@@ -88,6 +88,11 @@ export function mountPen(container, options) {
     </div>
     <canvas data-pen="bed" width="594" height="432" style="display:block;width:100%;height:auto;margin:0 0 12px;border:1px solid rgba(0,0,0,.15);background:#fff" aria-label="The bed: where the sheet and the drawing lie"></canvas>
     <dl class="pen-stats">
+      <div><dt>Paper</dt><dd data-pen="paper">—</dd></div>
+      <div><dt>On the bed</dt><dd data-pen="sheet-size">—</dd></div>
+      <div><dt>Drawing</dt><dd data-pen="drawing-size">—</dd></div>
+      <div><dt>Bed</dt><dd>594 × 432 mm</dd></div>
+      <div><dt>Sheet fit</dt><dd data-pen="sheet-fit">—</dd></div>
       <div><dt>Commands</dt><dd data-pen="commands">—</dd></div>
       <div><dt>On the machine</dt><dd data-pen="time">—</dd></div>
     </dl>
@@ -155,6 +160,21 @@ export function mountPen(container, options) {
     turn = Number($("turn").value);
     try {
       const onBed = placed();
+      const sheet = describePaper(onBed.page, onBed.units);
+      const mm = millimetersPerUnit(onBed.units);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const move of onBed.moves) {
+        if (move.type !== "draw") continue;
+        for (const point of move.points) {
+          minX = Math.min(minX, point.x); minY = Math.min(minY, point.y);
+          maxX = Math.max(maxX, point.x); maxY = Math.max(maxY, point.y);
+        }
+      }
+      const size = (value) => Number(value.toFixed(1));
+      $("paper").textContent = `${sheet.format} · ${sheet.orientation}`;
+      $("sheet-size").textContent = `${size(sheet.width)} × ${size(sheet.height)} mm (X × Y)`;
+      $("sheet-fit").textContent = offset.x >= 0 && offset.y >= 0 && offset.x + sheet.width <= profile.travel.width && offset.y + sheet.height <= profile.travel.height ? "Inside the bed" : "Paper extends beyond the bed";
+      $("drawing-size").textContent = Number.isFinite(minX) ? `${size((maxX - minX) * mm)} × ${size((maxY - minY) * mm)} mm` : "No strokes";
       compiled = compileEbbPlan(onBed, { profile });
       drawBed($("bed"), getPlot().plan(), offset, onBed);
       const seconds = compiled.stats.durationMs / 1000;

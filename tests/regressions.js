@@ -1,5 +1,21 @@
 import assert from "node:assert/strict";
 import { PlotterEngine, Optimizer, Driver, Renderer, Planner } from "../vanilla.penplotter.js";
+import { paperSize, describePaper } from "../src/core/model.js";
+
+function testPaperSizes() {
+  assert.deepEqual(paperSize("A4"), { width: 210, height: 297 });
+  assert.deepEqual(paperSize("A2", "landscape"), { width: 594, height: 420 });
+  assert.deepEqual(paperSize("A3", "portrait", "cm"), { width: 29.7, height: 42 });
+  assert.throws(() => paperSize("A42"), /Unknown paper format/);
+  assert.throws(() => paperSize("A4", "sideways"), /portrait or landscape/);
+  assert.equal(describePaper({ width: 29.7, height: 21 }, "cm").format, "A4");
+  assert.equal(describePaper({ width: 80, height: 50 }).format, "Custom");
+  const plot = new PlotterEngine({ units: "mm", page: paperSize("A4") });
+  plot.line(20, 30, 100, 80);
+  const turned = Planner.placePlan(plot.plan(), { x: 10, y: 20 }, 90);
+  assert.equal(describePaper(turned.page).orientation, "landscape");
+  assert.deepEqual([turned.page.width, turned.page.height], [297, 210]);
+}
 
 function testEditsAfterPlanning() {
   const plot = new PlotterEngine();
@@ -122,6 +138,7 @@ function testBedDrawing() {
   assert.equal(turned.page.height, 594);
 }
 
+testPaperSizes();
 testEditsAfterPlanning();
 testOptimizationSettingsSurviveEdits();
 testUnits();
