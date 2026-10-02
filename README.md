@@ -4,17 +4,15 @@
 
 **[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
 
-You supply polylines in physical units. This engine can clean up paths, plan a route, preview it and export files. Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
+You supply polylines in physical units. This engine can clean up paths, plan a route, preview it and export files.
 
-**Which of the two do you need?**
+Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
 
-| | vanilla.penplotter (this repository) | p5.penplotter |
-|---|---|---|
-| what it is | the engine: geometry in millimetres, optimizer, route planner, time estimate, machine driver | a p5.js adapter that calls this engine |
-| needs | nothing; plain ES modules, no p5.js | p5.js and this engine |
-| you draw with | your own code, arrays of points, Paper.js, an SVG file | supported p5 shapes: `plot.line()` instead of `line()` |
-| to the pen | `driver.run(plot.plan())` | `plot.go()` |
-| take it if | you work without p5, or want to build your own layer on top | you sketch in p5.js |
+## Which library?
+
+**vanilla.penplotter** is the engine. Use it for your own JavaScript, arrays of points or supported SVG geometry. It has no dependencies and works without p5.js.
+
+**[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)** connects this engine to p5.js. Use it when you want to draw with supported p5 shapes and send them to the pen with `plot.go()`.
 
 The libraries prepare a complete drawing before plotting. Live streaming is not implemented; [live drawing notes](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/live.html) describe the proposed direction.
 
@@ -53,6 +51,8 @@ const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
 await driver.run(plan, { confirmed: true });
 ```
 
+### Before plotting
+
 A few things I learned the hard way, so you do not have to:
 
 - The machine has no home position. Park the carriage in the home corner by hand before you start; that spot is 0,0 of the plan.
@@ -63,13 +63,19 @@ A few things I learned the hard way, so you do not have to:
 - `compileEbbPlan(plan)` gives you the exact command list without sending it; `createLogTransport()` is the dry run. Do one the first time.
 - Web Serial only exists in Chrome and Edge, on `localhost` or https.
 
-Motion is planned with acceleration: every stroke ramps up from rest, cruises, slows into corners by how sharp they are, and ramps down again. The plan's `drawSpeed` and `travelSpeed` are the speeds the machine gets; the profile fills in the rest (40 mm/s drawing, 120 mm/s travelling, 800 and 1200 mm/s², a corner deviation of 0.05 mm), and every value can be overridden in `compileEbbPlan(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })` or `driver.run(plan, { ... })`. A stroke never aims at exactly zero speed (floor 2 mm/s, so the last step of a line is never left hanging with the pen on the paper), chords within 0.02 mm of a straight line are merged before planning (a circle of 360 chords is a few dozen commands, not 360), and commands go out ahead of their acknowledgements, so a run of short moves is never paced by the USB round trip. On firmware 3.x the driver also opens the board's motion queue to its full depth. The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, the seconds the plot takes: 681 estimated, 680 plotted, for the wave hatch.
+### Motion
+
+Motion is planned with acceleration: every stroke ramps up from rest, cruises, slows into corners by how sharp they are, and ramps down again. The plan's `drawSpeed` and `travelSpeed` are the speeds the machine gets; the profile fills in the rest (40 mm/s drawing, 120 mm/s travelling, 800 and 1200 mm/s², a corner deviation of 0.05 mm), and every value can be overridden in `compileEbbPlan(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })` or `driver.run(plan, { ... })`.
+
+A stroke never aims at exactly zero speed (floor 2 mm/s, so the last step of a line is never left hanging with the pen on the paper), chords within 0.02 mm of a straight line are merged before planning (a circle of 360 chords is a few dozen commands, not 360), and commands go out ahead of their acknowledgements, so a run of short moves is never paced by the USB round trip.
+
+On firmware 3.x the driver also opens the board's motion queue to its full depth.
+
+The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, the seconds the plot takes: 681 estimated, 680 plotted, for the wave hatch.
 
 **We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted on 2026-10-01. An AxiDraw or another EBB board speaks the same protocol and should behave the same, but nobody here has plotted with one, so treat every other profile as untested. Not there yet: pause, and resuming mid-stroke from a checkpoint.
 
 ## Requirements
-
-This table is literally identical in the README of `p5.penplotter`; a test guards that.
 
 <!-- vereisten:start -->
 | component | requires | note |
@@ -105,6 +111,14 @@ pinned one; the version check refuses a core below the required minimum.
 | `drawRoute(context, { showTravel })` | the route on a canvas, the pen in the air in red (also `drawPreview`) |
 | `drawBed(context, { bed, sheet })` | the bed as the machine sees it: the home corner, the sheet where it lies, the drawing on it |
 | `exportSVG`, `exportHPGL({ penMap, unitsPerMm })`, `exportGCode({ penUp, penDown })`, `exportJSON` | the same plan as a file, for machines without a driver |
+
+## Planning the route
+
+<p align="center">
+  <img src="docs/images/animations/route.gif" alt="The same drawing in input order and planned order, with dotted pen-up moves" width="480">
+</p>
+
+The marks stay the same; the order changes. `plan({ strategy: "nearest" })` uses greedy nearest-path routing. Use `"drawn"` when the order you drew matters.
 
 ## Every stage on its own
 
@@ -152,7 +166,9 @@ Every example ends at the pen; the [examples page](https://seb-prjcts-be.github.
 
 ## Behaviour and limits
 
-**Edits.** After every change, through the drawing methods, `tool()`, `layer()`, `importSVG()` or directly in `plot.document` and returned paths or layers, planning, statistics, preview and export rebuild the plan with the last optimisation and planning settings. A plan returned earlier stays a separate snapshot. The check compares the whole document on every call, so document data must stay JSON-serialisable. Measured: about 5 ms at 11 000 points, 20 ms at 50 000, 230 ms at 500 000. Negligible for one plot; do not redraw a huge plan as a preview every frame.
+**Edits.** After every change, through the drawing methods, `tool()`, `layer()`, `importSVG()` or directly in `plot.document` and returned paths or layers, planning, statistics, preview and export rebuild the plan with the last optimisation and planning settings. A plan returned earlier stays a separate snapshot. The check compares the whole document on every call, so document data must stay JSON-serialisable.
+
+Measured: about 5 ms at 11 000 points, 20 ms at 50 000, 230 ms at 500 000. Negligible for one plot; do not redraw a huge plan as a preview every frame.
 
 **Units.** Coordinates, tolerances and distance statistics are in the document unit. Plan speeds are mm/s, G-code feeds mm/min. HPGL and G-code export and the time estimate convert mm, cm, inch and CSS pixels (96 px per inch) to physical sizes; SVG keeps the document unit. Direct plotting accepts only mm, cm and inch.
 
@@ -172,10 +188,11 @@ Every example ends at the pen; the [examples page](https://seb-prjcts-be.github.
 npm test
 npm run docs
 npm run manifest
-npm run handbook
 ```
 
-`npm test` runs the snapshot, driver, regression and version tests, checks every local link on the site, builds every example composition and live preview headlessly, and fails when a generated docs page is stale. `npm run docs` renders `docs/architecture.md` and `docs/roadmap.md` to HTML; `npm run manifest` regenerates `docs/vanilla.penplotter.manifest.json`; The optional vanilla.waves check stays off the network: download `waves-core.js` from vanilla.waves commit `4fad55570d9dab243e99f40181f12b5aede2c5be` and run:
+`npm test` runs the snapshot, driver, regression and version tests, checks every local link on the site, builds every example composition and live preview headlessly, and fails when a generated docs page is stale. `npm run docs` renders `docs/architecture.md` and `docs/roadmap.md` to HTML; `npm run manifest` regenerates `docs/vanilla.penplotter.manifest.json`.
+
+The optional vanilla.waves check stays off the network: download `waves-core.js` from vanilla.waves commit `4fad55570d9dab243e99f40181f12b5aede2c5be` and run:
 
 ```powershell
 node tests/waves-integration.js path/to/waves-core.js waves-a4.svg
@@ -186,3 +203,5 @@ node tests/waves-integration.js path/to/waves-core.js waves-a4.svg
 Designed and directed by Sebastien Vanblaere, written with AI assistance, and held to one rule: nothing is claimed that a test or a plot on paper has not shown. See [About](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/about.html).
 
 MIT License.
+
+Sebastien Vanblaere
