@@ -30,8 +30,8 @@
       <li><a href="#hero" class="active">Showcase</a></li>
       <li><a href="docs/examples.html">Examples</a></li>
       <li><a href="docs/possibilities.html">Possibilities</a></li>
-      <li><a href="docs/architecture.html">Architecture</a></li>
       <li><a href="docs/guide.html">Guide</a></li>
+      <li><a href="docs/architecture.html">Architecture</a></li>
       <li><a href="docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
@@ -75,10 +75,10 @@
     <div class="section-header">
       <div class="section-tag">try it</div>
       <h2>A Line and a <span class="accent">Circle</span></h2>
-      <p class="section-desc">This is complete. One import, a page in millimetres, two shapes, and the route the pen will take, drawn on a canvas you supply.</p>
+      <p class="section-desc">The drawing needs one import, a page in millimetres and two shapes. The fragment below assumes an HTML canvas and a module script; the Guide provides a complete page.</p>
     </div>
     <div style="max-width:760px; margin:0 auto;">
-      <pre class="code-block"><code class="language-javascript">import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.1/vanilla.penplotter.js";
+      <pre class="code-block"><code class="language-javascript">import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/vanilla.penplotter.js";
 
 const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } });
 plot.line(20, 20, 190, 20);
@@ -88,7 +88,7 @@ plot.drawPreview(canvas.getContext("2d"), { showTravel: true });   // the pen's 
 console.log(plot.plan().stats);            // path count, distances and a time estimate</code></pre>
     </div>
     <div class="cta-row">
-      <a href="examples/first_job/index.html" class="cta-btn">Open it as a page &#8594;</a>
+      <a href="examples/first_job/index.html" class="cta-btn">Open the working example &#8594;</a>
     </div>
   </section>
 

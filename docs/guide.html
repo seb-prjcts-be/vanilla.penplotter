@@ -18,8 +18,8 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
-      <li><a href="architecture.html">Architecture</a></li>
       <li><a href="guide.html" class="active">Guide</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
@@ -28,23 +28,91 @@
     <header class="page-header">
       <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
       <h1>Guide</h1>
-      <p class="guide-intro">Seven short steps and a page of starters. The first four give you a planned job; the seventh sends it to the machine. You only need the modules underneath when your sketch asks for them.</p>
+      <p class="guide-intro">Begin with a complete drawing page, preview it and export it. A dry run comes before physical plotting. Pens, fills, cleanup and direct module access are optional extensions.</p>
     </header>
 
-    <h2>1. Create geometry</h2>
-    <pre><code class="language-javascript">import { PlotterEngine } from "../vanilla.penplotter.js";
+    <nav aria-label="On this page"><p><a href="#start">Start</a> · <a href="#export">Export</a> · <a href="#plotting">Dry run and plot</a> · <a href="#paper">Paper</a> · <a href="#pens">Pens</a> · <a href="#fills">Fills</a> · <a href="#planning">Planning</a> · <a href="#starters">Fragments</a> · <a href="#modules">Modules</a> · <a href="#reference">Reference</a></p></nav>
 
-const plot = new PlotterEngine({
-  units: "mm",
-  page: { width: 210, height: 297, margin: 12 }
+    <h2 id="start">1. Draw and preview</h2>
+    <p>Save this complete page as <code>index.html</code> and open it through localhost or HTTPS. It draws a line and a circle on a canvas, then prints the plan statistics. No plotter is needed. The import pins the source used by this guide.</p>
+    <pre><code class="language-markup">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;My pen drawing&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="preview" width="420" height="594"&gt;&lt;/canvas&gt;
+  &lt;script type="module"&gt;
+    import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/vanilla.penplotter.js";
+
+    const plot = new PlotterEngine({
+      units: "mm", page: { width: 210, height: 297, margin: 12 }
+    });
+    plot.line(20, 20, 190, 20);
+    plot.circle(105, 145, 52);
+    const canvas = document.getElementById("preview");
+    plot.drawRoute(canvas.getContext("2d"), { showTravel: true });
+    console.log(plot.plan().stats);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    <p>For the fragments below, keep this page and replace or extend the drawing inside its module block. Core coordinates are document units: here, millimetres. <code>circle()</code> takes a radius. Change <code>52</code> to <code>26</code> and reload.</p>
+
+    <p>The active layer starts as <code>default</code>. Geometry is stored directly; no canvas or SVG has to exist first.</p>
+    <figure class="doc-animation" id="animation-shapes">
+      <img src="images/animations/shapes.gif" width="600" height="400" loading="lazy" alt="Basic shapes are recorded directly in millimetres.">
+      <figcaption>A line, a circle, a rectangle: enough to begin. Try changing the circle’s radius from <code>52</code> to <code>26</code>. Here the numbers are millimetres; <code>circle()</code> takes a radius.</figcaption>
+    </figure>
+
+    <h2 id="export">2. Export the drawing</h2>
+    <p>After drawing, export the same plan as SVG. HPGL and G-code need commands and settings suited to the receiving software and machine; an export does not establish driver support.</p>
+    <pre><code class="language-javascript">plot.drawRoute(canvas.getContext("2d"), {
+  showTravel: true
 });
 
-plot.line(20, 20, 190, 20);
-plot.circle(105, 145, 52);</code></pre>
-    <p>The active layer starts as <code>default</code>. Geometry is stored directly; no canvas or SVG has to exist first.</p>
+const svg = plot.exportSVG();
+const hpgl = plot.exportHPGL({ unitsPerMm: 40 });
+const gcode = plot.exportGCode({
+  penUp: "M5",
+  penDown: "M3 S1000"
+});</code></pre>
+
+    <figure class="doc-animation" id="animation-svg-files">
+      <img src="images/animations/svg-files.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
+      <figcaption>Ochre shows the imported geometry becoming pen strokes. Sage connectors lead from one plan to three export formats; those connectors explain the workflow and are not plotter travel. Bring a drawing you already have. Supported SVG shapes become pen paths; the same engine can write SVG, HPGL and G-code. Try a simple file in <a href="../examples/svg_to_pen/index.html">SVG to pen</a>. A filled silhouette needs pen strokes to give it tone.</figcaption>
+    </figure>
+
+    <h2 id="plotting">3. Dry run, then plot</h2>
+    <p>This is where it was all going. One machine profile has a tested driver so far: the iDraw HSE / A2, an AxiDraw-style CoreXY plotter with an EBB board. The plan goes straight to it; nothing is written to disk on the way.</p>
+    <p>First open the <a href="../examples/direct_plot/index.html">40 × 25 mm test</a> and use its dry run. To check your own drawing without hardware, add these imports at the top of the starter's module, then run the commands through the log transport:</p>
+    <pre><code class="language-javascript">import { EbbDriver, compileEbbPlan, createLogTransport }
+  from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/src/driver/ebb.js";
+
+const commands = compileEbbPlan(plot.plan(), { profile: "idraw-hse-a2" });
+const driver = new EbbDriver({ transport: createLogTransport(), profile: "idraw-hse-a2" });
+const result = await driver.run(commands, { confirmed: true });
+console.log(result); // commands checked and logged; no serial connection</code></pre>
+    <p>The example panel handles physical connection, sheet placement, confirmation and stopping. Use it for a first physical test. A custom application can use <code>createWebSerialTransport()</code> and <code>EbbDriver</code>; open the port from a user click and run only after checking the dry run and confirming the job. See <a href="architecture.html">Architecture</a> for the driver contract.</p>
+
+    <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or an error requests the stop sequence: motion halted, pen up, motors off. A working connection is needed to deliver those commands. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
+    <p class="callout">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. The example panel can resume after completed strokes of the same drawing, after manual parking at home. There is no mid-stroke pause or resume. Exports for other machines need suitable software and configuration.</p>
+    <p class="callout">A complete drawing is prepared before plotting. <code>strategy: "drawn"</code> can preserve its order. <a href="live.html">Live drawing</a>, where new strokes arrive while the pen runs, is proposed work and has no current API.</p>
+    <p>The HSE profile records manufacturer defaults separately from its operating settings. It retains the controller's pen calibration unless you supply <code>penLift</code>. For a known standard servo, height percentages are 0–100 and lift/lower rates are 1–100:</p>
+    <pre><code class="language-javascript">import { compileEbbPlan } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/src/driver/ebb.js";
+
+const compiled = compileEbbPlan(plot.plan(), {
+  profile: "idraw-hse-a2",
+  penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }
+});</code></pre>
+    <p>These heights are control percentages, not millimetres. Check the installed servo and pen mounting; omit <code>penLift</code> to keep existing calibration. The <a href="architecture.html">machine notes</a> distinguish the tested HSE/A2 from likely compatible devices. Sharing EBB firmware alone does not establish mechanical compatibility.</p>
+
+    <figure class="doc-animation" id="animation-screen-to-paper">
+      <img src="images/animations/screen-to-paper.gif" width="600" height="400" loading="lazy" alt="A complete JavaScript drawing is planned and then plotted on paper.">
+      <figcaption>The whole drawing comes first; the machine follows its plan afterwards. The screen is a preview, and the moving arm is an illustration. Try the <a href="../examples/direct_plot/index.html">40 by 25 mm test</a> before a larger sheet.</figcaption>
+    </figure>
+
+    <h2 id="paper">Paper and drawing size</h2>
     <p><strong>Paper, drawing and bed have separate sizes.</strong> A4 is 210 × 297 mm in portrait, or 297 × 210 mm in landscape. The drawing occupies only the area covered by its strokes. The bed is the machine’s working area; “A2” in a model name does not set your drawing’s size.</p>
     <p><code>PlotterEngine.paperSize(format, orientation, units)</code> exposes the same helper as the named <code>paperSize()</code> export. The p5 adapter uses it to fit a canvas with <code>createPlot({ paper: "A2", margin: 12 })</code>. The core's own paper selection preserves the original stroke size.</p>
-    <pre><code class="language-javascript">import { PlotterEngine, paperSize } from "../vanilla.penplotter.js";
+    <pre><code class="language-javascript">import { PlotterEngine, paperSize } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/vanilla.penplotter.js";
 
 const plot = new PlotterEngine({
   units: "mm",
@@ -53,15 +121,10 @@ const plot = new PlotterEngine({
     <p><code>paperSize()</code> supports A0–A6. It sets the sheet dimensions without scaling the geometry. A3 is 297 × 420 mm; A2 is 420 × 594 mm. On the 594 × 432 mm HSE/A2 bed, A2 fits with its 594 mm edge along X, at X = 0 and Y between 0 and 12 mm.</p>
     <p>In every example’s pen panel, choose the drawing’s original page or an A format. A formats start in portrait. Turn by 90° or 270° for landscape, then use <strong>Centre paper on the bed</strong> or enter X/Y from home. Turning rotates the drawing with its sheet; choosing paper never scales the strokes. The panel blocks plotting if the sheet extends beyond the bed or the drawing extends beyond the sheet. A2 landscape centres at X = 0, Y = 6 mm. Export links keep the drawing’s original page and coordinates, before bed placement.</p>
 
-    <figure class="doc-animation" id="animation-shapes">
-      <img src="images/animations/shapes.gif" width="600" height="400" loading="lazy" alt="Basic shapes are recorded directly in millimetres.">
-      <figcaption>A line, a circle, a rectangle: enough to begin. Try changing the circle’s radius from <code>52</code> to <code>26</code>. Here the numbers are millimetres; <code>circle()</code> takes a radius.</figcaption>
-    </figure>
-
-    <h2>2. Add pens and layers</h2>
+    <h2 id="pens">Pens and layers</h2>
     <pre><code class="language-javascript">plot.tool({ id: "blue", name: "Blue fineliner", color: "#234f84", width: 0.3 });
 plot.layer("waves", { toolId: "blue" });
-plot.polyline(points);
+plot.polyline([{ x: 20, y: 40 }, { x: 105, y: 80 }, { x: 190, y: 40 }]);
 
 plot.tool({ id: "red", name: "Red fineliner", color: "#d94b39", width: 0.3 });
 plot.layer("accents", { toolId: "red" });
@@ -72,7 +135,7 @@ plot.circle(105, 145, 24);</code></pre>
       <figcaption>Sage is pen A; ochre is pen B. Each colour follows its assigned paths. The second pass hides one layer; it does not erase the source paths. Let one pen draw the outline and another draw the texture. Try setting a returned layer’s <code>visible</code> property to <code>false</code> and rebuilding the plan. Its paths stay in the document, but leave the job. The driver waits for a manual pen change.</figcaption>
     </figure>
 
-    <h2>3. Generate fills</h2>
+    <h2 id="fills">Fills</h2>
     <pre><code class="language-javascript">const boundary = [
   { x: 30, y: 40 },
   { x: 180, y: 40 },
@@ -96,7 +159,7 @@ plot.stipple(boundary, {
       <figcaption>A fill becomes pen strokes: hatch in one direction, cross-hatch in two, or tiny dashes for stipple. The spacing changes the density.</figcaption>
     </figure>
 
-    <h2>4. Optimize and plan</h2>
+    <h2 id="planning">Cleanup and route planning</h2>
     <pre><code class="language-javascript">plot.optimize({
   duplicateTolerance: 0.01,
   mergeTolerance: 0.05,
@@ -105,7 +168,7 @@ plot.stipple(boundary, {
 
 const plan = plot.plan({
   strategy: "nearest",
-  drawSpeed: 40,             // mm/s; the defaults are the iDraw's own
+  drawSpeed: 40,             // mm/s; chosen operating settings, not vendor defaults
   travelSpeed: 40,
   acceleration: 800,         // mm/s², the estimate ramps like the machine
   travelAcceleration: 300,
@@ -127,55 +190,10 @@ console.log(plan.stats);</code></pre>
       <figcaption>Remove duplicate paths, join touching paths and simplify straight segments. Here, 6 paths with 126 points become 1 path with 6 points. This cleans the geometry before the route is planned.</figcaption>
     </figure>
 
-    <h2>5. Preview, and files for other machines</h2>
-    <pre><code class="language-javascript">plot.drawRoute(canvas.getContext("2d"), {
-  showTravel: true
-});
-
-const svg = plot.exportSVG();
-const hpgl = plot.exportHPGL({ unitsPerMm: 40 });
-const gcode = plot.exportGCode({
-  penUp: "M5",
-  penDown: "M3 S1000"
-});</code></pre>
-
-    <figure class="doc-animation" id="animation-svg-files">
-      <img src="images/animations/svg-files.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
-      <figcaption>Ochre shows the imported geometry becoming pen strokes. Sage connectors lead from one plan to three export formats; those connectors explain the workflow and are not plotter travel. Bring a drawing you already have. Supported SVG shapes become pen paths; the same engine can write SVG, HPGL and G-code. Try a simple file in <a href="../examples/svg_to_pen/index.html">SVG to pen</a>. A filled silhouette needs pen strokes to give it tone.</figcaption>
-    </figure>
-
-    <h2>6. Use the modules directly</h2>
-    <p>Import from <code>src/geometry</code>, <code>src/optimizer</code>, <code>src/planner</code> or <code>src/renderer</code>. The root facade does not own a hidden representation: every stage accepts and returns the documented snapshots.</p>
-
-    <h2>7. To the pen</h2>
-    <p>This is where it was all going. One machine profile has a tested driver so far: the iDraw HSE / A2, an AxiDraw-style CoreXY plotter with an EBB board. The plan goes straight to it; nothing is written to disk on the way.</p>
-    <pre><code class="language-javascript">import { EbbDriver, createWebSerialTransport } from "./src/driver/ebb.js";
-
-const transport = createWebSerialTransport();
-await transport.open();   // from a click: the browser shows its port list
-const driver = new EbbDriver({ transport, profile: "idraw-hse-a2" });
-await driver.run(plot.plan(), { confirmed: true });</code></pre>
-    <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or an error requests the stop sequence: motion halted, pen up, motors off. A working connection is needed to deliver those commands. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
-    <p class="callout">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. The example panel can resume after completed strokes of the same drawing, after manual parking at home. There is no mid-stroke pause or resume. Exports for other machines need suitable software and configuration.</p>
-    <p class="callout">A complete drawing is prepared before plotting. <code>strategy: "drawn"</code> can preserve its order. <a href="live.html">Live drawing</a>, where new strokes arrive while the pen runs, is proposed work and has no current API.</p>
-    <p>The HSE profile records manufacturer defaults separately from its operating settings. It retains the controller's pen calibration unless you supply <code>penLift</code>. For a known standard servo, height percentages are 0–100 and lift/lower rates are 1–100:</p>
-    <pre><code class="language-javascript">import { compileEbbPlan } from "./src/driver/ebb.js";
-
-const compiled = compileEbbPlan(plot.plan(), {
-  profile: "idraw-hse-a2",
-  penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }
-});</code></pre>
-    <p>These heights are control percentages, not millimetres. Check the installed servo and pen mounting; omit <code>penLift</code> to keep existing calibration. The <a href="architecture.html">machine notes</a> distinguish the tested HSE/A2 from likely compatible devices. Sharing EBB firmware alone does not establish mechanical compatibility.</p>
-
-    <figure class="doc-animation" id="animation-screen-to-paper">
-      <img src="images/animations/screen-to-paper.gif" width="600" height="400" loading="lazy" alt="A complete JavaScript drawing is planned and then plotted on paper.">
-      <figcaption>The whole drawing comes first; the machine follows its plan afterwards. The screen is a preview, and the moving arm is an illustration. Try the <a href="../examples/direct_plot/index.html">40 by 25 mm test</a> before a larger sheet.</figcaption>
-    </figure>
-
-    <h2>8. Copy-paste starters</h2>
-    <p>Start with the complete ES-module example below. The following fragments reuse its <code>plot</code> object; provide the points or SVG text they refer to. The full example pages include the preview and pen panel.</p>
+    <h2 id="starters">More drawing fragments</h2>
+    <p>Use the HTML wrapper from the first step. Replace its module contents with the wave example below. The following fragments reuse its <code>plot</code> object; provide the points or SVG text they refer to. The full example pages include the preview and pen panel.</p>
     <h3>A wave on A4, as SVG</h3>
-    <pre><code class="language-javascript">import { PlotterEngine } from "./vanilla.penplotter.js";
+    <pre><code class="language-javascript">import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/vanilla.penplotter.js";
 
 const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297, margin: 15 } });
 for (let row = 0; row &lt; 20; row += 1) {
@@ -203,7 +221,7 @@ plot.layer("fill", { toolId: "red" });
 plot.hatch([{ x: 60, y: 120 }, { x: 150, y: 120 }, { x: 150, y: 176 }, { x: 60, y: 176 }], { spacing: 2 });
 const hpgl = plot.exportHPGL({ penMap: { black: 1, red: 2 } });</code></pre>
     <h3>Supported SVG paths, planned</h3>
-    <pre><code class="language-javascript">import { PlotterEngine, Geometry } from "./vanilla.penplotter.js";
+    <pre><code class="language-javascript">import { PlotterEngine, Geometry } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/vanilla.penplotter.js";
 
 const imported = Geometry.importSVG(await (await fetch("drawing.svg")).text(), { curveSteps: 24 });
 const fitted = Geometry.transformDocument(imported, Geometry.Matrix.scale(0.25)); // 800 px → 200 mm
@@ -211,6 +229,20 @@ const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } 
 for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;
 console.log(plot.stats());</code></pre>
     <p>More directions on the <a href="possibilities.html">Possibilities</a> page; every example on <a href="examples.html">Examples</a> is a finished version of one of these.</p>
+    <h2 id="modules">Use the modules directly</h2>
+    <p>Import from <code>src/geometry</code>, <code>src/optimizer</code>, <code>src/planner</code> or <code>src/renderer</code>. The root facade does not own a hidden representation: every stage accepts and returns the documented snapshots.</p>
+
+    <h2 id="reference">Core reference</h2>
+    <table><thead><tr><th>Call</th><th>Units and result</th></tr></thead><tbody>
+      <tr><td><code>new PlotterEngine({ units, page })</code></td><td>Creates an engine and document. Use explicit units and page dimensions; the starter uses millimetres.</td></tr>
+      <tr><td><code>line(), circle(), polyline()</code></td><td>Coordinates use document units. Circle takes a radius; polyline takes points. Geometry is added to the current layer.</td></tr>
+      <tr><td><code>paperSize(format, orientation, units)</code></td><td>Returns A0–A6 dimensions; defaults to portrait and mm. Also exposed as <code>PlotterEngine.paperSize()</code>. Does not scale geometry.</td></tr>
+      <tr><td><code>optimize(options), plan(options)</code></td><td>Cleanup uses document-unit tolerances. Plan returns one PlotPlan; nearest is greedy, drawn preserves path order and direction. Speeds are mm/s.</td></tr>
+      <tr><td><code>drawRoute(context), drawBed(context, options)</code></td><td>DrawRoute previews planned routes. DrawBed previews machine moves with bed and sheet dimensions in millimetres.</td></tr>
+      <tr><td><code>exportSVG/HPGL/GCode/JSON()</code></td><td>Return strings from the current plan. HPGL and G-code convert to physical units; machine commands require configuration.</td></tr>
+      <tr><td><code>EbbDriver</code></td><td>Separate driver and transport. Physical tests cover the iDraw HSE/A2 only. Compile and log a dry run before a confirmed physical job.</td></tr>
+    </tbody></table>
+    <p>For snapshots, SVG limits, placement and machine profiles, read <a href="architecture.html">Architecture</a>. For complete runnable drawings, open <a href="examples.html">Examples</a>.</p>
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>

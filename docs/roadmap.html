@@ -17,8 +17,8 @@
       <li><a href="../index.html">Showcase</a></li>
       <li><a href="examples.html">Examples</a></li>
       <li><a href="possibilities.html">Possibilities</a></li>
-      <li><a href="architecture.html">Architecture</a></li>
       <li><a href="guide.html">Guide</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
@@ -34,7 +34,7 @@
 <p>Direct plotting uses the EBB driver. Physical tests cover the iDraw HSE / A2 with firmware 3.0.2: axes and scale on 2026-09-21, acceleration and queued low-level moves on 2026-10-01. The examples' pen panel places the sheet, offers a dry run and remembers completed strokes for resuming the same drawing.</p>
 <p>The latest tagged releases are core 0.3.1 and p5 adapter 0.2.1. The site's current source also includes the <code>pen()</code> and <code>drawRoute()</code> aliases and bed preview helpers. These additions are not a new tagged release.</p>
 <h2>Proposed next work</h2>
-<ul><li>Pause and resume within a stroke. Completed-stroke resume already exists in the example panel.</li><li>Configurable pen heights in the machine profile.</li><li>A Node serial transport for plotting from a script.</li><li>More curve support in the p5 adapter; arcs are already implemented.</li><li><a href="live.html">Live drawing</a>, with a bounded queue and pacing that follows the pen.</li></ul>
+<ul><li>Pause and resume within a stroke. Completed-stroke resume already exists in the example panel.</li><li>Calibration and hardware tests for additional pen-lift types; standard-servo percentages are already configurable with <code>penLift</code>.</li><li>A Node serial transport for plotting from a script.</li><li>More curve support in the p5 adapter; arcs are already implemented.</li><li><a href="live.html">Live drawing</a>, with a bounded queue and pacing that follows the pen.</li></ul>
 <p>These are directions, not available APIs or release dates.</p>
 <h2>Larger work</h2>
 <p>Full SVG/CSS support, robust polygon operations, spatial indexing and more advanced route planning would require substantial work. They are outside the current implementation.</p>

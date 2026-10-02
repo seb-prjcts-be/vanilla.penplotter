@@ -11,7 +11,7 @@ The latest tagged releases are core 0.3.1 and p5 adapter 0.2.1. The site's curre
 ## Proposed next work
 
 - Pause and resume within a stroke. Completed-stroke resume already exists in the example panel.
-- Configurable pen heights in the machine profile.
+- Calibration and hardware tests for additional pen-lift types; standard-servo percentages are already configurable with `penLift`.
 - A Node serial transport for plotting from a script.
 - More curve support in the p5 adapter; arcs are already implemented.
 - [Live drawing](live.html), with a bounded queue and pacing that follows the pen.
