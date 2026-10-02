@@ -1,6 +1,6 @@
 # vanilla.penplotter
 
-**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[Handbook](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/handbook.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
+**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
 
 You supply polylines in physical units. This engine can clean up paths, plan a route, preview it and export files. Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
 
@@ -22,7 +22,7 @@ The version field is **0.3.1**. The [architecture](https://seb-prjcts-be.github.
 
 ## Install
 
-The site uses current source. The latest tags are core `v0.3.1` and adapter `v0.2.1`; newer `pen()`, `drawRoute()` and bed preview helpers are available on `main`, not in all tagged builds. The [handbook](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/handbook.html) describe this current source.
+The site uses current source. The latest tags are core `v0.3.1` and adapter `v0.2.1`; newer `pen()`, `drawRoute()` and bed preview helpers are available on `main`, not in all tagged builds.
 
 ```html
 <script type="module">
