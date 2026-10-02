@@ -64,7 +64,7 @@ function testEstimateFollowsAcceleration() {
   // of ramp time, then the pen down and up again, 0.3 s each.
   const plan = plot.plan({ strategy: "input" });
   assert.equal(plan.options.drawSpeed, 40);
-  assert.equal(plan.options.travelSpeed, 120);
+  assert.equal(plan.options.travelSpeed, 40);
   assert.ok(Math.abs(plan.stats.estimatedSeconds - (2.5 + 0.05 + 0.6)) < 1e-9, `100 mm line: ${plan.stats.estimatedSeconds}`);
   // A short stroke never reaches cruising speed: a 1 mm line is a triangle,
   // 2 · sqrt(1 / 800) s of motion.

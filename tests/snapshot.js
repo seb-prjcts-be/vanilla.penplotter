@@ -245,7 +245,7 @@ async function testSitePreviews() {
     Renderer.drawPreview(context, plan, { showTravel: true });
     assert.ok(context.strokes > 0, `possibility ${name} draws something`);
   }
-  assert.match(possibilities.programs(), /HPGL[\s\S]*G-code[\s\S]*EBB[\s\S]*LM,/);
+  assert.match(possibilities.programs(), /HPGL[\s\S]*G-code[\s\S]*EBB[\s\S]*SM,/);
   const examples = await import("../docs/examples-builders.js");
   for (const [name, build] of Object.entries(examples.builders)) {
     if (name === "waves_pen" || name === "wave_hatch") continue;

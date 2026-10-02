@@ -222,7 +222,7 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
     <p>Every drawn path counts one pen-down and one pen-up. The time estimate, in seconds, gives every stroke and every hop its own ramps, with distances converted to millimetres first:</p>
     <pre><code class="language-none">Σ ramps(stroke, drawSpeed, acceleration)  +  Σ ramps(hop, travelSpeed, travelAcceleration)  +  penLifts · liftDelay  +  (toolChanges − 1) · toolChangeDelay
 ramps(L, v, a) = L / v + v / a  when L ≥ v² / a,  otherwise 2 · √(L / a)
-defaults: drawSpeed 40 mm/s, travelSpeed 120 mm/s, acceleration 800 mm/s², travelAcceleration 1200 mm/s², liftDelay 0.6 s, toolChangeDelay 15 s</code></pre>
+defaults: drawSpeed 40 mm/s, travelSpeed 40 mm/s, acceleration 800 mm/s², travelAcceleration 300 mm/s², liftDelay 0.6 s, toolChangeDelay 15 s</code></pre>
     <p>The estimate uses the iDraw profile speeds, ramps and pen delays. It is approximate: communication, manual swaps and settings affect the duration. The first tool is already in the holder, so only later swaps count as tool changes. <code>acceleration: 0</code> gives a plain distance-over-speed estimate. The planner returns separate point objects rather than editing its input.</p>
 
     <h2 id="c8"><span class="num">8</span>The renderers</h2>
@@ -283,8 +283,8 @@ defaults: drawSpeed 40 mm/s, travelSpeed 120 mm/s, acceleration 800 mm/s², trav
         <tr><td>resolution</td><td>80 steps/mm at 16× microstepping (2032 steps/inch)</td><td>40 mm frame measured; vendor's <code>axidraw_conf.py</code></td></tr>
         <tr><td>travel</td><td>594 × 432 mm</td><td>vendor configuration for the A2 model</td></tr>
         <tr><td>step rate</td><td>maximum 24.995 steps/ms, minimum 1.31 steps/s per motor</td><td>EBB firmware limits</td></tr>
-        <tr><td>speeds</td><td>40 mm/s drawing, 120 mm/s travelling; the plan's own speeds win</td><td>chosen under the vendor's defaults (55 and 166 mm/s)</td></tr>
-        <tr><td>acceleration</td><td>800 mm/s² drawing, 1200 mm/s² travelling, junction deviation 0.05 mm</td><td>chosen under the vendor's 40 in/s² (1016 mm/s²)</td></tr>
+        <tr><td>speeds</td><td>40 mm/s drawing and travelling; the plan's own speeds win</td><td>chosen under the vendor's defaults (55 and 166 mm/s)</td></tr>
+        <tr><td>acceleration</td><td>800 mm/s² drawing, 300 mm/s² travelling, junction deviation 0.05 mm</td><td>pen-up settings reduced after a physical startup and return test</td></tr>
         <tr><td>floor and merge</td><td>minimum pen speed 2 mm/s (<code>minSpeed</code>); chords within 0.02 mm of straight merged (<code>simplifyTolerance</code>)</td><td>chosen: a zero rate leaves the last step hanging; the board parses a command in a few ms</td></tr>
         <tr><td>motion queue</td><td>up to 32 commands on firmware 3.x (<code>fifoDepth</code>); 250 ms of motion sent ahead of the acknowledgements (<code>aheadMs</code>)</td><td>asked from the board with <code>QU,2</code>; chosen</td></tr>
         <tr><td>pen timing</td><td>300 ms after each pen up or down</td><td>chosen</td></tr>
@@ -399,8 +399,8 @@ frame();</code></pre>
         <tr><td><code>strategy</code></td><td>nearest</td><td>nearest | drawn</td></tr>
         <tr><td><code>reloop</code></td><td>true</td><td>move closed-path seams</td></tr>
         <tr><td><code>origin</code></td><td>{ x: 0, y: 0 }</td><td>document units</td></tr>
-        <tr><td><code>drawSpeed</code> / <code>travelSpeed</code></td><td>40 / 120</td><td>mm/s, for the estimate and the EBB driver</td></tr>
-        <tr><td><code>acceleration</code> / <code>travelAcceleration</code></td><td>800 / 1200</td><td>mm/s², ramps in the estimate; 0 for a plain sum</td></tr>
+        <tr><td><code>drawSpeed</code> / <code>travelSpeed</code></td><td>40 / 40</td><td>mm/s, for the estimate and the EBB driver</td></tr>
+        <tr><td><code>acceleration</code> / <code>travelAcceleration</code></td><td>800 / 300</td><td>mm/s², ramps in the estimate; 0 for a plain sum</td></tr>
         <tr><td><code>liftDelay</code> / <code>toolChangeDelay</code></td><td>0.6 / 15</td><td>seconds; a lift is pen down and up, a swap is every tool after the first</td></tr>
         <tr><td><code>useRaw</code></td><td>false</td><td>plan the unoptimized document</td></tr>
       </tbody>
@@ -420,7 +420,7 @@ frame();</code></pre>
     <table>
       <thead><tr><th>where</th><th>option</th><th>default</th></tr></thead>
       <tbody>
-        <tr><td><code>compileEbbPlan</code></td><td><code>profile</code>, <code>drawSpeed</code>, <code>travelSpeed</code>, <code>acceleration</code>, <code>travelAcceleration</code>, <code>junctionDeviation</code>, <code>minSpeed</code>, <code>simplifyTolerance</code>, <code>commandSet</code>, <code>returnHome</code>, <code>skipDraws</code></td><td>idraw-hse-a2, the plan's or 40 mm/s, the plan's or 120 mm/s, 800 mm/s², 1200 mm/s², 0.05 mm, 2 mm/s, 0.02 mm, LM, true, 0</td></tr>
+        <tr><td><code>compileEbbPlan</code></td><td><code>profile</code>, <code>drawSpeed</code>, <code>travelSpeed</code>, <code>acceleration</code>, <code>travelAcceleration</code>, <code>junctionDeviation</code>, <code>minSpeed</code>, <code>simplifyTolerance</code>, <code>commandSet</code>, <code>returnHome</code>, <code>skipDraws</code></td><td>idraw-hse-a2, the plan's or 40 mm/s, the plan's or 40 mm/s, 800 mm/s², 300 mm/s², 0.05 mm, 2 mm/s, 0.02 mm, LM, true, 0</td></tr>
         <tr><td><code>driver.run</code></td><td><code>confirmed</code>, <code>onProgress</code>, <code>onToolChange</code>, plus the compile options above when given a plan</td><td>required, none, none</td></tr>
         <tr><td><code>createWebSerialTransport</code></td><td><code>filters</code>, <code>baudRate</code>; <code>send</code> takes <code>timeoutMs</code></td><td>the profile's USB ids, 115200, 3000 ms</td></tr>
         <tr><td><code>createLogTransport</code></td><td><code>version</code>, <code>fifoMax</code>, <code>failOn</code></td><td>EBB 3.0.2, 32, none</td></tr>

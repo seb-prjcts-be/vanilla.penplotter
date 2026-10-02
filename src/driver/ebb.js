@@ -34,9 +34,9 @@ export const EBB_PROFILES = Object.freeze({
     // The vendor's configuration plots at 55 mm/s pen-down, 166 mm/s pen-up,
     // with 40 in/s² (1016 mm/s²) of acceleration. These stay under that.
     drawSpeed: 40, // mm/s, pen down
-    travelSpeed: 120, // mm/s, pen up
+    travelSpeed: 40, // mm/s, pen up
     acceleration: 800, // mm/s², pen down
-    travelAcceleration: 1200, // mm/s², pen up
+    travelAcceleration: 300, // mm/s², pen up
     junctionDeviation: 0.05, // mm: how far a corner may be rounded by not stopping
     minSpeed: 2, // mm/s: a stroke starts, turns around and ends at this, never at zero
     simplifyTolerance: 0.02, // mm: chords within this of a straight line are merged before planning
@@ -314,7 +314,7 @@ export function compileEbbPlan(plan, options = {}) {
     let length = 0;
     for (const phase of phases) {
       length += phase.length;
-      if (commandSet === "LM") emitLowLevel(phase);
+      if (commandSet === "LM" && penDown) emitLowLevel(phase);
       else emitSlices(phase);
     }
     const last = points[points.length - 1];

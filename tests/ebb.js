@@ -84,7 +84,7 @@ function testCompileSequence() {
   assert.match(cmds[1], /^SP,1,\d+$/, "pen goes up before any motion");
   assert.equal(cmds[cmds.length - 1], "EM,0,0");
 
-  const firstMove = cmds.findIndex((cmd) => cmd.startsWith("LM,"));
+  const firstMove = cmds.findIndex((cmd) => /^(SM|LM),/.test(cmd));
   const penDown = cmds.findIndex((cmd) => cmd.startsWith("SP,0"));
   assert.ok(firstMove > 1 && penDown > firstMove, "travel happens pen-up, then pen-down");
 
@@ -95,7 +95,8 @@ function testCompileSequence() {
   assert.ok(lastUp > penDown);
   assert.deepEqual(stepTotals(motionCommands(compiled)), [0, 0], "step totals return to the origin");
   for (const entry of motionCommands(compiled)) {
-    assert.match(entry.cmd, /^LM,\d+,-?\d+,-?\d+,\d+,-?\d+,-?\d+,3$/, "LM with positive rates, signed steps, cleared accumulators");
+    if (entry.kind === "travel") assert.match(entry.cmd, /^SM,\d+,-?\d+,-?\d+$/);
+    else assert.match(entry.cmd, /^LM,\d+,-?\d+,-?\d+,\d+,-?\d+,-?\d+,3$/, "LM with positive rates, signed steps, cleared accumulators");
   }
 }
 
@@ -248,7 +249,10 @@ function testSpeedsFollowThePlan() {
   const planned = compileEbbPlan(plot.plan({ strategy: "input", drawSpeed: 20 }), { profile: HSE });
   const defaults = compileEbbPlan(plot.plan({ strategy: "input" }), { profile: HSE });
   const overridden = compileEbbPlan(plot.plan({ strategy: "input", drawSpeed: 20 }), { profile: HSE, drawSpeed: 80 });
-  assert.ok(planned.stats.durationMs > defaults.stats.durationMs * 1.5, "a slower plan takes longer");
+  const drawingMs = (compiled) => compiled.commands
+    .filter((entry) => entry.kind === "draw")
+    .reduce((sum, entry) => sum + entry.durationMs, 0);
+  assert.ok(drawingMs(planned) > drawingMs(defaults) * 1.5, "a slower plan takes longer to draw");
   assert.ok(overridden.stats.durationMs < planned.stats.durationMs, "an explicit option wins over the plan");
 }
 
@@ -435,6 +439,7 @@ function testNoDwellAtRest() {
   const compiled = compileEbbPlan(plan, { profile: HSE, drawSpeed: 40, acceleration: 800 });
   const floorHz = HSE.minSpeed * HSE.stepsPerMm;
   for (const entry of motionCommands(compiled)) {
+    if (!entry.cmd.startsWith("LM,")) continue; // SM has an explicit duration, not rate/acceleration fields
     const [rate1, steps1, accel1, rate2, steps2, accel2] = entry.cmd.split(",").slice(1).map(Number);
     const intervals = Math.round(entry.durationMs / 1000 / INTERVAL_S);
     for (const [rate, steps, accel] of [[rate1, steps1, accel1], [rate2, steps2, accel2]]) {
@@ -607,6 +612,32 @@ function testDocumentationNamesTheDriver() {
   }
 }
 
+function testGentleDefaultTravel() {
+  // The p5 quick-start drawing: departure and return must use the same
+  // gentle pen-up defaults without requiring options in the sketch.
+  const plan = planOf((plot) => {
+    plot.rect(82, 152, 76, 46);
+    plot.line(86, 175, 154, 175);
+  });
+  const compiled = compileEbbPlan(plan);
+  assert.equal(plan.options.travelSpeed, 40);
+  assert.equal(plan.options.travelAcceleration, 300);
+  assert.equal(compiled.settings.travelSpeed, 40);
+  assert.equal(compiled.settings.travelAcceleration, 300);
+  assert.equal(compiled.settings.drawSpeed, 40);
+  assert.equal(compiled.settings.acceleration, 800);
+  assert.ok(compiled.commands.filter((entry) => entry.kind === "travel").every((entry) => entry.cmd.startsWith("SM,")), "pen-up travel uses SM");
+  assert.ok(compiled.commands.filter((entry) => entry.kind === "draw").every((entry) => entry.cmd.startsWith("LM,")), "drawing keeps LM");
+  assert.deepEqual(stepTotals(motionCommands(compiled)), [0, 0], "return ends at the exact starting step position");
+  const fallback = compileEbbPlan({ ...plan, options: {} });
+  assert.equal(fallback.settings.travelSpeed, 40);
+  assert.equal(fallback.settings.travelAcceleration, 300);
+  const custom = compileEbbPlan(plan, { travelSpeed: 60, travelAcceleration: 500 });
+  assert.equal(custom.settings.travelSpeed, 60);
+  assert.equal(custom.settings.travelAcceleration, 500);
+}
+
+testGentleDefaultTravel();
 testCoreXYMixing();
 testDocumentationNamesTheDriver();
 testCompileSequence();

@@ -96,9 +96,9 @@ plot.stipple(boundary, {
 const plan = plot.plan({
   strategy: "nearest",
   drawSpeed: 40,             // mm/s; the defaults are the iDraw's own
-  travelSpeed: 120,
+  travelSpeed: 40,
   acceleration: 800,         // mm/s², the estimate ramps like the machine
-  travelAcceleration: 1200,
+  travelAcceleration: 300,
   liftDelay: 0.6,            // s per stroke: pen down, and up again
   toolChangeDelay: 15
 });

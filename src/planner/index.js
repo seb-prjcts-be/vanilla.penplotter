@@ -67,9 +67,9 @@ export function orderPathsNearest(paths, start = { x: 0, y: 0 }, options = {}) {
 // time in the pen panel agree before any option is set.
 export const PLAN_DEFAULTS = Object.freeze({
   drawSpeed: 40, // mm/s
-  travelSpeed: 120, // mm/s
+  travelSpeed: 40, // mm/s
   acceleration: 800, // mm/s², drawing
-  travelAcceleration: 1200, // mm/s², pen up
+  travelAcceleration: 300, // mm/s², pen up
   liftDelay: 0.6, // s per stroke: pen down and up again
   toolChangeDelay: 15 // s
 });
