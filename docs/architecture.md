@@ -38,6 +38,8 @@ The browser SVG importer reads paths and basic shapes, including nested transfor
 
 `drawBed()` previews the sheet on the machine bed. `placePlan()` moves or rotates the plan's machine moves; it does not rewrite its route array. Use the bed preview for that placed plan rather than assuming every renderer applies the placement.
 
+The shared example panel can choose an A-format sheet without scaling the geometry. It uses that sheet as the frame for `placePlan()`, then checks the paper against the bed and the placed strokes against the paper before compiling commands. Placement fields are locked during a run. The source plan remains unchanged, and export links use that original plan rather than the machine placement.
+
 ## Direct plotting
 
 `EbbDriver` from `src/driver/ebb.js` compiles a complete plan into commands, checks units and bed bounds, and sends commands through a transport with acknowledgement handling. Motion uses acceleration ramps and corner speeds. Pen-up travel uses timed `SM` slices; drawing uses `LM` on supported firmware and timed slices on older firmware.

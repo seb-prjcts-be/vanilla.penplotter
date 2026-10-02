@@ -4,7 +4,7 @@
 // sheet lies on the bed, a dry run, connect, plot, stop, and, as a side door
 // for anyone without an EBB plotter, the same plan as SVG, HPGL or G-code.
 // The example itself only builds geometry; nothing here changes its plan.
-import { millimetersPerUnit, describePaper } from "../src/core/model.js";
+import { millimetersPerUnit, describePaper, paperSize } from "../src/core/model.js";
 import { placePlan } from "../src/planner/index.js";
 import { drawBed as renderBed } from "../src/renderer/index.js";
 import {
@@ -23,6 +23,13 @@ const profile = EBB_PROFILES["idraw-hse-a2"];
 // on screen lands sideways on a portrait sheet on the bed unless it is
 // turned; this is where you say which way it goes.
 export { placePlan };
+
+// Change the sheet around the drawing, preserving stroke lengths and source.
+export function preparePlacement(plan, offset, turn = 0, format = "drawing") {
+  const page = format === "drawing" ? plan.page : { ...plan.page, ...paperSize(format, "portrait", plan.units) };
+  if (!Number.isFinite(offset.x) || !Number.isFinite(offset.y)) throw new RangeError("Enter a finite sheet position in millimetres.");
+  return placePlan({ ...plan, page }, offset, turn);
+}
 
 // While a plot runs, every link that leaves the page is greyed out and
 // unclickable: the navigation, GitHub, the rest of the site. The panel's own
@@ -77,6 +84,10 @@ export function mountPen(container, options) {
   container.innerHTML = `
     <p class="pen-title">To the pen</p>
     <div class="pen-fields">
+      <label>Paper size<select data-pen="format">
+        <option value="drawing">Use the drawing's page</option>
+        ${["A0", "A1", "A2", "A3", "A4", "A5", "A6"].map((format) => `<option value="${format}">${format}</option>`).join("")}
+      </select></label>
       <label>Sheet position from the corner, X (mm)<input data-pen="x" type="number" value="${offset.x}" min="0" max="590" step="5"></label>
       <label>Sheet position from the corner, Y (mm)<input data-pen="y" type="number" value="${offset.y}" min="0" max="430" step="5"></label>
       <label>Turn on the bed<select data-pen="turn">
@@ -86,6 +97,8 @@ export function mountPen(container, options) {
         <option value="270">270°</option>
       </select></label>
     </div>
+    <p class="pen-side">Paper size keeps the strokes at their original scale. A formats start in portrait; a 90° or 270° turn places them in landscape. X and Y locate the paper corner nearest home.</p>
+    <button type="button" class="secondary" data-pen="center">Centre paper on the bed</button>
     <canvas data-pen="bed" width="594" height="432" style="display:block;width:100%;height:auto;margin:0 0 12px;border:1px solid rgba(0,0,0,.15);background:#fff" aria-label="The bed: where the sheet and the drawing lie"></canvas>
     <dl class="pen-stats">
       <div><dt>Paper</dt><dd data-pen="paper">—</dd></div>
@@ -102,7 +115,7 @@ export function mountPen(container, options) {
     <button type="button" data-pen="plot" disabled>Plot</button>
     <button type="button" class="secondary" data-pen="resume" hidden>Resume</button>
     <button type="button" class="stop" data-pen="stop" disabled>Stop — pen up</button>
-    <p class="pen-side">No EBB plotter at hand? Take the same plan with you as
+    <p class="pen-side">Export the drawing at its original page size, before bed placement:
       <a href="#" data-pen="svg">SVG</a>, <a href="#" data-pen="hpgl">HPGL</a> or <a href="#" data-pen="gcode">G-code</a>.</p>
     <div class="pen-log" role="log" aria-live="polite" data-pen="log">Ready.</div>`;
 
@@ -117,8 +130,8 @@ export function mountPen(container, options) {
   // sketch never resumes into the wrong lines.
   const RESUME_KEY = `vanilla.penplotter:resume:${name}`;
   let turn = 0;
-  const placed = () => placePlan(getPlot().plan(), offset, turn);
-  const signature = (c) => `${c.draws}:${c.stats.drawMm.toFixed(1)}:${c.stats.penDowns + c.skipDraws}:${offset.x},${offset.y},${turn}`;
+  const placed = () => preparePlacement(getPlot().plan(), offset, turn, $("format").value);
+  const signature = (c) => `${c.draws}:${c.stats.drawMm.toFixed(1)}:${c.stats.penDowns + c.skipDraws}:${offset.x},${offset.y},${turn}${$("format").value === "drawing" ? "" : `:${$("format").value}`}`;
   const readResume = () => {
     try {
       const record = JSON.parse(localStorage.getItem(RESUME_KEY));
@@ -140,6 +153,7 @@ export function mountPen(container, options) {
     box.scrollTop = box.scrollHeight;
   };
   const buttons = () => {
+    for (const key of ["x", "y", "turn", "format", "center"]) $(key).disabled = busy;
     const record = readResume();
     $("plot").disabled = !transport || !compiled || busy;
     $("connect").disabled = Boolean(transport) || busy;
@@ -155,8 +169,9 @@ export function mountPen(container, options) {
   };
 
   function refresh() {
-    offset.x = Number($("x").value);
-    offset.y = Number($("y").value);
+    if (busy) return;
+    offset.x = $("x").value.trim() === "" ? NaN : Number($("x").value);
+    offset.y = $("y").value.trim() === "" ? NaN : Number($("y").value);
     turn = Number($("turn").value);
     try {
       const onBed = placed();
@@ -175,8 +190,14 @@ export function mountPen(container, options) {
       $("sheet-size").textContent = `${size(sheet.width)} × ${size(sheet.height)} mm (X × Y)`;
       $("sheet-fit").textContent = offset.x >= 0 && offset.y >= 0 && offset.x + sheet.width <= profile.travel.width && offset.y + sheet.height <= profile.travel.height ? "Inside the bed" : "Paper extends beyond the bed";
       $("drawing-size").textContent = Number.isFinite(minX) ? `${size((maxX - minX) * mm)} × ${size((maxY - minY) * mm)} mm` : "No strokes";
-      compiled = compileEbbPlan(onBed, { profile });
       drawBed($("bed"), getPlot().plan(), offset, onBed);
+      if (offset.x < 0 || offset.y < 0 || offset.x + sheet.width > profile.travel.width || offset.y + sheet.height > profile.travel.height) {
+        throw new RangeError("Paper extends beyond the bed. Turn it, move it or choose a smaller sheet.");
+      }
+      if (Number.isFinite(minX) && (minX * mm < offset.x - 1e-6 || minY * mm < offset.y - 1e-6 || maxX * mm > offset.x + sheet.width + 1e-6 || maxY * mm > offset.y + sheet.height + 1e-6)) {
+        throw new RangeError("Drawing extends beyond the paper. Choose a larger sheet or reduce the drawing in the sketch.");
+      }
+      compiled = compileEbbPlan(onBed, { profile });
       const seconds = compiled.stats.durationMs / 1000;
       $("commands").textContent = String(compiled.commands.length);
       $("time").textContent = `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} s`;
@@ -264,6 +285,18 @@ export function mountPen(container, options) {
   $("x").addEventListener("input", refresh);
   $("y").addEventListener("input", refresh);
   $("turn").addEventListener("change", refresh);
+  $("format").addEventListener("change", refresh);
+  $("center").addEventListener("click", () => {
+    const plan = getPlot().plan();
+    const sheet = describePaper(preparePlacement(plan, { x: 0, y: 0 }, turn, $("format").value).page, plan.units);
+    if (sheet.width > profile.travel.width || sheet.height > profile.travel.height) {
+      status("Paper is larger than the bed in this orientation. Turn it or choose a smaller sheet.");
+      return;
+    }
+    $("x").value = String(Number(((profile.travel.width - sheet.width) / 2).toFixed(3)));
+    $("y").value = String(Number(((profile.travel.height - sheet.height) / 2).toFixed(3)));
+    refresh();
+  });
   $("dry").addEventListener("click", dryRun);
   $("connect").addEventListener("click", connect);
   $("plot").addEventListener("click", () => run(0));

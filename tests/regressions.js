@@ -1,6 +1,92 @@
 import assert from "node:assert/strict";
 import { PlotterEngine, Optimizer, Driver, Renderer, Planner } from "../vanilla.penplotter.js";
 import { paperSize, describePaper } from "../src/core/model.js";
+import { preparePlacement, mountPen } from "../examples/pen.js";
+
+function testPaperPlacement() {
+  const plot = new PlotterEngine({ units: "cm", page: { width: 8, height: 5 } });
+  plot.line(1, 1, 7, 4);
+  const source = plot.plan();
+  const before = JSON.stringify(source);
+  const placed = preparePlacement(source, { x: 100, y: 60 }, 90, "A4");
+  assert.deepEqual([placed.page.width, placed.page.height], [29.7, 21]);
+  const points = placed.moves.find((move) => move.type === "draw").points;
+  assert.ok(Math.abs(Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y) - Math.hypot(6, 3)) < 1e-9, "paper choice preserves drawing scale");
+  assert.equal(JSON.stringify(source), before, "paper placement never mutates source");
+  assert.deepEqual(points[0], { x: 38.7, y: 7 }, "rotation uses the chosen sheet, then the bed offset in document units");
+  assert.deepEqual(preparePlacement(source, { x: 0, y: 0 }, 0).page, source.page);
+}
+
+async function testPaperPanel() {
+  // Exercise the shared page controller with real plans and the log-only
+  // driver. No browser or serial port is opened.
+  const previousWindow = globalThis.window;
+  globalThis.window = { addEventListener() {} };
+  try {
+    const context = { canvas: { width: 594, height: 432 }, beginPath() {}, moveTo() {}, lineTo() {}, arc() {}, fill() {}, fillText() {}, translate() {}, rotate() {}, stroke() {}, strokeRect() {}, clearRect() {}, fillRect() {}, save() {}, restore() {} };
+    const fields = new Map();
+    const container = {
+      classList: { add() {} },
+      set innerHTML(html) {
+        for (const match of html.matchAll(/<(input|select|button|dd|p|div|canvas|a)\b[^>]*data-pen="([^"]+)"[^>]*>/g)) {
+          const handlers = {};
+          fields.set(match[2], {
+            value: match[0].match(/value="([^"]+)"/)?.[1] ?? (match[2] === "format" ? "drawing" : match[2] === "turn" ? "0" : ""),
+            textContent: "", disabled: false, hidden: false,
+            getContext: () => context,
+            addEventListener: (event, callback) => { handlers[event] = callback; },
+            fire: (event) => handlers[event]?.()
+          });
+        }
+      },
+      querySelector: (selector) => fields.get(selector.match(/data-pen="([^"]+)"/)[1])
+    };
+    const plot = new PlotterEngine({ units: "mm", page: { width: 80, height: 50 } });
+    plot.rect(10, 10, 60, 30);
+    const source = JSON.stringify(plot.plan());
+    mountPen(container, { getPlot: () => plot });
+    const field = (key) => fields.get(key);
+    field("format").value = "A4";
+    field("format").fire("change");
+    field("center").fire("click");
+    assert.equal(field("x").value, "192");
+    assert.equal(field("y").value, "67.5");
+    assert.equal(field("drawing-size").textContent, "60 × 30 mm");
+    await field("dry").fire("click");
+    assert.match(field("log").textContent, /Dry run: complete/);
+    field("format").value = "A2";
+    field("format").fire("change");
+    assert.equal(field("dry").disabled, true, "portrait A2 does not fit this bed");
+    field("turn").value = "90";
+    field("turn").fire("change");
+    field("center").fire("click");
+    assert.equal(field("x").value, "0");
+    assert.equal(field("y").value, "6");
+    assert.equal(field("dry").disabled, false, "landscape A2 fits when centred");
+    field("format").value = "A0";
+    field("format").fire("change");
+    assert.equal(field("dry").disabled, true);
+    field("format").value = "drawing";
+    field("turn").value = "0";
+    field("x").value = "";
+    field("format").fire("change");
+    assert.equal(field("dry").disabled, true, "an empty position cannot silently become zero");
+    field("center").fire("click");
+    assert.equal(field("dry").disabled, false, "centring also recovers an empty position");
+    assert.equal(JSON.stringify(plot.plan()), source, "panel choices leave the sketch untouched");
+    // Valid machine coordinates can still miss the selected paper.
+    field("format").value = "A4";
+    field("format").fire("change");
+    field("center").fire("click");
+    plot.line(220, 10, 230, 10);
+    field("format").fire("change");
+    assert.equal(field("dry").disabled, true);
+    assert.match(field("status").textContent, /Drawing extends beyond the paper/);
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+  }
+}
 
 function testPaperSizes() {
   assert.deepEqual(paperSize("A4"), { width: 210, height: 297 });
@@ -139,6 +225,8 @@ function testBedDrawing() {
 }
 
 testPaperSizes();
+testPaperPlacement();
+await testPaperPanel();
 testEditsAfterPlanning();
 testOptimizationSettingsSurviveEdits();
 testUnits();

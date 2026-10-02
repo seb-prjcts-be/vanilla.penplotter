@@ -116,6 +116,8 @@ pinned one; the version check refuses a core below the required minimum.
 | `drawBed(context, { bed, sheet })` | the bed as the machine sees it: the home corner, the sheet where it lies, the drawing on it |
 | `exportSVG`, `exportHPGL({ penMap, unitsPerMm })`, `exportGCode({ penUp, penDown })`, `exportJSON` | the same plan as a file, for machines without a driver |
 
+The shared pen panel in the examples lets you choose A0–A6 or keep the drawing’s page, turn the sheet and drawing together, and centre the paper on the bed. Paper choice preserves stroke size. A sheet outside the bed or strokes outside the sheet block plotting; export links retain the original drawing before placement.
+
 ## Planning the route
 
 <p align="center">
