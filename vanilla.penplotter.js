@@ -2,7 +2,8 @@ import {
   addLayer,
   createDocument,
   createTool,
-  getLayer
+  getLayer,
+  paperSize
 } from "./src/core/model.js";
 import * as Geometry from "./src/geometry/index.js";
 import { optimizeDocument } from "./src/optimizer/index.js";
@@ -20,6 +21,7 @@ export const VERSION = "0.3.1";
 
 export class PlotterEngine {
   static version = VERSION;
+  static paperSize = paperSize;
 
   constructor(options = {}) {
     this.plugins = options.plugins || new PluginHost();

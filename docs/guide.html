@@ -43,6 +43,7 @@ plot.line(20, 20, 190, 20);
 plot.circle(105, 145, 52);</code></pre>
     <p>The active layer starts as <code>default</code>. Geometry is stored directly; no canvas or SVG has to exist first.</p>
     <p><strong>Paper, drawing and bed have separate sizes.</strong> A4 is 210 × 297 mm in portrait, or 297 × 210 mm in landscape. The drawing occupies only the area covered by its strokes. The bed is the machine’s working area; “A2” in a model name does not set your drawing’s size.</p>
+    <p><code>PlotterEngine.paperSize(format, orientation, units)</code> exposes the same helper as the named <code>paperSize()</code> export. The p5 adapter uses it to fit a canvas with <code>createPlot({ paper: "A2", margin: 12 })</code>. The core's own paper selection preserves the original stroke size.</p>
     <pre><code class="language-javascript">import { PlotterEngine, paperSize } from "../vanilla.penplotter.js";
 
 const plot = new PlotterEngine({

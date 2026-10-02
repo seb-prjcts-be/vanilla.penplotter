@@ -118,6 +118,8 @@ pinned one; the version check refuses a core below the required minimum.
 
 The shared pen panel in the examples lets you choose A0–A6 or keep the drawing’s page, turn the sheet and drawing together, and centre the paper on the bed. Paper choice preserves stroke size. A sheet outside the bed or strokes outside the sheet block plotting; export links retain the original drawing before placement.
 
+`PlotterEngine.paperSize(format, orientation, units)` exposes the same A0–A6 helper as the named `paperSize()` export. Adapters use it without copying a second size table. The p5 adapter uses it for `createPlot({ paper: "A2", margin: 12 })`.
+
 ## Planning the route
 
 <p align="center">

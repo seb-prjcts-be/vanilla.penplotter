@@ -148,6 +148,25 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
     </table>
     <p>The functions in <code>src/core/model.js</code> build and check these objects: <code>createDocument</code>, <code>createLayer</code>, <code>createTool</code>, <code>createPath</code>, <code>addLayer</code>, <code>addPath</code>, <code>getLayer</code>, <code>cloneDocument</code>, <code>documentBounds</code>, <code>validateDocument</code>, plus the small helpers <code>point</code>, <code>clonePoint</code>, <code>distance</code>, <code>pathLength</code> and <code>millimetersPerUnit</code>. They are the vocabulary the other stages speak.</p>
 
+    <h3>Paper formats</h3>
+    <p><code>PlotterEngine.paperSize()</code> exposes the same helper on the engine class for adapters. In p5, <code>createPlot({ paper: "A2", margin: 12 })</code> uses it to fit and centre a canvas on the sheet. The standalone core panel keeps the original drawing scale when selecting paper.</p>
+    <p><code>paperSize(format, orientation, units)</code> returns sheet dimensions for A0–A6. Orientation defaults to <code>"portrait"</code> and units to <code>"mm"</code>. It chooses paper size without scaling the geometry. <code>describePaper(page, units)</code> reports the recognised format, orientation and dimensions in millimetres; an unrecognised size is <code>"Custom"</code>.</p>
+    <pre><code class="language-javascript">import { PlotterEngine, paperSize } from "../vanilla.penplotter.js";
+
+const plot = new PlotterEngine({
+  units: "mm",
+  page: { ...paperSize("A4", "landscape"), margin: 12 }
+});</code></pre>
+    <table>
+      <thead><tr><th>paper</th><th>portrait, mm</th><th>landscape, mm</th></tr></thead>
+      <tbody>
+        <tr><td>A4</td><td>210 × 297</td><td>297 × 210</td></tr>
+        <tr><td>A3</td><td>297 × 420</td><td>420 × 297</td></tr>
+        <tr><td>A2</td><td>420 × 594</td><td>594 × 420</td></tr>
+      </tbody>
+    </table>
+    <p>Paper, drawing and bed have separate sizes. The drawing occupies the bounds of its strokes; the paper surrounds it. The HSE/A2 bed is 594 × 432 mm, with X along the long rail. A2 fits with its 594 mm edge along X, at X = 0 and Y between 0 and 12 mm. Choosing the paper does not resize the strokes.</p>
+
     <h2 id="c4"><span class="num">4</span>The facade: PlotterEngine</h2>
     <p><code>PlotterEngine</code> is one object that holds a document, an active layer, and a cache of the last optimisation and the last plan. Beginners never need anything else; experts use it as a convenient front for the stages behind it.</p>
     <table>
@@ -164,6 +183,7 @@ console.log(plan.stats);   // { paths: 2, points: 98, drawDistance: …, travelD
         <tr><td><code>stats()</code></td><td>the current plan's statistics.</td></tr>
         <tr><td><code>exportSVG</code>, <code>exportHPGL</code>, <code>exportGCode</code>, <code>exportJSON</code></td><td>render the current plan; options go to the renderer.</td></tr>
         <tr><td><code>drawRoute(context, options)</code>, also <code>drawPreview</code></td><td>draws the current plan on a canvas 2D context.</td></tr>
+        <tr><td><code>drawBed(context, { bed, sheet })</code></td><td>shows the planned machine moves on the bed; <code>bed</code> and <code>sheet</code> dimensions and position are in millimetres.</td></tr>
         <tr><td><code>use(plugin)</code></td><td>installs a plugin into the engine's host. Chainable.</td></tr>
         <tr><td><code>document</code>, <code>activeLayer</code>, <code>optimized</code>, <code>planned</code></td><td>public fields. Editing <code>document</code> directly is allowed and detected.</td></tr>
       </tbody>
@@ -235,6 +255,12 @@ defaults: drawSpeed 40 mm/s, travelSpeed 40 mm/s, acceleration 800 mm/s², trave
     <p><code>renderGCode(plan, { drawFeed, travelFeed, penUp, penDown })</code> writes <code>G21 G90</code>, then per route a pen-up, a rapid <code>G0</code> to the start, the pen-down, one <code>G1</code> per point, and a pen-up, ending with <code>M2</code>. Coordinates are in millimetres whatever the document unit; feeds are mm/min (defaults 1800 and 4200); the pen commands default to <code>M5</code> and <code>M3 S1000</code>, the servo idiom of GRBL pen plotters, and are options because every machine differs. Tool changes become comments.</p>
     <h3>JSON and the preview</h3>
     <p><code>renderJSON</code> is the plan itself, pretty-printed unless <code>compact</code>. <code>drawPreview(context, plan, options)</code> fits the page into the canvas with <code>padding</code>, paints the paper (<code>paper</code>, default warm white), optionally draws the travel moves dashed (<code>showTravel</code>, <code>travelColor</code>), then every draw move in its tool's colour and width scaled to the canvas. <code>progress</code> between 0 and 1 draws only the first part of the plan, which is how a plotting animation would be made.</p>
+
+    <h3>Place the sheet on the bed</h3>
+    <p>The shared pen panel in every example lets you keep the drawing's original page or choose A0–A6. A formats start in portrait. Turn by 90° or 270° for landscape, then use <strong>Centre paper on the bed</strong> or enter X/Y in millimetres from home. X/Y locate the sheet corner nearest home. A2 landscape centres at X = 0, Y = 6 mm.</p>
+    <p>A turn rotates the drawing with its sheet, without mirroring it. Paper choice preserves stroke lengths. The panel blocks plotting when the sheet extends beyond the bed, the drawing extends beyond the paper, or a position is empty or invalid. Place the real paper to match the preview, then check the dry run. Placement fields stay locked during a plot.</p>
+    <p>In code, <code>Planner.placePlan(plan, { x, y }, turn)</code> returns a new plan with transformed machine moves. Offsets are in millimetres; the moves remain in the plan's document units. Supported turns are 0, 90, 180 and 270 degrees. The original plan and its route array remain unchanged. Use <code>Renderer.drawBed(context, placedPlan, { bed, sheet })</code> to preview the placed moves. Export links in the example panel use the original page and coordinates, before bed placement; selecting paper in the panel does not change the exported drawing.</p>
+    <p>These paper and bed helpers describe current source. For tagged builds, check which helpers exist before using them; the <a href="https://seb-prjcts-be.github.io/p5.penplotter/docs/setup.html">adapter's Setup page</a> gives current-source imports for both libraries.</p>
 
     <h2 id="c9"><span class="num">9</span>The EBB driver and its transports</h2>
     <p>The EBB (EiBotBoard) is the controller in the AxiDraw and its relatives, including the iDraw HSE. It speaks a small text protocol over a USB serial port: a command, a comma-separated argument list, a carriage return; a reply ending in <code>OK</code>, or a line starting with <code>!</code> for an error. The driver uses nine of its commands:</p>

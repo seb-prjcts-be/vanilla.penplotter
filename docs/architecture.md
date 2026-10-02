@@ -8,6 +8,8 @@ The pipeline is geometry, optional cleanup, route planning, preview or export, a
 
 ## Geometry
 
+`PlotterEngine.paperSize()` exposes the existing core A0–A6 helper to adapters that receive the engine class. The p5 adapter uses it to fit a canvas to chosen paper; the standalone core panel preserves the source drawing's scale.
+
 The document contains a page, tools, layers and polyline paths. Circles, arcs and imported curves become sampled points. There are no native curve objects, text layout, polygon booleans or clipping.
 
 `hatch()` and `crossHatch()` make separate line segments inside a simple polygon. They do not join the stripes into a continuous zigzag or handle compound shapes with holes. `stipple()` places short dashes with a seeded generator and a minimum distance between centres. Crowded regions can produce fewer dots than requested.
