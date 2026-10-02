@@ -1,5 +1,7 @@
 # vanilla.penplotter
 
+![From JavaScript geometry to a planned drawing on paper](docs/images/animations/overview.gif)
+
 **[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
 
 You supply polylines in physical units. This engine can clean up paths, plan a route, preview it and export files. Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
