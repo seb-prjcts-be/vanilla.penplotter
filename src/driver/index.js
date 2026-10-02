@@ -45,7 +45,7 @@ export const MACHINE_PROFILES = Object.freeze({
     renderer: "svg",
     page: { width: 594, height: 432 },
     drawSpeed: 40,
-    travelSpeed: 120,
+    travelSpeed: 40,
     direct: "ebb-web-serial",
     note: "Plots directly through EbbDriver; machine facts live in EBB_PROFILES."
   }

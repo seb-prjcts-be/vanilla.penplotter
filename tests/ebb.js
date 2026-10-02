@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { PlotterEngine } from "../vanilla.penplotter.js";
 import {
   EBB_PROFILES,
+  EBB_COMPATIBILITY,
   EbbDriver,
   compileEbbPlan,
   createLogTransport,
@@ -637,6 +638,36 @@ function testGentleDefaultTravel() {
   assert.equal(custom.settings.travelAcceleration, 500);
 }
 
+async function testModelPenSetup() {
+  const plan = planOf((plot) => plot.line(10, 10, 25, 10));
+  const defaults = compileEbbPlan(plan);
+  assert.ok(!defaults.commands.some((entry) => entry.cmd.startsWith("SC,")), "existing pen calibration is preserved unless requested");
+  const configured = compileEbbPlan(plan, { penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 } });
+  assert.deepEqual(configured.commands.slice(0, 4).map((entry) => entry.cmd), ["SC,4,20641", "SC,5,15248", "SC,11,1618", "SC,12,1079"]);
+  assert.equal(configured.commands[4].cmd, "EM,1,1");
+  for (const value of [-1, 101, NaN, Infinity]) {
+    assert.throws(() => compileEbbPlan(plan, { penLift: { up: value } }), /between 0 and 100/);
+  }
+  assert.throws(() => compileEbbPlan(plan, { penLift: true }), /penLift must be an object/);
+  assert.throws(() => compileEbbPlan(plan, { penLift: { raiseRate: 0 } }), /between 1 and 100/);
+  assert.throws(() => compileEbbPlan(plan, { penLift: { down: null } }), /between 0 and 100/);
+  assert.equal(HSE.manufacturerDefaults.stepsPerMm, HSE.stepsPerMm);
+  assert.equal(EBB_COMPATIBILITY.filter((entry) => entry.status === "tested").length, 1);
+  assert.ok(EBB_COMPATIBILITY.every((entry) => entry.source.startsWith("https://")));
+  const transport = createLogTransport();
+  await new EbbDriver({ transport }).run(plan, {
+    confirmed: true,
+    penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }
+  });
+  assert.ok(transport.log.indexOf("SC,4,20641") < transport.log.indexOf("SP,1,300"));
+  const invalid = createLogTransport();
+  await assert.rejects(() => new EbbDriver({ transport: invalid }).run(plan, {
+    confirmed: true, penLift: { up: 101 }
+  }), /between 0 and 100/);
+  assert.deepEqual(invalid.log, ["V"], "invalid pen calibration sends no setup or movement commands");
+}
+
+await testModelPenSetup();
 testGentleDefaultTravel();
 testCoreXYMixing();
 testDocumentationNamesTheDriver();

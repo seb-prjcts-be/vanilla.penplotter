@@ -148,6 +148,14 @@ await driver.run(plot.plan(), { confirmed: true });</code></pre>
     <p>Use millimetres, centimetres or inches. Park the carriage in the home corner by hand first: the machine has no homing, so that spot is 0,0 of the plan. Every point is checked against the 594 × 432 mm travel before the first byte is sent, and <code>driver.abort()</code> or an error requests the stop sequence: motion halted, pen up, motors off. A working connection is needed to deliver those commands. <code>compileEbbPlan(plan)</code> with <code>createLogTransport()</code> is the dry run.</p>
     <p class="callout">Web Serial needs Chrome or Edge on localhost or https. Motion is planned with acceleration; the plan's <code>drawSpeed</code> and <code>travelSpeed</code> are what the machine gets, and <code>run(plan, { drawSpeed, travelSpeed, acceleration, travelAcceleration, junctionDeviation })</code> overrides any of them. The example panel can resume after completed strokes of the same drawing, after manual parking at home. There is no mid-stroke pause or resume. Exports for other machines need suitable software and configuration.</p>
     <p class="callout">A complete drawing is prepared before plotting. <code>strategy: "drawn"</code> can preserve its order. <a href="live.html">Live drawing</a>, where new strokes arrive while the pen runs, is proposed work and has no current API.</p>
+    <p>The HSE profile records manufacturer defaults separately from its operating settings. It retains the controller's pen calibration unless you supply <code>penLift</code>. For a known standard servo, height percentages are 0–100 and lift/lower rates are 1–100:</p>
+    <pre><code class="language-javascript">import { compileEbbPlan } from "./src/driver/ebb.js";
+
+const compiled = compileEbbPlan(plot.plan(), {
+  profile: "idraw-hse-a2",
+  penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }
+});</code></pre>
+    <p>These heights are control percentages, not millimetres. Check the installed servo and pen mounting; omit <code>penLift</code> to keep existing calibration. The <a href="architecture.html">machine notes</a> distinguish the tested HSE/A2 from likely compatible devices. Sharing EBB firmware alone does not establish mechanical compatibility.</p>
 
     <figure class="doc-animation" id="animation-screen-to-paper">
       <img src="images/animations/screen-to-paper.gif" width="600" height="400" loading="lazy" alt="A complete JavaScript drawing is planned and then plotted on paper.">

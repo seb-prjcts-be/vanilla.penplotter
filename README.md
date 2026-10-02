@@ -75,7 +75,9 @@ On firmware 3.x the driver also opens the board's motion queue to its full depth
 
 The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, the seconds the plot takes: 681 estimated, 680 plotted, for the wave hatch.
 
-**We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted on 2026-10-01. An AxiDraw or another EBB board speaks the same protocol and should behave the same, but nobody here has plotted with one, so treat every other profile as untested. Not there yet: pause, and resuming mid-stroke from a checkpoint.
+**We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted on 2026-10-01. The iDraw HSE/A3 and standard-servo AxiDraw models are likely candidates, not tested profiles. NextDraw needs its own pen-lift and homing configuration. See the [machine notes](docs/architecture.html).
+
+`EBB_PROFILES["idraw-hse-a2"]` keeps the manufacturer's defaults separately from the operating settings. Pen heights and lift rates remain unchanged unless you pass `penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }` to `compileEbbPlan()` or `driver.run()`. These are percentages for the profile's standard servo, not millimetres; check the installed pen lift and mounting first. `EBB_COMPATIBILITY` lists the researched candidates and source links, without selecting a machine automatically.
 
 ## Requirements
 

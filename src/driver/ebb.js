@@ -10,9 +10,8 @@
 // Motion is planned with acceleration. Every stroke (one pen-down path, or one
 // pen-up travel) gets a speed profile: ramp up from rest, cruise, slow down
 // into corners by how sharp they are, ramp down to rest. The profile is sent
-// as LM commands (firmware 2.7+): one command per constant-acceleration phase,
-// with exact step counts per motor. Older firmware gets the same profile cut
-// into short constant-speed SM slices.
+// as LM commands for drawing (firmware 2.7+), with exact step counts per motor.
+// Pen-up travel and older firmware use short constant-speed SM slices.
 
 import { simplifyPath } from "../optimizer/index.js";
 
@@ -31,8 +30,7 @@ export const EBB_PROFILES = Object.freeze({
     travel: Object.freeze({ width: 594, height: 432 }),
     maxStepRate: 24.995, // steps per millisecond, per motor
     minStepRate: 1.31, // steps per second, per motor (SM only)
-    // The vendor's configuration plots at 55 mm/s pen-down, 166 mm/s pen-up,
-    // with 40 in/s² (1016 mm/s²) of acceleration. These stay under that.
+    // Operating settings: deliberately separate from the vendor defaults.
     drawSpeed: 40, // mm/s, pen down
     travelSpeed: 40, // mm/s, pen up
     acceleration: 800, // mm/s², pen down
@@ -44,9 +42,40 @@ export const EBB_PROFILES = Object.freeze({
     penUpDelay: 300, // ms
     fifoDepth: 32, // motion commands queued on the board (firmware 3.0+)
     aheadMs: 250, // how much motion the host sends ahead of the acknowledgements
-    usb: Object.freeze({ usbVendorId: 0x04d8, usbProductId: 0xfd92 })
+    usb: Object.freeze({ usbVendorId: 0x04d8, usbProductId: 0xfd92 }),
+    manufacturerDefaults: Object.freeze({
+      source: "https://idrawpenplotter.com/pages/downloads",
+      package: "extensions-260620.zip; idraw_HSE.inx, axidraw_conf.py, axidraw.py, motion.py",
+      model: 6,
+      microstepping: 16,
+      stepsPerMm: 80,
+      drawSpeed: 25 * 8.6979 / 110 * 25.4,
+      travelSpeed: 75 * 8.6979 / 110 * 25.4,
+      acceleration: 40 * 0.75 * 25.4,
+      travelAcceleration: 60 * 0.75 * 25.4
+    }),
+    penServo: Object.freeze({
+      type: "standard",
+      min: 9855,
+      max: 27831,
+      sweepMs: 200,
+      periodMs: 24,
+      up: 60,
+      down: 30,
+      raiseRate: 75,
+      lowerRate: 50
+    })
   })
 });
+
+// Research evidence, not automatic model detection or additional machine profiles.
+export const EBB_COMPATIBILITY = Object.freeze([
+  { name: "iDraw HSE / A2", status: "tested", profile: "idraw-hse-a2", source: "https://idrawpenplotter.com/pages/downloads" },
+  { name: "iDraw HSE / A3", status: "likely", profile: null, source: "https://idrawpenplotter.com/pages/downloads" },
+  { name: "AxiDraw V2, V3, V3/A3, SE/A3, SE/A2 and MiniKit (standard pen lift)", status: "likely", profile: null, source: "https://github.com/evil-mad/axidraw/blob/master/inkscape%20driver/axidraw_conf.py" },
+  { name: "Bantam Tools NextDraw", status: "needs-profile", profile: null, source: "https://bantam.tools/nd_migrate/" },
+  { name: "EggBot and WaterColorBot", status: "different-kinematics", profile: null, source: "https://evil-mad.github.io/EggBot/ebb.html" }
+].map(Object.freeze));
 
 export function mixCoreXY(x, y, stepsPerMm) {
   return {
@@ -209,6 +238,32 @@ export function compileEbbPlan(plan, options = {}) {
   }
 
   const commands = [];
+  // SC stores pen parameters; the following SP performs the actual lift.
+  // Opt in explicitly: the installed servo and pen mounting must be known.
+  if (options.penLift !== undefined) {
+    if (!options.penLift || typeof options.penLift !== "object" || Array.isArray(options.penLift)) {
+      throw new TypeError("penLift must be an object with up, down, raiseRate and lowerRate percentages.");
+    }
+    const servo = profile.penServo;
+    if (!servo || servo.type !== "standard") throw new Error("This profile has no standard pen-lift calibration.");
+    const percent = (key) => {
+      const value = Object.hasOwn(options.penLift, key) ? options.penLift[key] : servo[key];
+      const minimum = key.endsWith("Rate") ? 1 : 0;
+      if (typeof value !== "number" || !Number.isFinite(value) || value < minimum || value > 100) {
+        throw new RangeError(`penLift.${key} must be between ${minimum} and 100.`);
+      }
+      return value;
+    };
+    const range = servo.max - servo.min;
+    const rateScale = range * (servo.periodMs / 100) / servo.sweepMs;
+    const values = [
+      [4, Math.round(servo.min + range * percent("up") / 100)],
+      [5, Math.round(servo.min + range * percent("down") / 100)],
+      [11, Math.round(rateScale * percent("raiseRate"))],
+      [12, Math.round(rateScale * percent("lowerRate"))]
+    ];
+    for (const [parameter, value] of values) commands.push({ cmd: `SC,${parameter},${value}`, kind: "pen-setup", durationMs: 0 });
+  }
   const stats = { drawMm: 0, travelMm: 0, penDowns: 0, durationMs: 0 };
   const position = { x: 0, y: 0 };
   const steps = { a1: 0, a2: 0 }; // steps actually commanded so far
