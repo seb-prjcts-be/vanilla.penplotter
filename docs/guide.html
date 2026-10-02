@@ -58,8 +58,8 @@ plot.layer("accents", { toolId: "red" });
 plot.circle(105, 145, 24);</code></pre>
 
     <figure class="doc-animation" id="animation-pens-and-layers">
-      <img src="images/animations/pens-and-layers.gif" width="600" height="400" loading="lazy" alt="Two pens draw separate layers and one layer is switched off.">
-      <figcaption>Let one pen draw the outline and another draw the texture. Try setting a returned layer’s <code>visible</code> property to <code>false</code> and rebuilding the plan. Its paths stay in the document, but leave the job. The driver waits for a manual pen change.</figcaption>
+      <img src="images/animations/pens-and-layers.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="Two pens draw separate layers and one layer is switched off.">
+      <figcaption>Sage is pen A; ochre is pen B. Each colour follows its assigned paths. The second pass hides one layer; it does not erase the source paths. Let one pen draw the outline and another draw the texture. Try setting a returned layer’s <code>visible</code> property to <code>false</code> and rebuilding the plan. Its paths stay in the document, but leave the job. The driver waits for a manual pen change.</figcaption>
     </figure>
 
     <h2>3. Generate fills</h2>
@@ -108,8 +108,8 @@ console.log(plan.stats);</code></pre>
     <p>After editing the document, export, statistics and preview rebuild stale plans automatically, retaining the previous optimization and planning settings. This also covers edits to returned paths, layers and tools. Document data must remain JSON-serializable.</p>
 
     <figure class="doc-animation" id="animation-route">
-      <img src="images/animations/route.gif" width="600" height="400" loading="lazy" alt="Input order beside planned order, with shorter pen-up travel in the planned version.">
-      <figcaption>Same drawing, less travel with the pen raised: 2,404 mm becomes 422 mm in this example. Dotted lines are travel; solid lines are drawing.</figcaption>
+      <img src="images/animations/route.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="Input order beside planned order, with shorter pen-up travel in the planned version.">
+      <figcaption>Cream solid lines show the input drawing; sage solid lines show the planned drawing. Ochre dotted lines are moves with the pen raised: they leave no ink. Same drawing, less travel with the pen raised: 2,404 mm becomes 422 mm in this example. Dotted lines are travel; solid lines are drawing.</figcaption>
     </figure>
 
     <figure class="doc-animation" id="animation-cleanup">
@@ -130,8 +130,8 @@ const gcode = plot.exportGCode({
 });</code></pre>
 
     <figure class="doc-animation" id="animation-svg-files">
-      <img src="images/animations/svg-files.gif" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
-      <figcaption>Bring a drawing you already have. Supported SVG shapes become pen paths; the same engine can write SVG, HPGL and G-code. Try a simple file in <a href="../examples/svg_to_pen/index.html">SVG to pen</a>. A filled silhouette needs pen strokes to give it tone.</figcaption>
+      <img src="images/animations/svg-files.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
+      <figcaption>Ochre shows the imported geometry becoming pen strokes. Sage connectors lead from one plan to three export formats; those connectors explain the workflow and are not plotter travel. Bring a drawing you already have. Supported SVG shapes become pen paths; the same engine can write SVG, HPGL and G-code. Try a simple file in <a href="../examples/svg_to_pen/index.html">SVG to pen</a>. A filled silhouette needs pen strokes to give it tone.</figcaption>
     </figure>
 
     <h2>6. Use the modules directly</h2>
