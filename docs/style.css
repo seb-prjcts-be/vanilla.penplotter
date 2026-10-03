@@ -8,7 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
 
 :root {
-  --bg:          #f5f5f5;
+  --bg:          rgb(250, 249, 245);
   --bg2:         #eeeeee;
   --bg3:         #e4e4e4;
   --surface:     #ffffff;
@@ -45,7 +45,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid #000; outline-offset:
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 2.5rem;
-  background: rgba(245, 245, 245, 0.92);
+  background: rgba(250, 249, 245, 0.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-mid);
 }
@@ -103,7 +103,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid #000; outline-offset:
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at center, rgba(245,245,245,0.15) 0%, rgba(245,245,245,0.75) 100%);
+  background: radial-gradient(ellipse at center, rgba(250,249,245,0.15) 0%, rgba(250,249,245,0.75) 100%);
   pointer-events: none;
 }
 .hero-text { text-align: center; pointer-events: auto; padding: 0 1.25rem; }
@@ -374,7 +374,7 @@ footer a:hover { color: #000; }
     left: 0; right: 0;
     flex-direction: column;
     gap: 0;
-    background: rgba(245, 245, 245, 0.97);
+    background: rgba(250, 249, 245, 0.97);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-mid);
     padding: 0.5rem 0 1rem;
