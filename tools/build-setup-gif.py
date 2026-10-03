@@ -1,11 +1,22 @@
-"""Build the low-resolution CGA setup animation with Pillow."""
+"""Build the low-resolution vanilla setup animation with Pillow."""
 from pathlib import Path
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'docs/images/animations/setup-plotter.gif'
-PALETTE = [0,0,0, 85,255,255, 255,85,255, 255,255,255,
-           255,85,85, 170,0,0] + [0] * (768 - 18)
+PALETTE = [36,27,24, 143,170,160, 197,140,85, 233,217,189,
+           197,140,85, 36,27,24] + [0] * (768 - 18)
+def finish(im):
+    panel=Image.new('P',(405,270),0)
+    panel.putpalette(im.getpalette())
+    panel.paste(im,(42,28))
+    d=ImageDraw.Draw(panel)
+    label=ImageFont.load_default(size=8)
+    d.text((12,4), 'VANILLA.PENPLOTTER',font=label,fill=3)
+    d.text((12,14), 'STARTING CORNER',font=label,fill=2)
+    d.line((12,24,392,24),fill=1)
+    return panel.resize((810,540),Image.Resampling.NEAREST)
+
 frames = []
 # One machine at 320 x 240. Bed scale: one pixel per four millimetres.
 # Physical bed: 432 across, 594 along the rails; rounding error < 1 pixel.
@@ -40,7 +51,7 @@ for tick in range(8):
     d.rectangle((162,195,166,199),fill=4 if tick%2==0 else 5)
     d.rectangle((155,209,161,214),outline=3)
     d.line((158,214,158,232,177,232),fill=3)
-    frames.append(im.resize((640,480),Image.Resampling.NEAREST))
+    frames.append(finish(im))
 frames[0].save(OUT,save_all=True,append_images=frames[1:],
                duration=500,loop=0,optimize=False,disposal=2)
 print(OUT)

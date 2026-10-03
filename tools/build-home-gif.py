@@ -1,10 +1,10 @@
-"""One line on screen, then on the physical plotter. Coarse CGA pixels."""
+"""One line on screen, then on the physical plotter. Warm bitmap pixels."""
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 OUT=Path(__file__).resolve().parents[1]/'docs/images/animations/overview-simple.gif'
 FONT=ImageFont.load_default(size=10)
-PALETTE=[0,0,0,85,255,255,255,85,255,255,255,255,255,85,85]+[0]*(768-15)
+PALETTE=[36,27,24,143,170,160,197,140,85,233,217,189,197,140,85]+[0]*(768-15)
 frames=[]
 for tick in range(70):
     im=Image.new('P',(320,240),0); im.putpalette(PALETTE)

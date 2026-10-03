@@ -1,21 +1,14 @@
-"""Build the two CGA workflow GIFs with Pillow: python tools/build-workflow-gifs.py."""
+"""Build the two vanilla workflow GIFs with Pillow: python tools/build-workflow-gifs.py."""
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 import math
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'docs/images/animations'
-PALETTE = [0, 0, 0, 85, 255, 255, 255, 85, 255, 255, 255, 255] + [0] * (768 - 12)
-def font(size):
-    for name in ('C:/Windows/Fonts/cour.ttf', 'DejaVuSansMono.ttf'):
-        try:
-            return ImageFont.truetype(name, size)
-        except OSError:
-            pass
-    return ImageFont.load_default(size=size)
+PALETTE = [36,27,24,143,170,160,197,140,85,233,217,189] + [0] * (768 - 12)
 
-FONT = font(15)
-SMALL = font(13)
+FONT = ImageFont.load_default(size=14)
+SMALL = ImageFont.load_default(size=12)
 # Canvas coordinates are mapped to the same paper position in both diagrams.
 SHAPES = [
     [(40, 80), (90, 80), (90, 130), (40, 130), (40, 80)],
@@ -37,27 +30,29 @@ def build(name, sequential):
         im = Image.new('P', (600, 400), 0)
         im.putpalette(PALETTE)
         d = ImageDraw.Draw(im)
-        d.text((18, 17), 'vanilla.penplotter', font=FONT, fill=3)
-        d.text((18, 42), 'Draw, plot, wait, then the next' if sequential else 'Draw everything, then plot', font=FONT, fill=3)
+        d.text((18, 17), 'VANILLA.PENPLOTTER', font=FONT, fill=3)
+        d.text((18, 42), 'DRAW, PLOT, WAIT, THEN THE NEXT' if sequential else 'DRAW EVERYTHING, THEN PLOT', font=FONT, fill=2)
+        d.line((18, 65, 582, 65), fill=1)
         d.text((18, 76), 'Screen', font=SMALL, fill=1)
         d.text((307, 76), 'Bed coordinates (mm)', font=SMALL, fill=1)
         d.rectangle((18, 103, 266, 302), outline=1, width=2)
-        d.rectangle((22, 107, 262, 298), fill=3)
+        d.rectangle((22, 107, 262, 298), fill=0)
         d.rectangle((307, 105, 568, 295), fill=3, outline=1, width=2)
         d.text((303, 91), '(0,0)', font=SMALL, fill=1)
         d.text((502, 91), '+X', font=SMALL, fill=1)
         d.text((575, 185), '+Y', font=SMALL, fill=1)
         for path in screen + ([extra_screen] if extra_screen else []):
-            if len(path) >= 2: d.line([canvas(p) for p in path], fill=2, width=2)
+            if len(path) >= 2: d.line([canvas(p) for p in path], fill=3, width=2)
         for path in ink + ([extra_ink] if extra_ink else []):
-            if len(path) >= 2: d.line([bed(p) for p in path], fill=2, width=2)
+            if len(path) >= 2: d.line([bed(p) for p in path], fill=1, width=2)
         hx, hy = head
-        d.ellipse((hx - 4, hy - 4, hx + 4, hy + 4), fill=0, outline=1, width=2)
+        d.ellipse((hx - 4, hy - 4, hx + 4, hy + 4), fill=0, outline=3, width=2)
         d.line((303, 101, 311, 109), fill=2, width=1)
         d.line((303, 109, 311, 101), fill=2, width=1)
         d.text((18, 324), message, font=FONT, fill=1)
         d.text((18, 353), f'Screen: {len(screen)}/3   Paper: {completed}/3', font=SMALL, fill=3)
         d.text((18, 377), 'driver.session(prepare)' if sequential else 'driver.run(plan)', font=SMALL, fill=2)
+        im = im.resize((300, 200), Image.Resampling.NEAREST).resize((600, 400), Image.Resampling.NEAREST)
         frames.append((im, duration))
 
     def move(destination, message):

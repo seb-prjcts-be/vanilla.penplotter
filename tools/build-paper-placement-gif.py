@@ -3,7 +3,18 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 OUT=Path(__file__).resolve().parents[1]/'docs/images/animations/paper-placement.gif'
 font=ImageFont.load_default(size=10)
-palette=[0,0,0,85,255,255,255,85,255,255,255,255,255,85,85]+[0]*(768-15)
+palette=[36,27,24,143,170,160,197,140,85,233,217,189,233,217,189]+[0]*(768-15)
+def finish(im):
+    panel=Image.new('P',(405,270),0)
+    panel.putpalette(im.getpalette())
+    panel.paste(im,(42,28))
+    d=ImageDraw.Draw(panel)
+    label=ImageFont.load_default(size=8)
+    d.text((12,4), 'VANILLA.PENPLOTTER',font=label,fill=3)
+    d.text((12,14), 'PAPER AND POSITION',font=label,fill=2)
+    d.line((12,24,392,24),fill=1)
+    return panel.resize((810,540),Image.Resampling.NEAREST)
+
 frames=[]
 for tick in range(4):
  im=Image.new('P',(320,240),0); im.putpalette(palette); d=ImageDraw.Draw(im)
@@ -15,8 +26,8 @@ for tick in range(4):
  # 400 x 250 canvas, width 80 mm: 80 along X, 50 across Y.
  d.line((187,177,187,157),fill=2)
  d.rectangle((181,176,188,189),fill=0,outline=2)
- d.line((181,181,187,187),fill=4 if tick%2==0 else 3)
- d.line((181,187,187,181),fill=4 if tick%2==0 else 3)
+ d.line((181,181,187,187),fill=3)
+ d.line((181,187,187,181),fill=3)
  d.line((310,178,310,40),fill=1); d.line((310,40,307,46),fill=1); d.line((310,40,313,46),fill=1)
  d.text((301,22),'X',font=font,fill=1)
  d.line((191,205,283,205),fill=1); d.line((283,205,277,202),fill=1); d.line((283,205,277,208),fill=1)
@@ -26,5 +37,5 @@ for tick in range(4):
  d.line((105,45,166,45,184,55),fill=1)
  d.line((125,88,158,88,187,157),fill=2)
  d.line((116,161,152,161,181,183),fill=4)
- frames.append(im.resize((640,480),Image.Resampling.NEAREST))
+ frames.append(finish(im))
 frames[0].save(OUT,save_all=True,append_images=frames[1:],duration=700,loop=0,optimize=False,disposal=2)

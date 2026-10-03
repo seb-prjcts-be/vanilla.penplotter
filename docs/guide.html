@@ -49,7 +49,7 @@ const plot = new PlotterEngine({
 <p>Use the format and orientation of your paper. The line stays 80 mm long, near the paper corner.</p>
 <h3>Place it on the machine</h3>
 <p>In an example's pen panel, X and Y locate the paper corner from the machine origin. Set both to zero when those corners coincide. Use the paper already on your machine.</p>
-<figure><img src="images/animations/paper-placement.gif" width="640" height="480" style="max-width:100%;height:auto;image-rendering:pixelated" alt="CGA plotter with A2 paper, an 80 mm line near the paper corner, X along the rails and Y across the bed."></figure>
+<figure><img src="images/animations/paper-placement.gif?v=vanilla-20261003" width="810" height="540" style="max-width:100%;height:auto;image-rendering:pixelated" alt="Pixel drawing of the plotter with A2 paper, an 80 mm line near the paper corner, X along the rails and Y across the bed."></figure>
 <p>In my setup, X runs up the long rails and Y across to the right. The bed preview shows X to the right and Y down. The <a href="setup.html#machine-origin">machine origin</a> is the same point in both views.</p>
 <p>The panel's <strong>Turn on the bed</strong> rotates the paper and drawing together. Check the preview against the actual sheet. Changing the format keeps stroke lengths; turning or changing X/Y changes where they land. Export links keep the original drawing coordinates.</p>
 <details><summary>Place a plan in your own code</summary>
@@ -75,8 +75,8 @@ Renderer.drawBed(canvas.getContext("2d"), placed, {
     </figure>
 <h2 id="werkwijzen">4. Two ways to work</h2>
 <div class="workflow-pair">
-<figure><h3>Draw everything, then plot</h3><img src="images/animations/workflow-draw-then-plot.gif" width="600" height="400" alt="All shapes are prepared before the pen draws them."><figcaption>Add the shapes to one engine and plot its plan with <code>driver.run()</code>. Use <code>strategy: "drawn"</code> to keep their drawing order.</figcaption></figure>
-<figure><h3>Draw one object, plot it, then the next</h3><img src="images/animations/workflow-object-by-object.gif" width="600" height="400" alt="Each object is prepared after the previous object has finished plotting."><figcaption>Use <code>driver.session()</code>. Make one object, await <code>session.run()</code>, then make the next. The pen returns home after the last object.</figcaption></figure>
+<figure><h3>Draw everything, then plot</h3><img src="images/animations/workflow-draw-then-plot.gif?v=vanilla-20261003" width="600" height="400" alt="All shapes are prepared before the pen draws them."><figcaption>Add the shapes to one engine and plot its plan with <code>driver.run()</code>. Use <code>strategy: "drawn"</code> to keep their drawing order.</figcaption></figure>
+<figure><h3>Draw one object, plot it, then the next</h3><img src="images/animations/workflow-object-by-object.gif?v=vanilla-20261003" width="600" height="400" alt="Each object is prepared after the previous object has finished plotting."><figcaption>Use <code>driver.session()</code>. Make one object, await <code>session.run()</code>, then make the next. The pen returns home after the last object.</figcaption></figure>
 </div>
 <p>An engine keeps its drawing after a plot. Running its plan again draws the same strokes again. Start a new engine for each new object to keep earlier strokes out of that object's plan. Ink remains on the paper.</p>
 <h3>Three lines, one at a time</h3>
