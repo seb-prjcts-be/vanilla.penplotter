@@ -2,7 +2,7 @@
 
 ## Draw first, then plot
 
-Both libraries currently build a complete drawing before the pen starts. The planner can choose nearby paths or preserve the order in which you drew them. The chaos game example uses that second option: its dots appear in the game's order, but the whole point set is prepared before plotting.
+Each job is prepared before the pen starts. The planner can choose nearby paths or preserve drawing order. The p5 adapter now also offers `plot.sequence(prepare)`: calculate a small group, plot it, wait for completion, then calculate the next. Its [chaos game](https://seb-prjcts-be.github.io/p5.penplotter/examples/chaos_game/index.html) uses groups of 25 dots and includes a screen demo. Each job returns home; this is successive plotting, not a continuous driver session.
 
 ## The idea
 
