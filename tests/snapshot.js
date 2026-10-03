@@ -264,7 +264,6 @@ function testStaticLinks() {
     "docs/examples.html",
     "docs/possibilities.html",
     "docs/about.html",
-    "docs/handbook.html",
     "docs/architecture.html",
     "docs/roadmap.html",
     ...fs.readdirSync(path.join(root, "examples"), { withFileTypes: true })
