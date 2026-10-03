@@ -1,5 +1,4 @@
-// SVG to pen: the road p5.plotSvg stops at, continued without vpype or
-// Inkscape. Import → fit to a width → optimize → plan → the pen panel.
+// Import supported SVG shapes, fit to a width, preview and plot.
 import { PlotterEngine, Geometry, documentBounds } from "../../vanilla.penplotter.js";
 import { mountPen } from "../pen.js";
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup - vanilla.penplotter</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261003-learning">
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+  <nav id="navbar">
+    <a class="nav-logo" href="../index.html">vanilla.<span>penplotter</span></a>
+    <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
+    <ul class="nav-links">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="setup.html" class="active">Setup</a></li>
+      <li><a href="guide.html">Guide</a></li>
+      <li><a href="examples.html">Examples</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
+    </ul>
+  </nav>
+<main class="page"><header class="page-header"><div class="section-tag">JavaScript plotter engine · v0.3.1</div><h1>Setup</h1></header>
+<h2 id="install">1. Draw a line on screen</h2>
+<p>Save this as <code>index.html</code> and open it through localhost or HTTPS.</p>
+<h3>index.html</h3><pre><code class="language-markup">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;My pen drawing&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="preview" width="600" height="400"&gt;&lt;/canvas&gt;
+  &lt;script type="module"&gt;
+    import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
+
+    const plot = new PlotterEngine({
+      units: "mm", page: { width: 120, height: 80 }
+    });
+    plot.line(12, 12, 92, 12);
+    const canvas = document.getElementById("preview");
+    plot.drawRoute(canvas.getContext("2d"));
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>You should see one line. Its coordinates are in millimetres; its length on paper will be 80 mm.</p>
+<h2 id="plotting">2. Plot a small drawing</h2>
+<p>Use Chrome or Edge. Connect the plotter by USB and switch it on.</p>
+<h3 id="machine-origin">Put the pen at the starting corner</h3>
+<p>On my iDraw HSE / A2, the starting corner is bottom left when the long rails run away from you. With the motors off, move the carriage there. The machine does not find that point automatically.</p>
+<figure><img src="images/animations/setup-plotter.gif" width="640" height="480" style="max-width:100%;height:auto;image-rendering:pixelated" alt="The plotter with its pen at the lower-left starting corner and controller below the arm."></figure>
+<h3>Use the example panel</h3>
+<p>Open the <a href="../examples/direct_plot/index.html">frame and wave</a> example. Its panel supplies the connection and plotting buttons.</p>
+<ol>
+<li>Choose the format of the paper already on the machine. Set X and Y to its corner's distance from the starting point. If needed, turn the sheet in the preview to match its orientation.</li>
+<li>Check that the drawing is on your paper in the bed preview. Changing the paper format keeps the drawing the same size.</li>
+<li>Click <strong>Dry run</strong>. The log should say <code>complete</code>; the machine stays still.</li>
+<li>Click <strong>Connect plotter</strong>, select the port and click Connect.</li>
+<li>Click <strong>Plot</strong> and confirm. The pen draws the frame and wave, then returns to the starting corner.</li>
+</ol>
+<p>The frame should measure 40 × 25 mm. Click <strong>Stop</strong> to stop a plot. After a stop or error, switch off the motors and return the carriage to the starting corner before trying again.</p>
+<p>The driver here is tested on the iDraw HSE / A2. A different machine needs its own checked profile and starting directions.</p>
+<h2 id="troubleshooting">If it does not work</h2>
+<ul>
+<li>No line on screen: check the browser console and whether the import loaded.</li>
+<li>No port list: open the page in Chrome or Edge on HTTPS or localhost.</li>
+<li>The panel refuses the placement: check the paper format, turn and X/Y values against the bed preview.</li>
+</ul>
+<p><a href="guide.html">Continue with the Guide</a>.</p>
+</main>
+  <footer>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p class="footer-sub">MIT License &middot; v0.3.1</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+</body>
+</html>

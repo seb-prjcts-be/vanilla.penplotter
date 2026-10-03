@@ -8,17 +8,17 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261002c">
+  <link rel="stylesheet" href="style.css?v=20261003-learning">
 </head>
 <body>
   <nav id="navbar">
     <a class="nav-logo" href="../index.html">vanilla.<span>penplotter</span></a>
     <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
     <ul class="nav-links">
-      <li><a href="../index.html">Showcase</a></li>
-      <li><a href="examples.html">Examples</a></li>
-      <li><a href="possibilities.html">Possibilities</a></li>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="setup.html">Setup</a></li>
       <li><a href="guide.html">Guide</a></li>
+      <li><a href="examples.html">Examples</a></li>
       <li><a href="architecture.html">Architecture</a></li>
       <li><a href="about.html" class="active">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
@@ -33,22 +33,7 @@
 
     <h2>Why</h2>
     <p>Keeping the drawing and the plotter connection in one browser page seemed useful. The sketch supplies points and pen assignments; the engine makes a plan you can inspect before plotting.</p>
-    <p><code>vanilla.penplotter</code> stores points in layers, with a tool for each layer. It can tidy those paths, choose nearby strokes and estimate how long the drawing will take. You can export the result or run it through the EBB driver. Direct plotting still needs a dry run, a parked carriage and confirmation.</p>
-
-    <h2>Where it stops</h2>
-    <ul>
-      <li><strong>Drawing.</strong> It has polyline primitives, simple fills and a limited SVG importer. Curves are sampled into points; there is no text layout or polygon boolean support. Draw with p5.js, p5.gysin, Paper.js or plain arrays; hand the points over.</li>
-      <li><strong>p5.plotSvg.</strong> <a href="https://github.com/golanlevin/p5.plotSvg">p5.plotSvg</a> captures a p5 sketch as an SVG and covers far more of p5's drawing API. It exports the drawing for use in other software. This engine can import supported SVG paths and basic shapes, plan them and plot them. Check the preview: it does not reproduce every SVG feature.</li>
-      <li><strong>vpype.</strong> <a href="https://vpype.readthedocs.io/">vpype</a> is the mature reference for line sorting, merging and simplification, in Python, on the command line. The optimizer here uses some of those ideas in JavaScript, with fewer options.</li>
-      <li><strong>Other machines.</strong> Direct plotting has been tested on the iDraw HSE / A2. For other machines, you can export SVG, HPGL or G-code and use software configured for your plotter.</li>
-    </ul>
-
-    <h2>The machine</h2>
-    <p>Development and physical tests use an iDraw HSE / A2 with EBB firmware 3.0.2. Its CoreXY axes and 80 steps per millimetre were checked on paper on 2026-09-21. The 594 × 432 mm travel comes from the vendor configuration. There is no automatic homing: park the carriage at the home corner before plotting.</p>
-    <p>The EBB driver checks bed bounds, plans acceleration and handles acknowledgements. On abort or error it attempts to clear motion, lift the pen and release the motors. The example panel can resume after completed strokes of the same drawing; pausing and resuming within a stroke are not implemented.</p>
-
-    <h2>Using p5.js</h2>
-    <p>If you draw in p5.js, <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> records supported p5 shapes as you draw them. Planning and machine code stay in this engine. The adapter checks a minimum core version; that check does not prove every possible version combination.</p>
+    <p>If you draw in p5.js, <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> connects your sketch to this engine.</p>
 
     <h2>How this was made</h2>
     <p>I use AI to help me build bridges to systems I would like to work with. I try to leave room for the joy of coding along the way.</p>
@@ -64,10 +49,9 @@
       <li><a href="https://seb-prjcts-be.github.io/p5.gysin/">p5.gysin</a> and wave samplers: the sister libraries; the first exports SVG whose supported paths can be imported here, the second supplies the numbers the examples draw with.</li>
     </ul>
 
-    <p class="reading-note">The <a href="guide.html">guide</a> explains the API and machine setup; the <a href="architecture.html">architecture</a> describes the pipeline. MIT License. Source and issues on <a href="https://github.com/seb-prjcts-be/vanilla.penplotter">GitHub</a>.</p>
   </main>
   <footer>
-    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
 </body>

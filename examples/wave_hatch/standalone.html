@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>wave hatch</title></head>
+<body>
+  <canvas id="preview" width="600" height="760" style="max-width:100%;height:auto"></canvas>
+  <a id="save" download="wave_hatch.svg">Save SVG</a>
+  <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
+  <script type="module">
+import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
+// Wave hatch — a tonal field: 70 cells, each hatched at a spacing and angle
+// that two vanilla.waves samplers decide. No image, no gradient: only lines.
+
+function createWaveHatch(waves, options = {}) {
+  const columns = options.columns ?? 7;
+  const rows = options.rows ?? 10;
+  const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297, margin: 18 } });
+  const tone = waves.createSampler({ wave: "triangle sine", range: [1.3, 6.5], frequency: 0.19 });
+  const turn = waves.createSampler({ wave: "triangle sine", range: [0, Math.PI], frequency: 0.07 });
+  const cell = 24;
+  const left = (210 - columns * cell) / 2;
+  const top = (297 - rows * cell) / 2;
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const x = left + column * cell;
+      const y = top + row * cell;
+      const square = [
+        { x: x + 1, y: y + 1 },
+        { x: x + cell - 1, y: y + 1 },
+        { x: x + cell - 1, y: y + cell - 1 },
+        { x: x + 1, y: y + cell - 1 }
+      ];
+      // Time never changes: one sample per cell, the sheet is a still.
+      const spacing = tone.sample(column * 1.9 + row * 1.1, 0);
+      const angle = turn.sample(column * 0.8 + row * 2.3, 0);
+      plot.hatch(square, { spacing, angle, metadata: { row, column } });
+    }
+  }
+  plot.optimize({ simplifyTolerance: 0.02 });
+  plot.plan();
+  return plot;
+}
+
+const plot = createWaveHatch(VanillaWaves);
+
+plot.drawRoute(document.getElementById("preview").getContext("2d"), { showTravel: true });
+document.getElementById("save").href = URL.createObjectURL(new Blob([plot.exportSVG()], { type: "image/svg+xml" }));
+  </script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 {
   "version": "0.3.1",
-  "generated": "2026-10-02",
   "schema": "vanilla.penplotter/document@1",
   "plan_schema": "vanilla.penplotter/plan@1",
   "stages": [
@@ -19,6 +18,7 @@
   "examples": [
     "direct_plot",
     "first_job",
+    "object_by_object",
     "route_lab",
     "svg_to_pen",
     "two_pens",

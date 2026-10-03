@@ -275,7 +275,7 @@ export function mountPen(container, options) {
       if (result.status === "complete") clearResume();
       log(`Plot ${result.status} after ${((performance.now() - started) / 1000).toFixed(0)} s.`);
     } catch (error) {
-      log(`Stopped safely: ${error.message}`);
+      log(`Plot stopped: ${error.message}`);
     }
     busy = false;
     lockLinks(container, false);

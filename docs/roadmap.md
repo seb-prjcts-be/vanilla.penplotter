@@ -4,7 +4,7 @@
 
 The current source records polylines in layers, generates simple fills, imports a subset of SVG, cleans up paths and plans a route. It previews the plan and exports SVG, HPGL, G-code and JSON.
 
-Direct plotting uses the EBB driver. Physical tests cover the iDraw HSE / A2 with firmware 3.0.2: axes and scale on 2026-09-21, acceleration and queued low-level moves on 2026-10-01. The examples' pen panel places the sheet, offers a dry run and remembers completed strokes for resuming the same drawing.
+Direct plotting uses the EBB driver. Physical tests cover the iDraw HSE / A2 with firmware 3.0.2: axes and scale on 2026-09-21, acceleration and queued low-level moves on 2026-10-01. The examples' pen panel places the sheet, offers a dry run and remembers completed strokes for resuming the same drawing. A driver session can plot successive objects without returning home between them. Three successive lines were physically tested on 2026-10-03.
 
 The latest tagged releases are core 0.3.1 and p5 adapter 0.2.1. The site's current source also includes the `pen()` and `drawRoute()` aliases and bed preview helpers. These additions are not a new tagged release.
 

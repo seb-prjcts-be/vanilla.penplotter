@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Waves to pen - vanilla.penplotter + vanilla.waves</title>
+  <title>Three lines, one at a time - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../showcase.css?v=20261002b">
+  <link rel="stylesheet" href="../../docs/animations.css">
 </head>
 <body>
   <nav id="navbar">
@@ -23,41 +24,32 @@
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-    <main class="demo-page">
-    <div class="demo-header">
-      <div class="demo-number">vanilla.waves · a still from an animation</div>
-      <h1>Waves to pen</h1>
-      <p>vanilla.waves animates; a plotter draws once. So I stop time: every line is sampled at t = 0, and the 32 rows that would ripple on a screen become one still sheet. That is the whole trick for plotting anything that moves. Pick the moment, then go to the pen.</p>
-    </div>
-    <div class="demo-layout">
-      <div class="demo-code">
-        <div class="code-label">drawing.js</div>
-        <pre><code class="language-javascript" data-src="drawing.js">// loading drawing.js …</code></pre>
-        <div class="code-label">sketch.js</div>
-        <pre><code class="language-javascript" data-src="sketch.js">// loading sketch.js …</code></pre>
-      </div>
-      <div class="demo-right">
-        <div class="demo-canvas"><canvas id="preview" width="640" height="880" aria-label="Preview of 32 wave lines on A4"></canvas></div>
-      <dl>
-      <div><dt>Paths</dt><dd id="paths">—</dd></div>
-      <div><dt>Draw</dt><dd id="draw">—</dd></div>
-      <div><dt>Travel</dt><dd id="travel">—</dd></div>
-      </dl>
-      <p id="status" role="status">Loading vanilla.waves…</p>
-      <div id="pen"></div>
-      </div>
-    </div>
+<main class="demo-page">
+<div class="demo-header"><h1>Three lines, one at a time</h1><p>Calculate a line, plot it and wait before calculating the next. The three lines are 5 mm long. One session returns to the starting corner after the last line.</p></div>
+<div class="demo-layout">
+<div class="demo-code"><div class="code-label">sketch.js</div><pre><code class="language-javascript" data-src="sketch.js">Loading sketch.js...</code></pre></div>
+<div class="demo-right"><div class="demo-canvas"><canvas id="preview" width="600" height="400" aria-label="The three lines appear one at a time."></canvas></div>
+<button id="demo" type="button">Run screen demo</button>
+<p>For a physical plot, enter your paper corner's position from the machine origin. The lines start 12 mm inside that corner. Check that this area is clear.</p>
+<label>Paper X (mm) <input id="paper-x" type="number" value="0" min="0" max="570"></label>
+<label>Paper Y (mm) <input id="paper-y" type="number" value="0" min="0" max="405"></label>
+<p id="status" role="status">Ready for the screen demo.</p>
+<button id="connect" type="button">Connect plotter</button>
+<button id="plot" type="button" disabled>Plot three lines</button>
+<button id="stop" type="button" disabled>Stop</button>
+<p>After a stop or error, park the carriage at the <a href="../../docs/setup.html#machine-origin">machine origin</a> before another plot.</p>
+</div></div>
+<p>The driver session was physically tested with three successive lines on the iDraw HSE / A2. This page uses the same API; the screen demo uses a log connection.</p>
 <details class="copyable-page"><summary>Copy index.html</summary>
-<p>This complete page draws the example on screen and offers an SVG file. Save it as <code>index.html</code> and open it through localhost or HTTPS.</p>
+<p>This complete page includes the screen demo and plotter controls. Save it as <code>index.html</code> and open it through localhost or HTTPS.</p>
 <pre><code class="language-markup" data-src="standalone.html">Loading index.html...</code></pre>
 <a href="standalone.html">Open the single-file example</a>
 </details>
-  </main>
+</main>
   <footer>
     <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>
     <p class="footer-sub">vanilla.penplotter v0.3.1 &nbsp;&middot;&nbsp; iDraw HSE / A2 &nbsp;&middot;&nbsp; EBB 3.0.2</p>
   </footer>
-  <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
   <script type="module" src="sketch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
   <script type="module" src="../code.js"></script>

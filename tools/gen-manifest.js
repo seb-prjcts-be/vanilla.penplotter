@@ -11,7 +11,6 @@ const examples = fs.readdirSync(examplesRoot, { withFileTypes: true })
   .sort();
 const manifest = {
   version: packageData.version,
-  generated: new Date().toISOString().slice(0, 10),
   schema: "vanilla.penplotter/document@1",
   plan_schema: "vanilla.penplotter/plan@1",
   stages: ["Geometry", "Optimizer", "Planner", "Renderer", "Driver"],

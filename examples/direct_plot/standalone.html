@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>frame and wave</title></head>
+<body>
+  <canvas id="preview" width="600" height="760" style="max-width:100%;height:auto"></canvas>
+  <a id="save" download="frame-and-wave.svg">Save SVG</a>
+  <script type="module">
+import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
+const plot = new PlotterEngine({ units: "mm", page: { width: 40, height: 25, margin: 0 } });
+plot.polygon([{ x: 0, y: 0 }, { x: 40, y: 0 }, { x: 40, y: 25 }, { x: 0, y: 25 }]);
+const wave = [];
+for (let x = 3; x <= 37; x += 0.5) {
+  wave.push({ x, y: 12.5 + Math.sin(((x - 3) / 34) * Math.PI * 4) * 8 });
+}
+plot.polyline(wave);
+plot.drawRoute(document.getElementById("preview").getContext("2d"), { showTravel: true });
+document.getElementById("save").href = URL.createObjectURL(new Blob([plot.exportSVG()], { type: "image/svg+xml" }));
+  </script>
+</body>
+</html>

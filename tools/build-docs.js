@@ -102,17 +102,17 @@ export function renderPage(page, markdown) {
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261002c">
+  <link rel="stylesheet" href="style.css?v=20261003-learning">
 </head>
 <body>
   <nav id="navbar">
     <a class="nav-logo" href="../index.html">vanilla.<span>penplotter</span></a>
     <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
     <ul class="nav-links">
-      <li><a href="../index.html">Showcase</a></li>
-      <li><a href="examples.html">Examples</a></li>
-      <li><a href="possibilities.html">Possibilities</a></li>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="setup.html">Setup</a></li>
       <li><a href="guide.html">Guide</a></li>
+      <li><a href="examples.html">Examples</a></li>
       <li><a href="architecture.html"${page.target.endsWith("architecture.html") ? ' class="active"' : ""}>Architecture</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
@@ -127,7 +127,7 @@ export function renderPage(page, markdown) {
 ${content}
   </main>
   <footer>
-    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v${VERSION}</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>

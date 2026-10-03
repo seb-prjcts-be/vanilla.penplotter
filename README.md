@@ -2,15 +2,15 @@
 
 ![From JavaScript geometry to a planned drawing on paper](docs/images/animations/overview.gif)
 
-**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[Possibilities](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/possibilities.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
+**[Open site](https://seb-prjcts-be.github.io/vanilla.penplotter/)** · **[Setup](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/setup.html)** · **[Examples](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/examples.html)** · **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)**
 
 You supply polylines in physical units. This engine can clean up paths, plan the pen’s route, preview it and export files.
 
 Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
 
-## Twee manieren van werken
+## Two ways to work
 
-Alles tekenen, dan plotten: één volledige tekening vormt één job. Of één object tekenen en plotten, wachten tot de job klaar is en daarna een nieuwe opname maken voor het volgende object op hetzelfde papier. Een plot wist de opgenomen geometrie niet automatisch. De [Guide](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/guide.html#werkwijzen) legt beide werkwijzen en hun grenzen uit. Dit zijn opeenvolgende complete jobs; live streaming tijdens een lopende job is nog niet geïmplementeerd.
+Draw everything and run one plan with `driver.run()`. Or use `driver.session()` to draw one object, plot it and wait before making the next. The session retains position between objects and returns home after the last. Start a new engine for each object; plotting does not clear an existing document. The [Guide](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/guide.html#werkwijzen) has a working log example.
 
 ## Which library?
 
@@ -18,7 +18,7 @@ Alles tekenen, dan plotten: één volledige tekening vormt één job. Of één o
 
 **[p5.penplotter](https://github.com/seb-prjcts-be/p5.penplotter)** connects this engine to p5.js. Use it when you want to draw with supported p5 shapes and send them to the pen with `plot.go()`.
 
-The libraries prepare a complete drawing before plotting. Live streaming is not implemented; [live drawing notes](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/live.html) describe the proposed direction.
+Each object is prepared before plotting. Sending new geometry during a moving job is not implemented; [live drawing notes](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/live.html) describe the proposed direction.
 
 **Direct plotting is physically tested on one profile:** iDraw HSE / A2, EBB firmware 3.0.2, over Web Serial in Chrome or Edge. SVG, HPGL and G-code exports need software and settings suited to the receiving machine.
 
@@ -26,15 +26,15 @@ The version field is **0.3.1**. The [architecture](https://seb-prjcts-be.github.
 
 ## Install
 
-The site uses current source. The latest tags are core `v0.3.1` and adapter `v0.2.1`; newer `pen()`, `drawRoute()` and bed preview helpers are available on `main`, not in all tagged builds.
+The examples use the repository source. The import below pins the core used by the guide, including driver sessions. The latest tagged release is `v0.3.1`; it does not contain all later additions.
 
 ```html
 <script type="module">
-  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.3.1/vanilla.penplotter.js";
+  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
 </script>
 ```
 
-The root module imports its own `src/` folder, so load it from somewhere that serves the whole repository: the jsDelivr tag above, GitHub Pages (`https://seb-prjcts-be.github.io/vanilla.penplotter/vanilla.penplotter.js`, always the latest `main`), or a local clone. Pin the tag for anything you want to keep.
+The root module imports its own `src/` folder, so load it from somewhere that serves the whole repository: the jsDelivr source above, GitHub Pages (`https://seb-prjcts-be.github.io/vanilla.penplotter/vanilla.penplotter.js`, always the latest `main`), or a local clone. Keep a source commit or tag pinned for sketches you want to preserve.
 
 ## To the pen
 

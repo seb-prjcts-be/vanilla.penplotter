@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Direct plot - vanilla.penplotter</title>
+  <title>Frame and wave - vanilla.penplotter</title>
   <link rel="icon" href="../../docs/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -15,11 +15,11 @@
     <a class="nav-logo" href="../../index.html">vanilla.<span>penplotter</span></a>
     <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
     <ul class="nav-links">
-      <li><a href="../../index.html">Showcase</a></li>
-      <li><a href="../../docs/examples.html" class="active">Examples</a></li>
-      <li><a href="../../docs/possibilities.html">Possibilities</a></li>
-      <li><a href="../../docs/architecture.html">Architecture</a></li>
+      <li><a href="../../index.html">Home</a></li>
+      <li><a href="../../docs/setup.html">Setup</a></li>
       <li><a href="../../docs/guide.html">Guide</a></li>
+      <li><a href="../../docs/examples.html" class="active">Examples</a></li>
+      <li><a href="../../docs/architecture.html">Architecture</a></li>
       <li><a href="../../docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
@@ -27,8 +27,8 @@
     <main class="demo-page">
     <div class="demo-header">
       <div class="demo-number">The first thing to plot</div>
-      <h1>Direct plot</h1>
-      <p>A 40 by 25 millimetre frame with two waves inside: the drawing I used to check the machine, and the one to try first. Small, quick, and if the frame measures 40 mm on paper, the scale is right. Dry run first if you like; it lists every command without sending one.</p>
+      <h1>Frame and wave</h1>
+      <p>A 40 × 25 mm frame with one wave line inside. Plot it and measure the frame to check the scale.</p>
     </div>
     <div class="demo-layout">
       <div class="demo-code">
@@ -45,11 +45,13 @@
       <div id="pen"></div>
       </div>
     </div>
-    <figure class="doc-animation" id="animation-sheet-placement">
-      <img src="../../docs/images/animations/sheet-placement.gif" width="600" height="400" loading="lazy" alt="A square sheet is placed on the bed and rotated through four quarter-turn positions.">
-      <figcaption>Turn the sheet, not the drawing’s handedness. The animation places a square at 147/66 mm and turns it by quarter turns on the 594 by 432 mm bed. The panel above lets you place your own job. In code, <code>placePlan()</code> transforms machine moves; the original <code>routes</code> remain unchanged.</figcaption>
-    </figure>
 
+
+<details class="copyable-page"><summary>Copy index.html</summary>
+<p>This complete page draws the example on screen and offers an SVG file. Save it as <code>index.html</code> and open it through localhost or HTTPS.</p>
+<pre><code class="language-markup" data-src="standalone.html">Loading index.html...</code></pre>
+<a href="standalone.html">Open the single-file example</a>
+</details>
   </main>
   <footer>
     <p><a href="../../docs/examples.html">&larr; All examples</a> &nbsp;&middot;&nbsp; <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter on GitHub</a></p>

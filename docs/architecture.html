@@ -7,17 +7,17 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261002c">
+  <link rel="stylesheet" href="style.css?v=20261003-learning">
 </head>
 <body>
   <nav id="navbar">
     <a class="nav-logo" href="../index.html">vanilla.<span>penplotter</span></a>
     <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
     <ul class="nav-links">
-      <li><a href="../index.html">Showcase</a></li>
-      <li><a href="examples.html">Examples</a></li>
-      <li><a href="possibilities.html">Possibilities</a></li>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="setup.html">Setup</a></li>
       <li><a href="guide.html">Guide</a></li>
+      <li><a href="examples.html">Examples</a></li>
       <li><a href="architecture.html" class="active">Architecture</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
@@ -29,8 +29,6 @@
       <h1>How vanilla.penplotter works</h1>
       <p class="guide-intro">The current geometry, planner and driver, with their limits.</p>
     </header>
-<h2>Twee werkwijzen</h2>
-<p>Voor een volledige tekening bouw je één document en plot je één plan. Voor object voor object gebruik je per job een nieuw document met dezelfde units en papierplaatsing. De verbinding kan blijven bestaan. Wacht op een voltooide job voordat je de volgende start. Een plan opnieuw uitvoeren tekent dezelfde geometrie opnieuw. Beide werkwijzen gebruiken complete jobs; er is geen live streaming tijdens een lopende job. Zie de <a href="guide.html#werkwijzen">Guide</a> voor de stappen en grenzen.</p>
 <h2>From points to a plan</h2>
 <p>You add lines and polylines in physical units. The engine keeps them in layers, with a tool for each layer. A tool describes a pen's colour and width; it does not choose or load a pen on the machine.</p>
 <p>The pipeline is geometry, optional cleanup, route planning, preview or export, and a separate machine driver. The core uses plain JavaScript objects and ES modules. It does not depend on p5.js.</p>
@@ -55,6 +53,7 @@
 <h2>Direct plotting</h2>
 <p><code>EbbDriver</code> from <code>src/driver/ebb.js</code> compiles a complete plan into commands, checks units and bed bounds, and sends commands through a transport with acknowledgement handling. Motion uses acceleration ramps and corner speeds. Pen-up travel uses timed <code>SM</code> slices; drawing uses <code>LM</code> on supported firmware and timed slices on older firmware.</p>
 <p>Physical tests cover one profile: <strong>iDraw HSE / A2, EBB firmware 3.0.2</strong>. Other profile entries and the generic text transport do not establish support for other machines. A log transport is available for a dry run without hardware.</p>
+<p><code>driver.run()</code> executes one complete plan and returns home. <code>driver.session(prepare, options)</code> keeps carriage position and motor steps between complete plans. Await each <code>session.run(plan)</code> before preparing the next object. It supports one pen and returns home once, after the callback finishes. A stopped or failed session ends without an uncertain return-home move. Simulated tests and the three-line hardware run on 2026-10-03 cover this implementation; see <code>tests/hardware/session-2026-10-03.json</code>.</p>
 <p>The carriage must be parked at home by hand. On abort or error, the driver attempts to stop motion, lift the pen and release the motors. A disconnected or unresponsive machine cannot be guaranteed to receive those commands.</p>
 <p>The examples' pen panel remembers completed strokes in local storage. It can resume the same drawing with <code>skipDraws</code>, after you park the carriage at home again. This is not a pause or a mid-stroke resume. Live streaming and a Node serial transport are not implemented.</p>
 <h2>Machine profiles and compatibility</h2>
@@ -66,9 +65,11 @@
 <h2>Modules and extensions</h2>
 <p>The source separates core data, geometry, optimizer, planner, renderer, driver and plugin registry. Optimizer plugins can register a named function. Registries also exist for effects, renderers and drivers, but those extension points are not yet wired into the facade.</p>
 <p>The <a href="guide.html">guide</a> shows the working API. The <a href="roadmap.html">roadmap</a> keeps proposed work separate from these implemented parts.</p>
+<h2>Pen-lift calibration</h2>
+<p>Omit <code>penLift</code> to retain controller calibration. For a known standard servo, up/down heights are 0-100 control percentages and raise/lower rates are 1-100. These are not millimetres. For example: <code>penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }</code>. Check the installed servo and pen mounting before changing these values.</p>
   </main>
   <footer>
-    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>

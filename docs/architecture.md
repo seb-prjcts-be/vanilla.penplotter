@@ -1,9 +1,5 @@
 # How vanilla.penplotter works
 
-## Twee werkwijzen
-
-Voor een volledige tekening bouw je één document en plot je één plan. Voor object voor object gebruik je per job een nieuw document met dezelfde units en papierplaatsing. De verbinding kan blijven bestaan. Wacht op een voltooide job voordat je de volgende start. Een plan opnieuw uitvoeren tekent dezelfde geometrie opnieuw. Beide werkwijzen gebruiken complete jobs; er is geen live streaming tijdens een lopende job. Zie de [Guide](guide.html#werkwijzen) voor de stappen en grenzen.
-
 ## From points to a plan
 
 You add lines and polylines in physical units. The engine keeps them in layers, with a tool for each layer. A tool describes a pen's colour and width; it does not choose or load a pen on the machine.
@@ -52,6 +48,8 @@ The shared example panel can choose an A-format sheet without scaling the geomet
 
 Physical tests cover one profile: **iDraw HSE / A2, EBB firmware 3.0.2**. Other profile entries and the generic text transport do not establish support for other machines. A log transport is available for a dry run without hardware.
 
+`driver.run()` executes one complete plan and returns home. `driver.session(prepare, options)` keeps carriage position and motor steps between complete plans. Await each `session.run(plan)` before preparing the next object. It supports one pen and returns home once, after the callback finishes. A stopped or failed session ends without an uncertain return-home move. Simulated tests and the three-line hardware run on 2026-10-03 cover this implementation; see `tests/hardware/session-2026-10-03.json`.
+
 The carriage must be parked at home by hand. On abort or error, the driver attempts to stop motion, lift the pen and release the motors. A disconnected or unresponsive machine cannot be guaranteed to receive those commands.
 
 The examples' pen panel remembers completed strokes in local storage. It can resume the same drawing with `skipDraws`, after you park the carriage at home again. This is not a pause or a mid-stroke resume. Live streaming and a Node serial transport are not implemented.
@@ -79,3 +77,7 @@ Optional `penLift` configuration translates standard-servo height and rate perce
 The source separates core data, geometry, optimizer, planner, renderer, driver and plugin registry. Optimizer plugins can register a named function. Registries also exist for effects, renderers and drivers, but those extension points are not yet wired into the facade.
 
 The [guide](guide.html) shows the working API. The [roadmap](roadmap.html) keeps proposed work separate from these implemented parts.
+
+## Pen-lift calibration
+
+Omit `penLift` to retain controller calibration. For a known standard servo, up/down heights are 0-100 control percentages and raise/lower rates are 1-100. These are not millimetres. For example: `penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }`. Check the installed servo and pen mounting before changing these values.

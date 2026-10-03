@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SVG drawing</title></head>
+<body>
+  <canvas id="preview" width="600" height="760" style="max-width:100%;height:auto"></canvas>
+  <a id="save" download="drawing.svg">Save SVG</a>
+  <script type="module">
+import { PlotterEngine, Geometry, documentBounds } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
+const SAMPLE = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <g id="frame" transform="translate(20 20)">
+    <rect x="0" y="0" width="360" height="260" fill="none" stroke="#000"/>
+    <path d="M 20 130 C 80 20, 140 240, 200 130 S 320 20, 340 130" fill="none" stroke="#000"/>
+    <path d="M 20 150 Q 110 260 200 150 T 340 150" fill="none" stroke="#000"/>
+    <line x1="20" y1="240" x2="340" y2="240" stroke="#000"/>
+    <circle cx="180" cy="130" r="48" fill="none" stroke="#000"/>
+  </g>
+</svg>`;
+
+const imported = Geometry.importSVG(SAMPLE, { curveSteps: 24, arcSteps: 48 });
+const bounds = documentBounds(imported);
+const width = 120;
+const scale = width / (bounds.maxX - bounds.minX);
+const height = (bounds.maxY - bounds.minY) * scale;
+const matrix = Geometry.Matrix.multiply(
+  Geometry.Matrix.translate(-bounds.minX * scale, -bounds.minY * scale),
+  Geometry.Matrix.scale(scale)
+);
+const fitted = Geometry.transformDocument(imported, matrix);
+const plot = new PlotterEngine({ units: "mm", page: { width, height, margin: 0 } });
+for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;
+plot.optimize({ mergeTolerance: 0.05, duplicateTolerance: 0.01, simplifyTolerance: 0.03 });
+plot.drawRoute(document.getElementById("preview").getContext("2d"), { showTravel: true });
+document.getElementById("save").href = URL.createObjectURL(new Blob([plot.exportSVG()], { type: "image/svg+xml" }));
+  </script>
+</body>
+</html>

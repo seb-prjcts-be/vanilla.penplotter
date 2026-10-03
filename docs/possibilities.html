@@ -8,7 +8,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261002c">
+  <link rel="stylesheet" href="style.css?v=20261003-learning">
   <link rel="stylesheet" href="animations.css">
 </head>
 <body>
@@ -16,152 +16,29 @@
     <a class="nav-logo" href="../index.html">vanilla.<span>penplotter</span></a>
     <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
     <ul class="nav-links">
-      <li><a href="../index.html">Showcase</a></li>
-      <li><a href="examples.html">Examples</a></li>
-      <li><a href="possibilities.html" class="active">Possibilities</a></li>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="setup.html">Setup</a></li>
       <li><a href="guide.html">Guide</a></li>
+      <li><a href="examples.html">Examples</a></li>
       <li><a href="architecture.html">Architecture</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-    <main>
-  <div class="ex-page-header">
-    <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
-    <h1>Possibilities</h1>
-    <p>A pen plotter draws with strokes. Closer lines can make a darker patch; changing the pen changes the marks. The previews below run in the browser, and the animations explain the steps. You can try the examples without a plotter.</p>
-  </div>
-  <section id="tone" class="section section-dark">
-    <div class="section-header">
-      <div class="section-tag">plot.hatch() · plot.crossHatch()</div>
-      <h2>Tone from <span class="accent">lines</span></h2>
-      <p class="section-desc">Closer lines usually make a darker patch. Pen width, ink, paper and angle also affect the tone. Let a wave or another sampler choose spacing per cell, then plot a small swatch to find the range you like.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><canvas data-possibility="tone" width="520" height="220" aria-label="Six squares hatched at decreasing spacing"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">for (const [index, spacing] of [6, 4, 2.6, 1.7, 1.2].entries()) {
-plot.hatch(cell(index), { spacing, angle: Math.PI / 4 });
-}
-plot.crossHatch(cell(5), { spacing: 1.2 });</code></pre>
-<a class="ex-full-link" href="../examples/wave_hatch/index.html">-&gt; full example</a>
-    </div>
-    <figure class="doc-animation" id="animation-hatching">
-      <img src="images/animations/hatching.gif" width="600" height="400" loading="lazy" alt="A filled shape becomes parallel pen strokes.">
-      <figcaption>This dark patch is made of parallel lines. Try halving the spacing in the example above. The patch gets denser, and the pen has more work. Open <a href="../examples/wave_hatch/index.html">wave hatch</a> to let a sampler choose the density.</figcaption>
-    </figure>
-
-  </section>
-
-  <section id="stipple" class="section">
-    <div class="section-header">
-      <div class="section-tag">plot.stipple({ count, minDistance, seed })</div>
-      <h2>Dots with <span class="accent">space</span></h2>
-      <p class="section-desc">A stipple is a short dash. The seeded generator keeps a minimum distance between dash centres and repeats the same placement for the same input. A crowded region can yield fewer dots than requested. Pen width and paper decide how the marks read.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><canvas data-possibility="stipple" width="520" height="220" aria-label="Stippled band with increasing density"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">plot.stipple(band, { count: 900, minDistance: 1.4, seed: 7 });</code></pre>
-    </div>
-  </section>
-
-  <section id="pens" class="section section-dark">
-    <div class="section-header">
-      <div class="section-tag">plot.tool() · plot.layer() · penMap</div>
-      <h2>Pens as <span class="accent">layers</span></h2>
-      <p class="section-desc">A tool describes a pen; a layer names its tool. The planner visits layers in document order and requests a swap when the tool changes. Group layers using the same pen yourself to avoid unnecessary swaps. HPGL pen numbers come from your map, and SVG stores tool metadata per layer.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><canvas data-possibility="pens" width="520" height="220" aria-label="Three-pen composition"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">plot.tool({ id: "blue", color: "#385a86", width: 0.5 });
-plot.layer("sky", { toolId: "blue" });
-plot.exportHPGL({ penMap: { black: 1, blue: 2, red: 3 } });</code></pre>
-<a class="ex-full-link" href="../examples/two_pens/index.html">-&gt; full example</a>
-    </div>
-  </section>
-
-  <section id="route" class="section">
-    <div class="section-header">
-      <div class="section-tag">plot.plan({ strategy: "nearest" })</div>
-      <h2>Planning the <span class="accent">route</span></h2>
-      <p class="section-desc">Left: strokes in their input order, with pen-up travel in red. Right: the same strokes reordered and reversed by a greedy nearest-path planner. This example reduces travel; the strategy does not guarantee the shortest route. Use <code>strategy: "drawn"</code> when order matters.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><canvas data-possibility="route" width="520" height="220" aria-label="The same strokes, planned in input order and in nearest order"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">plot.plan({ strategy: "drawn" }).stats.travelDistance;    // long
-plot.plan({ strategy: "nearest" }).stats.travelDistance;  // short</code></pre>
-<a class="ex-full-link" href="../examples/route_lab/index.html">-&gt; full example</a>
-    </div>
-  </section>
-
-  <section id="import" class="section section-dark">
-    <div class="section-header">
-      <div class="section-tag">Geometry.importSVG() · transformDocument()</div>
-      <h2>Files <span class="accent">in</span></h2>
-      <p class="section-desc">The importer reads SVG paths and basic shapes, including nested transform attributes. Curves become sampled points with fixed step counts. Text, images, CSS, viewBox mapping, clipping and compound fills are not reproduced. Inspect the preview and dimensions before plotting an imported drawing.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><canvas data-possibility="import" width="520" height="220" aria-label="An imported SVG next to its planned version"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">const doc = Geometry.importSVG(svgText, { curveSteps: 24 });
-const fitted = Geometry.transformDocument(doc, Geometry.Matrix.scale(0.3));</code></pre>
-<a class="ex-full-link" href="../examples/svg_to_pen/index.html">-&gt; full example</a>
-    </div>
-  </section>
-
-  <section id="programs" class="section">
-    <div class="section-header">
-      <div class="section-tag">exportHPGL() · exportGCode() · compileEbbPlan()</div>
-      <h2>One plan, several <span class="accent">formats</span></h2>
-      <p class="section-desc">The EBB driver compiles the plan for the tested iDraw. SVG, HPGL and G-code exports provide other routes through software that accepts those formats. Pen commands and tool numbers need to match your setup; an export does not establish direct driver support for that machine.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><pre class="ex-text" data-possibility="programs" aria-label="The same plan as HPGL, G-code and EBB commands"></pre></div>
-<pre class="ex-code-block"><code class="language-javascript">plot.exportHPGL({ unitsPerMm: 40 });
-plot.exportGCode({ penUp: "M5", penDown: "M3 S1000" });
-compileEbbPlan(plot.plan(), { profile: "idraw-hse-a2" }).commands;</code></pre>
-    </div>
-  </section>
-
-  <section id="waves" class="section section-dark">
-    <div class="section-header">
-      <div class="section-tag">any function of x · wave sampling · vanilla.waves</div>
-      <h2>A number in, a line <span class="accent">out</span></h2>
-      <p class="section-desc">You can build a line by sampling a function at successive x positions: <code>Math.sin</code>, a noise function, or a custom sampler. Sample at a fixed time and the animation becomes a sheet; sample at ten times and you have a series.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><canvas data-possibility="waves" width="520" height="220" aria-label="Wave lines sampled at a fixed time"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">for (let x = 20; x <= 190; x += 0.5) {
-points.push({ x, y: 60 + wave(x) });
-}
-plot.polyline(points);</code></pre>
-<a class="ex-full-link" href="../examples/waves_pen/index.html">-&gt; full example</a>
-    </div>
-  </section>
-
-  <section id="series" class="section">
-    <div class="section-header">
-      <div class="section-tag">seeds · new PlotterEngine() per sheet</div>
-      <h2>A <span class="accent">series</span></h2>
-      <p class="section-desc">Keep the same drawing rule and change the seed for each sheet. This example makes four plans and exports four numbered SVG files.</p>
-    </div>
-    <div class="ex-preview">
-      <div class="ex-canvas"><canvas data-possibility="series" width="520" height="220" aria-label="Four variations of one rule, side by side"></canvas></div>
-<pre class="ex-code-block"><code class="language-javascript">for (const seed of [1, 2, 3, 4]) {
-const plot = build(seed);
-download(`sheet-${seed}.svg`, plot.exportSVG());
-}</code></pre>
-    </div>
-  </section>
-  <section class="section" style="padding:3rem 2rem;">
-    <div style="max-width:760px; margin:0 auto;">
-      <p class="reading-note">Everything here runs without hardware. With an iDraw HSE / A2 attached, <a href="../examples/direct_plot/index.html">Direct plot</a> takes any of these plans to paper; the <a href="roadmap.html">roadmap</a> says what the driver still lacks.</p>
-    </div>
-  </section>
-  </main>
+    <main class="page"><header class="page-header"><h1>Drawing techniques</h1></header>
+  <ul>
+  <li id="tone"><a href="guide.html#fills">Hatching and tone</a></li>
+  <li id="stipple"><a href="guide.html#fills">Stipple</a></li>
+  <li id="pens"><a href="guide.html#pens">Pens and layers</a></li>
+  <li id="route"><a href="../examples/route_lab/index.html">Route planning</a></li>
+  <li id="svg"><a href="../examples/svg_to_pen/index.html">SVG import</a></li>
+  <li id="programs"><a href="guide.html#export">File exports</a></li>
+  <li id="waves"><a href="../examples/waves_pen/index.html">Wave lines</a></li>
+  <li id="series"><a href="examples.html#series">Making a series</a></li>
+  </ul></main>
   <footer>
-    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
-  <script type="module" src="possibilities.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>

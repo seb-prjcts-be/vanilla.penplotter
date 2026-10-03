@@ -411,3 +411,12 @@ pre code { white-space: pre; overflow-wrap: normal; }
 
 .token.tag, .token.attr-name { color: #E45649; }
 .token.attr-value { color: #50A14F; }
+
+.workflow-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.5rem; margin:2rem 0; }
+.workflow-pair figure { min-width:0; margin:0; }
+.workflow-pair img { display:block; width:100%; height:auto; }
+.workflow-pair h3 { font-size:1.35rem; }
+details { margin:1.5rem 0; }
+summary { cursor:pointer; margin-bottom:1rem; }
+@media (max-width:620px) { .workflow-pair { grid-template-columns:1fr; } }
+@media (max-width:620px) { .page table { table-layout:fixed; } .page td:first-child { white-space:normal; overflow-wrap:anywhere; } .page th, .page td { overflow-wrap:anywhere; padding-left:.4rem; padding-right:.4rem; } }
