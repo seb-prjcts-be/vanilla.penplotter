@@ -500,7 +500,7 @@ export class EbbDriver {
     }
   }
 
-  // Experimental: tested with simulated transports, not yet on a plotter.
+  // Experimental: one three-line hardware run; see tests/hardware/session-2026-10-03.json.
   async session(prepare, options = {}) {
     if (typeof prepare !== "function") throw new TypeError("session() needs a function.");
     if (options.confirmed !== true) throw new Error("A session requires { confirmed: true }: carriage at home, pen and paper checked.");
