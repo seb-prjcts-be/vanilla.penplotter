@@ -33,7 +33,7 @@
 <pre><code class="language-javascript">plot.circle(60, 40, 15);</code></pre>
 <p>The circle has a radius of 15 mm. Reload to see the line and circle. The engine records shapes; <code>drawRoute()</code> shows their planned route on the canvas.</p>
 <figure class="doc-animation" id="animation-shapes">
-      <img src="images/animations/shapes.gif" width="600" height="400" loading="lazy" alt="Basic shapes are recorded directly in millimetres.">
+      <img src="images/animations/shapes-home-norm.gif" width="600" height="400" loading="lazy" alt="Basic shapes are recorded directly in millimetres.">
       <figcaption>Lines, circles and rectangles become pen paths. <code>circle()</code> takes a radius.</figcaption>
     </figure>
 <h2 id="paper">2. Paper and placement</h2>
@@ -49,7 +49,7 @@ const plot = new PlotterEngine({
 <p>Use the format and orientation of your paper. The line stays 80 mm long, near the paper corner.</p>
 <h3>Place it on the machine</h3>
 <p>In an example's pen panel, X and Y locate the paper corner from the machine origin. Set both to zero when those corners coincide. Use the paper already on your machine.</p>
-<figure><img src="images/animations/paper-placement.gif?v=vanilla-20261003" width="810" height="540" style="max-width:100%;height:auto;image-rendering:pixelated" alt="Pixel drawing of the plotter with A2 paper, an 80 mm line near the paper corner, X along the rails and Y across the bed."></figure>
+<figure style="width:min(100%,600px);margin:1.5rem auto 2rem"><img src="images/animations/paper-placement-home-norm.gif" width="600" height="400" style="display:block;width:100%;height:auto;image-rendering:pixelated" alt="Pixel drawing of the plotter with A2 paper, an 80 mm line near the paper corner, X along the rails and Y across the bed."></figure>
 <p>In my setup, X runs up the long rails and Y across to the right. The bed preview shows X to the right and Y down. The <a href="setup.html#machine-origin">machine origin</a> is the same point in both views.</p>
 <p>The panel's <strong>Turn on the bed</strong> rotates the paper and drawing together. Check the preview against the actual sheet. Changing the format keeps stroke lengths; turning or changing X/Y changes where they land. Export links keep the original drawing coordinates.</p>
 <details><summary>Place a plan in your own code</summary>
@@ -62,7 +62,7 @@ Renderer.drawBed(canvas.getContext("2d"), placed, {
 });</code></pre>
 <p>Enter your paper position in <code>position</code>. The last argument to <code>placePlan()</code> is the turn: 0, 90, 180 or 270 degrees. Use the placed plan for the bed preview and driver; the source drawing stays unchanged.</p>
 <figure class="doc-animation" id="animation-sheet-placement">
-      <img src="images/animations/sheet-placement.gif" width="600" height="400" loading="lazy" alt="A square sheet is placed on the bed and rotated through four quarter-turn positions.">
+      <img src="images/animations/sheet-placement-home-norm.gif" width="600" height="400" loading="lazy" alt="A square sheet is placed on the bed and rotated through four quarter-turn positions.">
       <figcaption>The square sheet turns on the bed with its drawing. <code>placePlan()</code> changes the machine moves; the source drawing stays unchanged.</figcaption>
     </figure>
 </details>
@@ -70,13 +70,13 @@ Renderer.drawBed(canvas.getContext("2d"), placed, {
 <p>The <a href="setup.html#plotting">Setup steps</a> show how to place paper, connect and plot with an example panel. Each example supplies that panel. Its drawing code makes the shapes; the panel handles the machine.</p>
 <p>For your own application, open a Web Serial connection from a button click and pass a checked plan to <code>driver.run()</code>. The <a href="../examples/direct_plot/index.html">frame and wave</a> source shows how the shared panel is attached.</p>
 <figure class="doc-animation" id="animation-screen-to-paper">
-      <img src="images/animations/screen-to-paper.gif" width="600" height="400" loading="lazy" alt="A complete JavaScript drawing is planned and then plotted on paper.">
+      <img src="images/animations/screen-to-paper-home-norm.gif" width="600" height="400" loading="lazy" alt="A complete JavaScript drawing is planned and then plotted on paper.">
       <figcaption>Prepare the drawing, then plot its plan.</figcaption>
     </figure>
 <h2 id="werkwijzen">4. Two ways to work</h2>
 <div class="workflow-pair">
-<figure><h3>Draw everything, then plot</h3><img src="images/animations/workflow-draw-then-plot.gif?v=vanilla-20261003" width="600" height="400" alt="All shapes are prepared before the pen draws them."><figcaption>Add the shapes to one engine and plot its plan with <code>driver.run()</code>. Use <code>strategy: "drawn"</code> to keep their drawing order.</figcaption></figure>
-<figure><h3>Draw one object, plot it, then the next</h3><img src="images/animations/workflow-object-by-object.gif?v=vanilla-20261003" width="600" height="400" alt="Each object is prepared after the previous object has finished plotting."><figcaption>Use <code>driver.session()</code>. Make one object, await <code>session.run()</code>, then make the next. The pen returns home after the last object.</figcaption></figure>
+<figure><h3>Draw everything, then plot</h3><img src="images/animations/workflow-draw-then-plot-home-norm.gif" width="600" height="400" alt="All shapes are prepared before the pen draws them."><figcaption>Add the shapes to one engine and plot its plan with <code>driver.run()</code>. Use <code>strategy: "drawn"</code> to keep their drawing order.</figcaption></figure>
+<figure><h3>Draw one object, plot it, then the next</h3><img src="images/animations/workflow-object-by-object-home-norm.gif" width="600" height="400" alt="Each object is prepared after the previous object has finished plotting."><figcaption>Use <code>driver.session()</code>. Make one object, await <code>session.run()</code>, then make the next. The pen returns home after the last object.</figcaption></figure>
 </div>
 <p>An engine keeps its drawing after a plot. Running its plan again draws the same strokes again. Start a new engine for each new object to keep earlier strokes out of that object's plan. Ink remains on the paper.</p>
 <h3>Three lines, one at a time</h3>
@@ -109,13 +109,13 @@ plot.layer("accents", { toolId: "red" });
 plot.circle(105, 145, 24);</code></pre>
 
     <figure class="doc-animation" id="animation-pens-and-layers">
-      <img src="images/animations/pens-and-layers.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="Two pens draw separate layers and one layer is switched off.">
+      <img src="images/animations/pens-and-layers-home-norm.gif" width="600" height="400" loading="lazy" alt="Two pens draw separate layers and one layer is switched off.">
       <figcaption>Each layer uses its assigned pen. The driver waits for you to change pens. Set a layer’s <code>visible</code> property to <code>false</code> to leave it out of the plan; its paths remain in the document.</figcaption>
     </figure>
 
     <h2 id="fills">Fills</h2>
 <figure class="doc-animation" id="animation-hatching">
-      <img src="images/animations/hatching.gif" width="600" height="400" loading="lazy" alt="A filled shape becomes parallel pen strokes.">
+      <img src="images/animations/hatching-home-norm.gif" width="600" height="400" loading="lazy" alt="A filled shape becomes parallel pen strokes.">
       <figcaption>The patch is made of parallel pen strokes. Smaller spacing puts them closer together.</figcaption>
     </figure>
     <pre><code class="language-javascript">const boundary = [
@@ -137,7 +137,7 @@ plot.stipple(boundary, {
 });</code></pre>
 
     <figure class="doc-animation" id="animation-fills">
-      <img src="images/animations/fills.gif" width="600" height="400" loading="lazy" alt="Hatch, cross-hatch and stipple shown as three different ways to fill a shape with pen strokes.">
+      <img src="images/animations/fills-home-norm.gif" width="600" height="400" loading="lazy" alt="Hatch, cross-hatch and stipple shown as three different ways to fill a shape with pen strokes.">
       <figcaption>A fill becomes pen strokes: hatch in one direction, cross-hatch in two, or tiny dashes for stipple. The spacing changes the density.</figcaption>
     </figure>
 
@@ -163,19 +163,19 @@ console.log(plan.stats);</code></pre>
     <p>After editing the document, export, statistics and preview rebuild stale plans automatically, retaining the previous optimization and planning settings. This also covers edits to returned paths, layers and tools. Document data must remain JSON-serializable.</p>
 
     <figure class="doc-animation" id="animation-route">
-      <img src="images/animations/route.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="Input order beside planned order, with shorter pen-up travel in the planned version.">
+      <img src="images/animations/route-home-norm.gif" width="600" height="400" loading="lazy" alt="Input order beside planned order, with shorter pen-up travel in the planned version.">
       <figcaption>Cream solid lines show the input drawing; sage solid lines show the planned drawing. Ochre dotted lines are moves with the pen raised: they leave no ink. Same drawing, less travel with the pen raised: 2,404 mm becomes 422 mm in this example. </figcaption>
     </figure>
 
     <figure class="doc-animation" id="animation-cleanup">
-      <img src="images/animations/cleanup.gif" width="600" height="400" loading="lazy" alt="The same outline before and after deduplication, merging and simplification.">
+      <img src="images/animations/cleanup-home-norm.gif" width="600" height="400" loading="lazy" alt="The same outline before and after deduplication, merging and simplification.">
       <figcaption>Remove duplicate paths, join touching paths and simplify straight segments. Here, 6 paths with 126 points become 1 path with 6 points. This cleans the geometry before the route is planned.</figcaption>
     </figure>
 
 
 <h2 id="export">Files</h2>
 <figure class="doc-animation" id="animation-svg-files">
-      <img src="images/animations/svg-files.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
+      <img src="images/animations/svg-files-home-norm.gif" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
       <figcaption>Ochre shows imported geometry becoming pen strokes. Sage connectors lead from one plan to SVG, HPGL and G-code.</figcaption>
     </figure>
 <p>Export the current drawing as a string:</p>
