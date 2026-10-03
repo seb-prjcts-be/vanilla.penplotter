@@ -667,6 +667,108 @@ async function testModelPenSetup() {
   assert.deepEqual(invalid.log, ["V"], "invalid pen calibration sends no setup or movement commands");
 }
 
+async function testPersistentSession() {
+  for (const version of ["EBB Firmware Version 3.0.2", "EBB Firmware Version 2.6.0"]) {
+    const transport = createLogTransport({ version });
+    const driver = new EbbDriver({ transport });
+    let retained;
+    const result = await driver.session(async session => {
+      retained = session;
+      for (let i = 0; i < 100; i++) {
+        const x = 100 + i * 0.017;
+        const y = 100 + i * 0.023;
+        const plan = planOf(plot => plot.line(x, y, x + 0.137, y + 0.119));
+        await session.run(plan);
+        const commands = transport.log.filter(cmd => /^(SM|LM),/.test(cmd)).map(cmd => ({ cmd, durationMs: 0 }));
+        const target = mixCoreXY(x + 0.137, y + 0.119, 80);
+        assert.deepEqual(stepTotals(commands), [target.a1 || 0, target.a2 || 0], "each job ends at its absolute step target");
+        assert.deepEqual(session.position, { x: x + 0.137, y: y + 0.119 });
+        assert.equal(transport.log.at(-1), "QM", "physical idle is checked before preparing the next job");
+        assert.ok(!transport.log.includes("EM,0,0"), "motors remain enabled between jobs");
+      }
+    }, { confirmed: true });
+    assert.deepEqual(result, { status: "complete", jobs: 100 });
+    assert.equal(transport.log.filter(cmd => cmd === "EM,1,1").length, 1);
+    assert.equal(transport.log.filter(cmd => cmd === "EM,0,0").length, 1);
+    assert.deepEqual(stepTotals(transport.log.filter(cmd => /^(SM|LM),/.test(cmd)).map(cmd => ({ cmd, durationMs: 0 }))), [0, 0]);
+    await assert.rejects(retained.run(planOf(p => p.line(1, 1, 2, 2))), /ended/);
+  }
+
+  const plan = planOf(p => p.line(10, 10, 11, 11));
+  const transport = createLogTransport();
+  const driver = new EbbDriver({ transport });
+  await assert.rejects(driver.session(() => {}, {}), /confirmed/);
+  assert.equal(transport.log.length, 0);
+  assert.deepEqual(await driver.session(() => {}, { confirmed: true }), { status: "complete", jobs: 0 });
+  assert.equal(transport.log.length, 0, "an empty session sends nothing");
+  await driver.session(async session => {
+    const pending = session.run(plan);
+    await assert.rejects(session.run(plan), /Wait/);
+    await assert.rejects(driver.run(plan, { confirmed: true }), /already running/);
+    await pending;
+  }, { confirmed: true });
+
+  const idleTransport = createLogTransport();
+  const send = idleTransport.send;
+  let releaseIdle;
+  const idle = new Promise(resolve => { releaseIdle = resolve; });
+  let queriedIdle;
+  const queried = new Promise(resolve => { queriedIdle = resolve; });
+  idleTransport.send = async (cmd, options) => {
+    if (cmd === "QM") { queriedIdle(); await idle; }
+    return send(cmd, options);
+  };
+  let preparedNext = false;
+  const operation = new EbbDriver({ transport: idleTransport }).session(async session => {
+    await session.run(plan);
+    preparedNext = true;
+    await session.run(plan);
+  }, { confirmed: true });
+  await queried;
+  assert.equal(preparedNext, false, "an ACK does not complete a job while QM is still pending");
+  releaseIdle();
+  await operation;
+  assert.equal(preparedNext, true);
+
+  const penTransport = createLogTransport();
+  await assert.rejects(new EbbDriver({ transport: penTransport }).session(async session => {
+    await session.run(planOf(p => { p.layer("black", { toolId: "black" }); p.line(10, 10, 11, 11); }));
+    penTransport.log.length = 0;
+    await session.run(planOf(p => { p.layer("red", { toolId: "red" }); p.line(11, 11, 12, 12); }));
+  }, { confirmed: true }), /one pen/);
+  assert.ok(!penTransport.log.some(cmd => /^(SM|LM),/.test(cmd)), "a different pen is rejected before movement");
+
+  const caughtTransport = createLogTransport({ failOn: cmd => cmd.startsWith("LM,") ? "!failed" : null });
+  await assert.rejects(new EbbDriver({ transport: caughtTransport }).session(async session => {
+    try { await session.run(plan); } catch {}
+    await assert.rejects(session.run(plan), /ended/);
+  }, { confirmed: true }), /refused/);
+
+  for (const reason of ["prepare", "bounds", "abort", "transport"]) {
+    const failedTransport = createLogTransport();
+    const failedDriver = new EbbDriver({ transport: failedTransport });
+    let retained;
+    await assert.rejects(failedDriver.session(async session => {
+      retained = session;
+      await session.run(plan);
+      failedTransport.log.length = 0;
+      if (reason === "prepare") throw new Error("prepare failed");
+      if (reason === "abort") failedDriver.abort();
+      if (reason === "transport") {
+        const send = failedTransport.send;
+        failedTransport.send = async (cmd, options) => cmd.startsWith("LM,") ? "!failed" : send(cmd, options);
+      }
+      await session.run(reason === "bounds" ? planOf(p => p.line(600, 1, 601, 2)) : plan);
+    }, { confirmed: true }));
+    const stop = failedTransport.log.lastIndexOf("ES");
+    assert.ok(stop >= 0);
+    assert.ok(!failedTransport.log.slice(stop).some(cmd => /^(SM|LM),/.test(cmd)), "no home motion after a failed session");
+    assert.equal(failedTransport.log.at(-1), "EM,0,0");
+    await assert.rejects(retained.run(plan), /ended/);
+  }
+}
+
+await testPersistentSession();
 await testModelPenSetup();
 testGentleDefaultTravel();
 testCoreXYMixing();

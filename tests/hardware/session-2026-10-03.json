@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-03T10:08:13.504Z",
+  "commit": "ff4db76626d8daa64ba9d9a3ac2d2113abb77d67",
+  "port": "COM3",
+  "version": "EBBv13_and_above EB Firmware Version 3.0.2",
+  "jobs": [
+    {
+      "index": 0,
+      "position": {
+        "x": 205,
+        "y": 180
+      },
+      "steps": [
+        30800,
+        2000
+      ],
+      "result": {
+        "status": "complete",
+        "commands": 551,
+        "durationMs": 14854.68
+      }
+    },
+    {
+      "index": 1,
+      "position": {
+        "x": 212.5,
+        "y": 183
+      },
+      "steps": [
+        31640,
+        2360
+      ],
+      "result": {
+        "status": "complete",
+        "commands": 20,
+        "durationMs": 1592.68
+      }
+    },
+    {
+      "index": 2,
+      "position": {
+        "x": 220,
+        "y": 186
+      },
+      "steps": [
+        32480,
+        2720
+      ],
+      "result": {
+        "status": "complete",
+        "commands": 20,
+        "durationMs": 1592.68
+      }
+    }
+  ],
+  "result": {
+    "status": "complete",
+    "jobs": 3
+  },
+  "finalIdle": "QM,0,0,0,0",
+  "finalSteps": "0,0",
+  "status": "controller-checks-passed",
+  "machine": "iDraw HSE / A2",
+  "transport": "Windows SerialPort on COM3; serialized request/reply bridge",
+  "motorEnableCount": 1,
+  "motorDisableCount": 1,
+  "commandedStepTotals": [
+    0,
+    0
+  ],
+  "visualConfirmation": "User confirmed three short lines on paper and the carriage back at the original physical origin on 2026-10-03.",
+  "limits": "QS reports commanded steps, not independent physical measurements. EM,0,0 resets counters; final QS alone does not prove the home position. No fault or emergency-stop test was performed on hardware."
+}
