@@ -17,7 +17,7 @@
   <link rel="icon" href="docs/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="docs/style.css?v=20261002c">
+  <link rel="stylesheet" href="docs/style.css?v=20261003-learning">
   <link rel="stylesheet" href="docs/home-overview.css">
 </head>
 <body>
@@ -27,10 +27,10 @@
     <a class="nav-logo" href="index.html">vanilla.<span>penplotter</span></a>
     <button class="nav-hamburger" aria-label="Toggle menu" onclick="this.closest('nav').classList.toggle('nav-open')"><span></span><span></span><span></span></button>
     <ul class="nav-links">
-      <li><a href="#hero" class="active">Showcase</a></li>
-      <li><a href="docs/examples.html">Examples</a></li>
-      <li><a href="docs/possibilities.html">Possibilities</a></li>
+      <li><a href="#hero" class="active">Home</a></li>
+      <li><a href="docs/setup.html">Setup</a></li>
       <li><a href="docs/guide.html">Guide</a></li>
+      <li><a href="docs/examples.html">Examples</a></li>
       <li><a href="docs/architecture.html">Architecture</a></li>
       <li><a href="docs/about.html">About</a></li>
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
@@ -42,140 +42,24 @@
     <div class="hero-overlay">
       <div class="hero-text">
         <figure class="home-overview">
-          <img src="docs/images/animations/overview.gif" width="600" height="400" alt="A JavaScript drawing is planned, then sent to a pen plotter after connecting and confirming.">
+          <img src="docs/images/animations/overview.gif?v=20261003" width="640" height="480" style="image-rendering:pixelated" alt="A JavaScript drawing is planned, then sent to a pen plotter after connecting and confirming.">
         </figure>
         <div class="hero-badge">vanilla.penplotter &middot; JavaScript &middot; v0.3.1</div>
-        <h1>A drawing in code, <span class="accent">a pen on paper</span></h1>
-        <p class="hero-sub">Build a drawing from points, or import supported SVG shapes.<br>See the pen’s route and an estimate of how long the drawing will take. Direct plotting is tested on the iDraw HSE / A2.</p>
+        <h1>Plot drawings <span class="accent">with JavaScript</span></h1>
+        <p class="hero-sub">Draw lines in millimetres, inspect the pen’s route and plot from the browser.</p>
         <div class="cta-row">
-          <a href="#try" class="cta-btn">Start with a line and a circle &#8594;</a>
-          <a href="#make" class="cta-btn secondary">See what it draws &#8595;</a>
+          <a href="docs/examples.html" class="cta-btn">Examples &#8594;</a>
+          <a href="docs/setup.html" class="cta-btn secondary">Setup &#8594;</a>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="werkwijzen" class="section">
-    <div class="section-header">
-      <h2>Twee manieren van werken</h2>
-      <p>Alles tekenen en daarna plotten. Of één object tekenen en plotten, wachten tot het klaar is en dan het volgende maken. Zo kun je verder werken op hetzelfde papier.</p>
-    </div>
-    <div style="max-width:760px; margin:0 auto;">
-      <p>Een plot wist de opname niet. Zonder een nieuwe opname plot je ook eerdere objecten opnieuw. Je kiest dus zelf: het hele werk in één job, of afzonderlijke jobs op hetzelfde papier.</p>
-      <p><a href="docs/guide.html#werkwijzen">Lees hoe beide werkwijzen werken en wat er wordt onthouden.</a></p>
-    </div>
-  </section>
-
-  <!-- 1. WHAT YOU CAN MAKE -->
-  <section id="make" class="section section-dark">
-    <div class="section-header">
-      <div class="section-tag">what you can make</div>
-      <h2>Four <span class="accent">drawings</span></h2>
-      <p class="section-desc">Drawn here the way the pen will draw them, the pen in the air in red. Click one to open it.</p>
-    </div>
-    <div class="make-grid">
-      <a class="make-card" href="examples/wave_hatch/index.html"><div class="ex-canvas"><canvas data-example="wave_hatch" width="480" height="600" aria-label="Wave hatch"></canvas></div><p>Ten metres of ink, no grey anywhere.</p></a>
-      <a class="make-card" href="examples/two_pens/index.html"><div class="ex-canvas"><canvas data-example="two_pens" width="480" height="600" aria-label="Two pens"></canvas></div><p>Black first, then red; the machine waits for you once.</p></a>
-      <a class="make-card" href="examples/route_lab/index.html"><div class="ex-canvas"><canvas data-example="route_lab" width="480" height="600" aria-label="Route lab"></canvas></div><p>The same drawing with less pen-up travel.</p></a>
-      <a class="make-card" href="examples/svg_to_pen/index.html"><div class="ex-canvas"><canvas data-example="svg_to_pen" width="480" height="600" aria-label="SVG to pen"></canvas></div><p>A file you already have, on paper.</p></a>
-    </div>
-  </section>
-
-  <!-- 2. TRY IT -->
-  <section id="try" class="section">
-    <div class="section-header">
-      <div class="section-tag">try it</div>
-      <h2>A line and a <span class="accent">circle</span></h2>
-      <p class="section-desc">The drawing needs one import, a page in millimetres and two shapes. The fragment below assumes an HTML canvas and a module script; the Guide provides a complete page.</p>
-    </div>
-    <div style="max-width:760px; margin:0 auto;">
-      <pre class="code-block"><code class="language-javascript">import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@9f19656703c94dc970c0233135cdc9a66cda3f3f/vanilla.penplotter.js";
-
-const plot = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } });
-plot.line(20, 20, 190, 20);
-plot.circle(105, 145, 52);
-
-plot.drawPreview(canvas.getContext("2d"), { showTravel: true });   // the pen's route, red where it travels
-console.log(plot.plan().stats);            // path count, distances and a time estimate</code></pre>
-    </div>
-    <div class="cta-row">
-      <a href="examples/first_job/index.html" class="cta-btn">Open the working example &#8594;</a>
-    </div>
-  </section>
-
-  <!-- 3. CHANGE ONE THING -->
-  <section id="change" class="section section-dark">
-    <div class="section-header">
-      <div class="section-tag">change one thing and look</div>
-      <h2>Things to <span class="accent">try</span></h2>
-      <p class="section-desc">Try adding a hatch, keeping your drawing order or importing a file.</p>
-    </div>
-    <ol class="pipeline-list">
-      <li><span>01</span><strong>add a hatch</strong><p><code>plot.hatch([{ x: 30, y: 200 }, { x: 180, y: 200 }, { x: 180, y: 270 }, { x: 30, y: 270 }], { spacing: 2.4 })</code>: a dark rectangle made of lines. Change <code>2.4</code> to <code>1.2</code> and the lines sit closer together. The patch gets denser and usually takes longer to plot.</p></li>
-      <li><span>02</span><strong>keep your order</strong><p><code>plot.plan({ strategy: "drawn" })</code>: the pen follows the order in which you added the paths. This can take more travel; the chaos game keeps its order on purpose.</p></li>
-      <li><span>03</span><strong>bring a file</strong><p>Try a supported SVG in <a href="examples/svg_to_pen/index.html">SVG to pen</a> and pick a width: the same drawing, from a file.</p></li>
-    </ol>
-  </section>
-
-  <!-- 4. ON PAPER -->
-  <section id="paper" class="section">
-    <div class="section-header">
-      <div class="section-tag">put it on paper</div>
-      <h2>On <span class="accent">paper</span></h2>
-      <p class="section-desc">Every example page has a pen panel: it shows the bed, lets you place and turn the sheet, counts the minutes, and remembers where a stopped plot can resume.</p>
-    </div>
-    <ol class="pipeline-list">
-      <li><span>01</span><strong>Chrome or Edge</strong><p>Connect the plotter by USB. These examples use Web Serial in Chrome or Edge on localhost or HTTPS.</p></li>
-      <li><span>02</span><strong>Home corner</strong><p>Slide the carriage to the home corner by hand, and put the paper down.</p></li>
-      <li><span>03</span><strong>Connect, then Plot</strong><p>Choose the plotter in the list that opens, check the bed drawing, press Plot.</p></li>
-      <li><span>04</span><strong>Stop</strong><p>Stop requests a pen lift and motor release. The panel can resume after the last completed stroke of the same drawing, once you park the carriage at home again.</p></li>
-    </ol>
-    <p class="section-desc" style="max-width:760px; margin:2rem auto 0;">Direct plotting has been tested on an iDraw HSE / A2 with EBB firmware 3.0.2. Without hardware you can preview and export SVG, HPGL or G-code. Those files need software and settings suited to the receiving machine.</p>
-    <div class="cta-row">
-      <a href="examples/direct_plot/index.html" class="cta-btn secondary">Direct plot: a 40 by 25 mm test &#8594;</a>
-    </div>
-  </section>
-
-  <!-- 5. GO FURTHER -->
-  <section id="further" class="section section-dark">
-    <div class="section-header">
-      <div class="section-tag">go further</div>
-      <h2>More to <span class="accent">try</span></h2>
-      <p class="section-desc">Try changing pens, adding tone or exporting a file for another plotter.</p>
-    </div>
-    <ol class="pipeline-list">
-      <li><span>files</span><strong>Files for other plotters</strong><p>The same plan as SVG, HPGL or G-code, for software that accepts those formats; configure it for your machine. <a href="docs/guide.html#animation-svg-files">See the file routes &rarr;</a></p></li>
-      <li><span>pens</span><strong>Two pens</strong><p>Every layer names its pen; the machine stops once per change and waits for you. <a href="examples/two_pens/index.html">Two pens &rarr;</a></p></li>
-      <li><span>tone</span><strong>Tone from lines</strong><p>Hatching, cross-hatching and seeded dots with space between their centres. <a href="docs/possibilities.html">Possibilities &rarr;</a></p></li>
-      <li><span>time</span><strong>Watch it appear</strong><p>The current workflow prepares a whole drawing before plotting. <a href="docs/live.html">Live drawing</a> would accept new strokes while the machine runs; it is proposed work, not an available feature.</p></li>
-    </ol>
-  </section>
-
-  <!-- 6. UNDER THE HOOD -->
-  <section id="hood" class="section" style="text-align:center; padding:4rem 2rem;">
-    <div class="section-header">
-      <div class="section-tag">under the hood</div>
-      <h2>How it <span class="accent">works</span></h2>
-      <p class="section-desc">You give it points in physical units or supported SVG shapes. It can clean up paths, choose nearby strokes, preview the route and estimate how long the drawing will take. The EBB driver sends a complete plan to the tested iDraw HSE / A2. SVG, HPGL, G-code and JSON exports are also available. Plain JavaScript ES modules.</p>
-    </div>
-    <div class="cta-row">
-      <a href="docs/guide.html" class="cta-btn secondary">Guide &#8594;</a>
-      <a href="docs/architecture.html" class="cta-btn secondary">Architecture &#8594;</a>
-      <a href="docs/roadmap.html" class="cta-btn secondary">Roadmap &#8594;</a>
-      <a href="docs/live.html" class="cta-btn secondary">Live drawing &#8594;</a>
-      <a href="https://github.com/seb-prjcts-be/vanilla.penplotter" class="cta-btn secondary" target="_blank">GitHub &#8594;</a>
-    </div>
-    <p class="section-desc" style="margin-top:2.5rem;">Sketching in p5.js? There is a small extension for that: <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a>.</p>
-  </section>
-
   <!-- FOOTER -->
   <footer>
-    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="docs/roadmap.html">Roadmap</a> &middot; <a href="docs/about.html">About</a> &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
+    <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; <a href="docs/roadmap.html">Roadmap</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
     <p class="footer-sub">MIT License &middot; v0.3.1</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
-  <script type="module" src="docs/examples.js"></script>
 </body>
 </html>
