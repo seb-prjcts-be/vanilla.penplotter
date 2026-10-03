@@ -5,7 +5,7 @@
 // 2026-09-21 (firmware EBB 3.0.2) and match axidraw_conf.py of the vendor's
 // iDraw HSE Inkscape extension: motor1 = X + Y, motor2 = X - Y, 80 steps/mm at
 // 16x microstepping, 594 x 432 mm travel. The EBB has no homing: the position
-// of the carriage when run() starts IS the plan origin (0,0), the home corner.
+// of the carriage when run() or session() starts IS the origin (0,0).
 //
 // Motion is planned with acceleration. Every stroke (one pen-down path, or one
 // pen-up travel) gets a speed profile: ramp up from rest, cruise, slow down
@@ -21,6 +21,7 @@ const RATE_SCALE = 2 ** 31; // LM accumulators step when they pass 2^31
 const RATE_MAX = 2 ** 31 - 1;
 const SLICE_S = 0.025; // SM fallback: longest constant-speed slice
 const MIN_PHASE_S = 0.004; // a ramp shorter than this is folded into its neighbour
+const SESSION = Symbol("EBB session state");
 
 export const EBB_PROFILES = Object.freeze({
   "idraw-hse-a2": Object.freeze({
@@ -265,8 +266,9 @@ export function compileEbbPlan(plan, options = {}) {
     for (const [parameter, value] of values) commands.push({ cmd: `SC,${parameter},${value}`, kind: "pen-setup", durationMs: 0 });
   }
   const stats = { drawMm: 0, travelMm: 0, penDowns: 0, durationMs: 0 };
-  const position = { x: 0, y: 0 };
-  const steps = { a1: 0, a2: 0 }; // steps actually commanded so far
+  const session = options[SESSION];
+  const position = { ...(session?.position ?? { x: 0, y: 0 }) };
+  const steps = { ...(session?.steps ?? { a1: 0, a2: 0 }) };
   let penDown = null;
   let drawing = null; // index of the draw move the pen is down for
 
@@ -380,7 +382,7 @@ export function compileEbbPlan(plan, options = {}) {
   };
   const travelTo = (target) => stroke([{ ...position }, target], travelSpeed, travelAcceleration);
 
-  commands.push({ cmd: "EM,1,1", kind: "motors-on", durationMs: 0 });
+  if (!session?.enabled) commands.push({ cmd: "EM,1,1", kind: "motors-on", durationMs: 0 });
   pen(false);
 
   let toolSeen = false;
@@ -415,7 +417,7 @@ export function compileEbbPlan(plan, options = {}) {
   pen(false);
   if (returnHome) travelTo({ x: 0, y: 0 });
   commands.push({ cmd: "", kind: "wait-idle", durationMs: 0 });
-  commands.push({ cmd: "EM,0,0", kind: "motors-off", durationMs: 0 });
+  if (!session || returnHome) commands.push({ cmd: "EM,0,0", kind: "motors-off", durationMs: 0 });
 
   return {
     schema: "vanilla.penplotter/ebb@1",
@@ -426,7 +428,8 @@ export function compileEbbPlan(plan, options = {}) {
     skipDraws,
     commands,
     stats,
-    end: { ...position }
+    end: { ...position },
+    endSteps: { ...steps }
   };
 }
 
@@ -488,10 +491,86 @@ export class EbbDriver {
   }
 
   async run(planOrCompiled, options = {}) {
+    if (this.busy) throw new Error("The EBB driver is already running.");
+    this.busy = true;
+    try {
+      return await this.#runJob(planOrCompiled, options);
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  // Experimental: tested with simulated transports, not yet on a plotter.
+  async session(prepare, options = {}) {
+    if (typeof prepare !== "function") throw new TypeError("session() needs a function.");
+    if (options.confirmed !== true) throw new Error("A session requires { confirmed: true }: carriage at home, pen and paper checked.");
+    if (this.busy) throw new Error("The EBB driver is already running.");
+    this.busy = true;
+    this.aborted = false;
+    const state = { position: { x: 0, y: 0 }, steps: { a1: 0, a2: 0 }, enabled: false };
+    let active = true;
+    let pending = null;
+    let failed = null;
+    let jobs = 0;
+    const session = {
+      get position() { return { ...state.position }; },
+      run: (plan, jobOptions = {}) => {
+        if (!active || failed || this.aborted) return Promise.reject(new Error("This EBB session has ended."));
+        if (pending) return Promise.reject(new Error("Wait for the current session job to finish."));
+        if (plan?.schema === "vanilla.penplotter/ebb@1") return Promise.reject(new Error("Sessions need a PlotPlan, not compiled commands."));
+        pending = this.#runJob(plan, { ...options, ...jobOptions, confirmed: true, returnHome: false, [SESSION]: state })
+          .then(result => {
+            if (result.status !== "complete") failed = new Error("The EBB session was stopped.");
+            else jobs += 1;
+            return result;
+          })
+          .catch(error => { failed = error; throw error; })
+          .finally(() => { pending = null; });
+        pending.catch(() => {});
+        return pending;
+      }
+    };
+    try {
+      await prepare(session);
+      active = false;
+      if (pending) await pending;
+      if (failed) throw failed;
+      if (this.aborted) throw new Error("The EBB session was stopped.");
+      if (state.enabled) {
+        const result = await this.#runJob({ units: "mm", moves: [], options: {} }, {
+          ...options, confirmed: true, returnHome: true, [SESSION]: state
+        });
+        if (result.status !== "complete") throw new Error("The EBB session was stopped while returning home.");
+      }
+      return { status: "complete", jobs };
+    } catch (error) {
+      active = false;
+      this.aborted = true;
+      if (pending) await pending.catch(() => {});
+      await this.safeStop();
+      throw error;
+    } finally {
+      active = false;
+      this.busy = false;
+    }
+  }
+
+  async #runJob(planOrCompiled, options = {}) {
     if (options.confirmed !== true) {
       throw new Error("Direct plotting requires { confirmed: true }: carriage at the home corner, pen and paper checked.");
     }
-    this.aborted = false;
+    if (!options[SESSION]) this.aborted = false;
+    if (this.aborted) return { status: "aborted", commands: 0 };
+    const session = options[SESSION];
+    if (session) {
+      const tools = new Set(planOrCompiled.moves.filter(move => move.type === "draw").map(move => move.toolId));
+      if (session.toolKnown) tools.add(session.toolId);
+      if (tools.size > 1) throw new Error("An EBB session currently supports one pen.");
+      if (tools.size) {
+        session.toolId = tools.values().next().value;
+        session.toolKnown = true;
+      }
+    }
 
     const version = await this.transport.send("V", { timeoutMs: 2000 });
     if (!/EBB/i.test(version)) throw new Error(`The connected device is not an EBB board: "${version}".`);
@@ -555,6 +634,15 @@ export class EbbDriver {
     } catch (error) {
       await this.safeStop();
       throw error;
+    }
+    if (this.aborted) {
+      await this.safeStop();
+      return { status: "aborted", commands: total };
+    }
+    if (options[SESSION]) {
+      options[SESSION].position = { ...compiled.end };
+      options[SESSION].steps = { ...compiled.endSteps };
+      options[SESSION].enabled = options.returnHome === false;
     }
     return { status: "complete", commands: total, durationMs: compiled.stats.durationMs };
   }
