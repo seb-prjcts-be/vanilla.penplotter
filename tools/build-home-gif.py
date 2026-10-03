@@ -2,7 +2,7 @@
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-OUT=Path(__file__).resolve().parents[1]/'docs/images/animations/overview.gif'
+OUT=Path(__file__).resolve().parents[1]/'docs/images/animations/overview-simple.gif'
 FONT=ImageFont.load_default(size=10)
 PALETTE=[0,0,0,85,255,255,255,85,255,255,255,255,255,85,85]+[0]*(768-15)
 frames=[]

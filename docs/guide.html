@@ -32,6 +32,10 @@
 <p>The two points are measured from the drawing's corner, in millimetres. Add another shape before <code>drawRoute()</code>:</p>
 <pre><code class="language-javascript">plot.circle(60, 40, 15);</code></pre>
 <p>The circle has a radius of 15 mm. Reload to see the line and circle. The engine records shapes; <code>drawRoute()</code> shows their planned route on the canvas.</p>
+<figure class="doc-animation" id="animation-shapes">
+      <img src="images/animations/shapes.gif" width="600" height="400" loading="lazy" alt="Basic shapes are recorded directly in millimetres.">
+      <figcaption>Lines, circles and rectangles become pen paths. <code>circle()</code> takes a radius.</figcaption>
+    </figure>
 <h2 id="paper">2. Paper and placement</h2>
 <p>The drawing uses millimetres already. Choosing paper does not resize its strokes.</p>
 <h3>Set the paper format</h3>
@@ -57,10 +61,18 @@ Renderer.drawBed(canvas.getContext("2d"), placed, {
   sheet: { ...position, width: 594, height: 420 }
 });</code></pre>
 <p>Enter your paper position in <code>position</code>. The last argument to <code>placePlan()</code> is the turn: 0, 90, 180 or 270 degrees. Use the placed plan for the bed preview and driver; the source drawing stays unchanged.</p>
+<figure class="doc-animation" id="animation-sheet-placement">
+      <img src="images/animations/sheet-placement.gif" width="600" height="400" loading="lazy" alt="A square sheet is placed on the bed and rotated through four quarter-turn positions.">
+      <figcaption>The square sheet turns on the bed with its drawing. <code>placePlan()</code> changes the machine moves; the source drawing stays unchanged.</figcaption>
+    </figure>
 </details>
 <h2 id="plotting">3. Plot the drawing</h2>
 <p>The <a href="setup.html#plotting">Setup steps</a> show how to place paper, connect and plot with an example panel. Each example supplies that panel. Its drawing code makes the shapes; the panel handles the machine.</p>
 <p>For your own application, open a Web Serial connection from a button click and pass a checked plan to <code>driver.run()</code>. The <a href="../examples/direct_plot/index.html">frame and wave</a> source shows how the shared panel is attached.</p>
+<figure class="doc-animation" id="animation-screen-to-paper">
+      <img src="images/animations/screen-to-paper.gif" width="600" height="400" loading="lazy" alt="A complete JavaScript drawing is planned and then plotted on paper.">
+      <figcaption>Prepare the drawing, then plot its plan.</figcaption>
+    </figure>
 <h2 id="werkwijzen">4. Two ways to work</h2>
 <div class="workflow-pair">
 <figure><h3>Draw everything, then plot</h3><img src="images/animations/workflow-draw-then-plot.gif" width="600" height="400" alt="All shapes are prepared before the pen draws them."><figcaption>Add the shapes to one engine and plot its plan with <code>driver.run()</code>. Use <code>strategy: "drawn"</code> to keep their drawing order.</figcaption></figure>
@@ -102,6 +114,10 @@ plot.circle(105, 145, 24);</code></pre>
     </figure>
 
     <h2 id="fills">Fills</h2>
+<figure class="doc-animation" id="animation-hatching">
+      <img src="images/animations/hatching.gif" width="600" height="400" loading="lazy" alt="A filled shape becomes parallel pen strokes.">
+      <figcaption>The patch is made of parallel pen strokes. Smaller spacing puts them closer together.</figcaption>
+    </figure>
     <pre><code class="language-javascript">const boundary = [
   { x: 30, y: 40 },
   { x: 180, y: 40 },
@@ -158,6 +174,10 @@ console.log(plan.stats);</code></pre>
 
 
 <h2 id="export">Files</h2>
+<figure class="doc-animation" id="animation-svg-files">
+      <img src="images/animations/svg-files.gif?v=20261002-colour" width="600" height="400" loading="lazy" alt="An SVG circle and lightning shape become pen paths and three export formats.">
+      <figcaption>Ochre shows imported geometry becoming pen strokes. Sage connectors lead from one plan to SVG, HPGL and G-code.</figcaption>
+    </figure>
 <p>Export the current drawing as a string:</p>
 <pre><code class="language-javascript">const svg = plot.exportSVG();
 const hpgl = plot.exportHPGL({ unitsPerMm: 40 });
