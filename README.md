@@ -95,7 +95,7 @@ The planner's estimate uses the same speeds, the same ramps and the same pen del
 | direct plotting | iDraw HSE / A2 with EBB firmware 3.0.2 | the only physically tested profile (`idraw-hse-a2`) |
 | examples | wave formulas, vanilla.waves (pinned commit) | examples only; neither library depends on them |
 
-Tested together: `vanilla.penplotter` 0.3.1 with `p5.penplotter` 0.2.1.
+Tested together: `vanilla.penplotter` 0.3.1 with `p5.penplotter` 0.2.2.
 
 Publishing: always `vanilla.penplotter` first, then `p5.penplotter`. The examples of
 `p5.penplotter` load the core as a sibling folder (`../vanilla.penplotter/`), locally under
