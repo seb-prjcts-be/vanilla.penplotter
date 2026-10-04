@@ -25,14 +25,14 @@
   </nav>
   <main class="page">
     <header class="page-header">
-      <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
+      <div class="section-tag">JavaScript plotter engine · v0.4.0</div>
       <h1>Roadmap</h1>
       <p class="guide-intro">Working parts and proposed work.</p>
     </header>
 <h2>Working now</h2>
 <p>The current source records polylines in layers, generates simple fills, imports a subset of SVG, cleans up paths and plans a route. It previews the plan and exports SVG, HPGL, G-code and JSON.</p>
 <p>Direct plotting uses the EBB driver. Physical tests cover the iDraw HSE / A2 with firmware 3.0.2: axes and scale on 2026-09-21, acceleration and queued low-level moves on 2026-10-01. The examples' pen panel places the sheet, offers a dry run and remembers completed strokes for resuming the same drawing. A driver session can plot successive objects without returning home between them. Three successive lines were physically tested on 2026-10-03.</p>
-<p>The latest tagged releases are core 0.3.1 and p5 adapter 0.2.1. The site's current source also includes the <code>pen()</code> and <code>drawRoute()</code> aliases and bed preview helpers. These additions are not a new tagged release.</p>
+<p>Core 0.4.0 includes sessions, paper placement, <code>pen()</code> and <code>drawRoute()</code> aliases, bed preview and the motion-queue timeout fix. The published p5 adapter is 0.2.5; its browser bundle retains the earlier pinned core commit.</p>
 <h2>Proposed next work</h2>
 <ul><li>Pause and resume within a stroke. Completed-stroke resume already exists in the example panel.</li><li>Calibration and hardware tests for additional pen-lift types; standard-servo percentages are already configurable with <code>penLift</code>.</li><li>A Node serial transport for plotting from a script.</li><li>More curve support in the p5 adapter; arcs are already implemented.</li><li><a href="live.html">Live drawing</a>, with a bounded queue and pacing that follows the pen.</li></ul>
 <p>These are directions, not available APIs or release dates.</p>
@@ -43,7 +43,7 @@
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
-    <p class="footer-sub">MIT License &middot; v0.3.1</p>
+    <p class="footer-sub">MIT License &middot; v0.4.0</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>

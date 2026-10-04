@@ -24,7 +24,7 @@
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-<main class="page"><header class="page-header"><div class="section-tag">JavaScript plotter engine · v0.3.1</div><h1>Guide</h1></header>
+<main class="page"><header class="page-header"><div class="section-tag">JavaScript plotter engine · v0.4.0</div><h1>Guide</h1></header>
 <nav aria-label="On this page"><p><a href="#start">Line</a> · <a href="#paper">Paper</a> · <a href="#plotting">Plot</a> · <a href="#werkwijzen">Two ways</a> · <a href="#pens">Pens</a> · <a href="#fills">Fills</a> · <a href="#planning">Planning</a> · <a href="#export">Files</a> · <a href="#reference">Reference</a></p></nav>
 <h2 id="start">1. Draw a line</h2>
 <p>Use the page from <a href="setup.html">Setup</a>. Its drawing starts with:</p>
@@ -40,7 +40,7 @@
 <p>The drawing uses millimetres already. Choosing paper does not resize its strokes.</p>
 <h3>Set the paper format</h3>
 <p>Add <code>paperSize</code> to the import and replace the engine declaration:</p>
-<pre><code class="language-javascript">import { PlotterEngine, paperSize } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
+<pre><code class="language-javascript">import { PlotterEngine, paperSize } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.4.0/vanilla.penplotter.js";
 
 const plot = new PlotterEngine({
   units: "mm",
@@ -81,7 +81,7 @@ Renderer.drawBed(canvas.getContext("2d"), placed, {
 <p>An engine keeps its drawing after a plot. Running its plan again draws the same strokes again. Start a new engine for each new object to keep earlier strokes out of that object's plan. Ink remains on the paper.</p>
 <h3>Three lines, one at a time</h3>
 <p>Add this to the Setup module. It uses a log connection, so the machine stays still:</p>
-<pre><code class="language-javascript">import { EbbDriver, createLogTransport } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/src/driver/ebb.js";
+<pre><code class="language-javascript">import { EbbDriver, createLogTransport } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.4.0/src/driver/ebb.js";
 
 const driver = new EbbDriver({
   transport: createLogTransport(), profile: "idraw-hse-a2"
@@ -202,7 +202,7 @@ const gcode = plot.exportGCode({ penUp: "M5", penDown: "M3 S1000" });</code></pr
 </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
-    <p class="footer-sub">MIT License &middot; v0.3.1</p>
+    <p class="footer-sub">MIT License &middot; v0.4.0</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>

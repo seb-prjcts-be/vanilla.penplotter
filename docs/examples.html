@@ -26,7 +26,7 @@
   </nav>
     <main>
   <div class="ex-page-header">
-    <div class="section-tag">JavaScript plotter engine · v0.3.1</div>
+    <div class="section-tag">JavaScript plotter engine · v0.4.0</div>
     <h1>Examples</h1>
     <p>Open a drawing for its source and plotting controls. Use <a href="setup.html">Setup</a> to begin with your own page.</p>
   </div>
@@ -107,7 +107,7 @@
       <div class="ex-canvas"><canvas data-example="svg_to_pen" width="480" height="600" aria-label="SVG to pen preview"></canvas></div>
 <a class="ex-full-link" href="../examples/svg_to_pen/index.html">-&gt; full example</a>
     </div>
-  </section><section id="series" class="section"><div style="max-width:760px;margin:auto"><details><summary>Make a series</summary><p>Replace the module contents in the <a href="setup.html">Setup page</a> with this code. It makes four stippled drawings with different seeds and adds four SVG download links.</p><pre><code class="language-javascript">import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
+  </section><section id="series" class="section"><div style="max-width:760px;margin:auto"><details><summary>Make a series</summary><p>Replace the module contents in the <a href="setup.html">Setup page</a> with this code. It makes four stippled drawings with different seeds and adds four SVG download links.</p><pre><code class="language-javascript">import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.4.0/vanilla.penplotter.js";
 
 for (let seed = 1; seed &lt;= 4; seed += 1) {
   const plot = new PlotterEngine({ units: "mm", page: { width: 120, height: 80 } });
@@ -123,7 +123,7 @@ for (let seed = 1; seed &lt;= 4; seed += 1) {
   </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
-    <p class="footer-sub">MIT License &middot; v0.3.1</p>
+    <p class="footer-sub">MIT License &middot; v0.4.0</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js"></script>
   <script type="module" src="examples.js"></script>

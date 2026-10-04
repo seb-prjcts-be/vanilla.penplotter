@@ -22,15 +22,15 @@ Each object is prepared before plotting. Sending new geometry during a moving jo
 
 **Direct plotting is physically tested on one profile:** iDraw HSE / A2, EBB firmware 3.0.2, over Web Serial in Chrome or Edge. SVG, HPGL and G-code exports need software and settings suited to the receiving machine.
 
-The version field is **0.3.1**. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) describes the current implementation. Proposed work is on the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html).
+The current release is **0.4.0**. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) describes the current implementation. Proposed work is on the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html).
 
 ## Install
 
-The examples use the repository source. The import below pins the core used by the guide, including driver sessions. The latest tagged release is `v0.3.1`; it does not contain all later additions.
+The examples use the repository source. The import below pins release `v0.4.0`, including driver sessions, paper placement, bed preview and the motion-queue timeout fix.
 
 ```html
 <script type="module">
-  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
+  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.4.0/vanilla.penplotter.js";
 </script>
 ```
 
@@ -95,12 +95,9 @@ The planner's estimate uses the same speeds, the same ramps and the same pen del
 | direct plotting | iDraw HSE / A2 with EBB firmware 3.0.2 | the only physically tested profile (`idraw-hse-a2`) |
 | examples | wave formulas, vanilla.waves (pinned commit) | examples only; neither library depends on them |
 
-Tested together: `vanilla.penplotter` 0.3.1 with `p5.penplotter` 0.2.2.
+The standalone core is version 0.4.0. The published `p5.penplotter` 0.2.5 bundle retains its own pinned core: commit `c72ba7fb8ea60c0ea2d84f7e36dd03d161fbd7c8`, labelled 0.3.1. This release does not change that bundle.
 
-Publishing: always `vanilla.penplotter` first, then `p5.penplotter`. The examples of
-`p5.penplotter` load the core as a sibling folder (`../vanilla.penplotter/`), locally under
-`htdocs` and online on GitHub Pages. They therefore always get the latest core, not a
-pinned one; the version check refuses a core below the required minimum.
+The standalone browser imports above use the fixed core release tag. The p5 browser bundle contains its core and driver; it does not fetch the latest standalone core at startup.
 <!-- vereisten:end -->
 
 ## The facade

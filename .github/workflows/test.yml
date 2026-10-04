@@ -14,4 +14,5 @@ jobs:
         with:
           node-version: 22
       - run: npm test
+      - run: npm run test:waves
       - run: npm run docs && npm run manifest && git diff --exit-code -- docs
