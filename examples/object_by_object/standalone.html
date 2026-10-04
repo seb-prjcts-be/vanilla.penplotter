@@ -12,10 +12,14 @@
 <button id="plot" disabled>Plot three lines</button>
 <button id="stop" disabled>Stop</button>
 <script type="module">
-import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/vanilla.penplotter.js";
-import {
-  EbbDriver, createLogTransport, createWebSerialTransport
-} from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378/src/driver/ebb.js";
+const response = await fetch(`https://api.github.com/repos/seb-prjcts-be/vanilla.penplotter/commits/main?t=${Date.now()}`, { cache: "no-store" });
+if (!response.ok) throw new Error(`Cannot resolve vanilla.penplotter/main: HTTP ${response.status}`);
+const { sha } = await response.json();
+if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Invalid vanilla.penplotter commit");
+const core = `https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@${sha}`;
+console.info("penplotter source", { core });
+const { PlotterEngine } = await import(`${core}/vanilla.penplotter.js`);
+const { EbbDriver, createLogTransport, createWebSerialTransport } = await import(`${core}/src/driver/ebb.js`);
 
 const $ = selector => document.querySelector(selector);
 let driver = null;

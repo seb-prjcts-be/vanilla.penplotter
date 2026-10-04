@@ -3,8 +3,16 @@ from pathlib import Path
 import re
 
 ROOT=Path(__file__).resolve().parents[1]
-CDN='https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@4880b41b911ede36b391e2924a4949b27bdb2378'
 WAVES='https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.waves@4fad55570d9dab243e99f40181f12b5aede2c5be/waves-core.js'
+
+def load_core(names):
+    return '''const response = await fetch(`https://api.github.com/repos/seb-prjcts-be/vanilla.penplotter/commits/main?t=${Date.now()}`, { cache: "no-store" });
+if (!response.ok) throw new Error(`Cannot resolve vanilla.penplotter/main: HTTP ${response.status}`);
+const { sha } = await response.json();
+if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Invalid vanilla.penplotter commit");
+const core = `https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@${sha}`;
+console.info("penplotter source", { core });
+const { '''+names+''' } = await import(`${core}/vanilla.penplotter.js`);'''
 
 def source(name,file):
     text=(ROOT/'examples'/name/file).read_text(encoding='utf-8')
@@ -29,7 +37,7 @@ for name,file,call in [
   <canvas id="preview" width="600" height="760" style="max-width:100%;height:auto"></canvas>
   <a id="save" download="{name}.svg">Save SVG</a>
 {wave_script}  <script type="module">
-import {{ PlotterEngine }} from "{CDN}/vanilla.penplotter.js";
+{load_core('PlotterEngine')}
 {body}
 plot.drawRoute(document.getElementById("preview").getContext("2d"), {{ showTravel: true }});
 document.getElementById("save").href = URL.createObjectURL(new Blob([plot.exportSVG()], {{ type: "image/svg+xml" }}));
@@ -43,8 +51,8 @@ document.getElementById("save").href = URL.createObjectURL(new Blob([plot.export
 text=(ROOT/'examples/direct_plot/sketch.js').read_text(encoding='utf-8')
 body=text[text.index('const plot ='):text.index('const plan =')]
 wrapper=wrapper.replace(name.replace('_',' '),'frame and wave').replace(name+'.svg','frame-and-wave.svg')
-start=wrapper.index('import { PlotterEngine }');end=wrapper.index('plot.drawRoute(')
-wrapper=wrapper[:start]+f'import {{ PlotterEngine }} from "{CDN}/vanilla.penplotter.js";\n'+body+wrapper[end:]
+start=wrapper.index('const response =');end=wrapper.index('plot.drawRoute(')
+wrapper=wrapper[:start]+load_core('PlotterEngine')+'\n'+body+wrapper[end:]
 wrapper=re.sub(r'  <script src="[^"]+"></script>\n','',wrapper)
 (ROOT/'examples/direct_plot/standalone.html').write_text(wrapper,encoding='utf-8')
 
@@ -66,12 +74,13 @@ for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;
 plot.optimize({ mergeTolerance: 0.05, duplicateTolerance: 0.01, simplifyTolerance: 0.03 });
 '''
 wrapper=wrapper.replace('frame and wave','SVG drawing').replace('frame-and-wave.svg','drawing.svg')
-start=wrapper.index('import { PlotterEngine }');end=wrapper.index('plot.drawRoute(')
-wrapper=wrapper[:start]+f'import {{ PlotterEngine, Geometry, documentBounds }} from "{CDN}/vanilla.penplotter.js";\n'+body+wrapper[end:]
+start=wrapper.index('const response =');end=wrapper.index('plot.drawRoute(')
+wrapper=wrapper[:start]+load_core('PlotterEngine, Geometry, documentBounds')+'\n'+body+wrapper[end:]
 (ROOT/'examples/svg_to_pen/standalone.html').write_text(wrapper,encoding='utf-8')
 
 session=(ROOT/'examples/object_by_object/sketch.js').read_text(encoding='utf-8')
-session=session.replace('../../vanilla.penplotter.js',CDN+'/vanilla.penplotter.js').replace('../../src/driver/ebb.js',CDN+'/src/driver/ebb.js')
+session=session.replace('import { PlotterEngine } from "../../vanilla.penplotter.js";',load_core('PlotterEngine'))
+session=session.replace('import {\n  EbbDriver, createLogTransport, createWebSerialTransport\n} from "../../src/driver/ebb.js";', 'const { EbbDriver, createLogTransport, createWebSerialTransport } = await import(`${core}/src/driver/ebb.js`);')
 wrapper='''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Three lines, one at a time</title></head>

@@ -590,7 +590,10 @@ export class EbbDriver {
     const total = compiled.commands.length;
     const aheadMs = this.profile.aheadMs ?? 250;
     const inflight = []; // commands sent whose acknowledgement is still to come
-    const recent = []; // durations of the commands that may still be queued on the board
+    // An acknowledgement means queued, not completed. Keep the remaining
+    // motion time even when many short commands follow an acknowledged long
+    // move; a window of the last N commands can forget that move too early.
+    let motionDeadline = performance.now();
     const queuedMs = () => inflight.reduce((sum, item) => sum + item.durationMs, 0);
     const settle = async (keep) => {
       while (inflight.length > keep) await inflight.shift().promise;
@@ -609,7 +612,7 @@ export class EbbDriver {
         } else if (entry.kind === "wait-idle") {
           await settle(0);
           await this.waitIdle();
-          recent.length = 0;
+          motionDeadline = performance.now();
         } else {
           // Commands go out ahead of their acknowledgements, so a run of
           // short moves is never paced by the USB round trip: at least two
@@ -619,9 +622,9 @@ export class EbbDriver {
           // as they are. The EBB acknowledges a command once it is queued;
           // with a full queue that is when the oldest queued move finishes.
           while (inflight.length >= 2 && (inflight.length > depth || queuedMs() >= aheadMs)) await settle(inflight.length - 1);
-          recent.push(entry.durationMs);
-          while (recent.length > depth + 1) recent.shift();
-          const timeoutMs = 5000 + queuedMs() + recent.reduce((sum, ms) => sum + ms, 0);
+          const now = performance.now();
+          motionDeadline = Math.max(now, motionDeadline) + entry.durationMs;
+          const timeoutMs = 5000 + motionDeadline - now;
           const promise = this.ask(entry.cmd, timeoutMs)
             .then(() => (options.onProgress ? options.onProgress(index, total, entry) : undefined));
           promise.catch(() => {}); // reported where it is awaited, never as an unhandled rejection
