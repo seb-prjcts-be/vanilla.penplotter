@@ -24,7 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node tests/snapshot.js && node tests/ebb.js && node tests/ebb-queue.js && node tests/grbl.js && node tests/regressions.js && node tests/version.js",
+    "test": "node tests/snapshot.js && node tests/ebb.js && node tests/ebb-queue.js && node tests/grbl.js && node tests/regressions.js && node tests/version.js && node tests/pen-panel.js",
     "docs": "node tools/build-docs.js",
     "manifest": "node tools/gen-manifest.js",
     "test:waves": "node tests/waves-integration.js tests/fixtures/vanilla-waves-core.js"

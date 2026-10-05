@@ -2,7 +2,7 @@
 //
 // mountPen(container, { getPlot, name, offset }) renders one panel: where the
 // sheet lies on the bed, a dry run, connect, plot, stop, and, as a side door
-// for anyone without an EBB plotter, the same plan as SVG, HPGL or G-code.
+// for other workflows, the same plan as SVG, HPGL or G-code.
 // The example itself only builds geometry; nothing here changes its plan.
 import { millimetersPerUnit, describePaper, paperSize } from "../src/core/model.js";
 import { placePlan } from "../src/planner/index.js";
@@ -11,11 +11,19 @@ import {
   EBB_PROFILES,
   EbbDriver,
   compileEbbPlan,
-  createLogTransport,
-  createWebSerialTransport
+  createLogTransport
 } from "../src/driver/ebb.js";
 
+import { createAutoSerialTransport, detectDriver } from "../src/driver/auto.js";
+import { compileDrawCorePlan } from "../src/driver/grbl.js";
+
 const profile = EBB_PROFILES["idraw-hse-a2"];
+// Settings recorded in tests/hardware/drawcore-a3-h-2026-10-05.json.
+export const DRAWCORE_A3_H = {
+  travel: { width: 420, height: 297 },
+  axes: { swapXY: true, xDirection: -1, yDirection: -1 },
+  penUp: 0.5, penDown: 5, penFeed: 1000, drawFeed: 600, travelFeed: 900
+};
 
 // The plan as it lies on the bed: turned by 0, 90, 180 or 270 degrees around
 // the sheet, then moved so that the sheet's corner lies `offset` mm from
@@ -61,10 +69,10 @@ export function lockLinks(container, on) {
 
 // The bed as the machine sees it: X along the long rail, home in the corner
 // by the board, the sheet where the offsets put it, the drawing inside.
-function drawBed(canvas, plan, offset, placed) {
+function drawBed(canvas, plan, offset, placed, travel = profile.travel) {
   const perUnit = millimetersPerUnit(plan.units);
   renderBed(canvas.getContext("2d"), placed, {
-    bed: profile.travel,
+    bed: travel,
     sheet: { x: offset.x, y: offset.y, width: placed.page.width * perUnit, height: placed.page.height * perUnit }
   });
 }
@@ -84,6 +92,10 @@ export function mountPen(container, options) {
   container.innerHTML = `
     <p class="pen-title">To the pen</p>
     <div class="pen-fields">
+      <label>Machine<select data-pen="machine">
+        <option value="ebb">iDraw HSE / A2 — EBB</option>
+        <option value="drawcore">iDraw A3 H — DrawCore</option>
+      </select></label>
       <label>Paper size<select data-pen="format">
         <option value="drawing">Use the drawing's page</option>
         ${["A0", "A1", "A2", "A3", "A4", "A5", "A6"].map((format) => `<option value="${format}">${format}</option>`).join("")}
@@ -104,7 +116,7 @@ export function mountPen(container, options) {
       <div><dt>Paper</dt><dd data-pen="paper">—</dd></div>
       <div><dt>On the bed</dt><dd data-pen="sheet-size">—</dd></div>
       <div><dt>Drawing</dt><dd data-pen="drawing-size">—</dd></div>
-      <div><dt>Bed</dt><dd>594 × 432 mm</dd></div>
+      <div><dt>Bed</dt><dd data-pen="bed-size">594 × 432 mm</dd></div>
       <div><dt>Sheet fit</dt><dd data-pen="sheet-fit">—</dd></div>
       <div><dt>Commands</dt><dd data-pen="commands">—</dd></div>
       <div><dt>On the machine</dt><dd data-pen="time">—</dd></div>
@@ -114,7 +126,7 @@ export function mountPen(container, options) {
     <button type="button" data-pen="connect">Connect plotter</button>
     <button type="button" data-pen="plot" disabled>Plot</button>
     <button type="button" class="secondary" data-pen="resume" hidden>Resume</button>
-    <button type="button" class="stop" data-pen="stop" disabled>Stop — pen up</button>
+    <button type="button" class="stop" data-pen="stop" disabled>Stop</button>
     <p class="pen-side">Export the drawing at its original page size, before bed placement:
       <a href="#" data-pen="svg">SVG</a>, <a href="#" data-pen="hpgl">HPGL</a> or <a href="#" data-pen="gcode">G-code</a>.</p>
     <div class="pen-log" role="log" aria-live="polite" data-pen="log">Ready.</div>`;
@@ -124,6 +136,8 @@ export function mountPen(container, options) {
   let transport = null;
   let driver = null;
   let busy = false;
+  const isDrawCore = () => $("machine").value === "drawcore";
+  const travel = () => isDrawCore() ? DRAWCORE_A3_H.travel : profile.travel;
 
   // An interrupted plot is remembered per drawing: how many strokes were
   // acknowledged complete, and a signature of the drawing so a changed
@@ -135,7 +149,7 @@ export function mountPen(container, options) {
   const readResume = () => {
     try {
       const record = JSON.parse(localStorage.getItem(RESUME_KEY));
-      return record && compiled && record.signature === signature(compiled) && record.done > 0 && record.done < compiled.draws ? record : null;
+      return !isDrawCore() && record && compiled && record.signature === signature(compiled) && record.done > 0 && record.done < compiled.draws ? record : null;
     } catch {
       return null;
     }
@@ -153,14 +167,15 @@ export function mountPen(container, options) {
     box.scrollTop = box.scrollHeight;
   };
   const buttons = () => {
-    for (const key of ["x", "y", "turn", "format", "center"]) $(key).disabled = busy;
+    for (const key of ["x", "y", "turn", "format", "center", "machine"]) $(key).disabled = busy;
+    $("machine").disabled = busy || Boolean(transport);
     const record = readResume();
-    $("plot").disabled = !transport || !compiled || busy;
+    $("plot").disabled = !driver || !compiled || busy;
     $("connect").disabled = Boolean(transport) || busy;
     $("dry").disabled = !compiled || busy;
     $("stop").disabled = !busy;
     $("resume").hidden = !record;
-    $("resume").disabled = !transport || !compiled || busy;
+    $("resume").disabled = !driver || !compiled || busy;
     if (record) $("resume").textContent = `Resume at stroke ${record.done + 1} of ${compiled.draws}`;
   };
   const toolName = (toolId) => {
@@ -174,6 +189,9 @@ export function mountPen(container, options) {
     offset.y = $("y").value.trim() === "" ? NaN : Number($("y").value);
     turn = Number($("turn").value);
     try {
+      $("bed-size").textContent = `${travel().width} × ${travel().height} mm`;
+      $("x").max = String(travel().width);
+      $("y").max = String(travel().height);
       const onBed = placed();
       const sheet = describePaper(onBed.page, onBed.units);
       const mm = millimetersPerUnit(onBed.units);
@@ -188,19 +206,19 @@ export function mountPen(container, options) {
       const size = (value) => Number(value.toFixed(1));
       $("paper").textContent = `${sheet.format} · ${sheet.orientation}`;
       $("sheet-size").textContent = `${size(sheet.width)} × ${size(sheet.height)} mm (X × Y)`;
-      $("sheet-fit").textContent = offset.x >= 0 && offset.y >= 0 && offset.x + sheet.width <= profile.travel.width && offset.y + sheet.height <= profile.travel.height ? "Inside the bed" : "Paper extends beyond the bed";
+      $("sheet-fit").textContent = offset.x >= 0 && offset.y >= 0 && offset.x + sheet.width <= travel().width && offset.y + sheet.height <= travel().height ? "Inside the bed" : "Paper extends beyond the bed";
       $("drawing-size").textContent = Number.isFinite(minX) ? `${size((maxX - minX) * mm)} × ${size((maxY - minY) * mm)} mm` : "No strokes";
-      drawBed($("bed"), getPlot().plan(), offset, onBed);
-      if (offset.x < 0 || offset.y < 0 || offset.x + sheet.width > profile.travel.width || offset.y + sheet.height > profile.travel.height) {
+      drawBed($("bed"), getPlot().plan(), offset, onBed, travel());
+      if (offset.x < 0 || offset.y < 0 || offset.x + sheet.width > travel().width || offset.y + sheet.height > travel().height) {
         throw new RangeError("Paper extends beyond the bed. Turn it, move it or choose a smaller sheet.");
       }
       if (Number.isFinite(minX) && (minX * mm < offset.x - 1e-6 || minY * mm < offset.y - 1e-6 || maxX * mm > offset.x + sheet.width + 1e-6 || maxY * mm > offset.y + sheet.height + 1e-6)) {
         throw new RangeError("Drawing extends beyond the paper. Choose a larger sheet or reduce the drawing in the sketch.");
       }
-      compiled = compileEbbPlan(onBed, { profile });
-      const seconds = compiled.stats.durationMs / 1000;
+      compiled = isDrawCore() ? compileDrawCorePlan(onBed, DRAWCORE_A3_H) : compileEbbPlan(onBed, { profile });
+      const seconds = isDrawCore() ? null : compiled.stats.durationMs / 1000;
       $("commands").textContent = String(compiled.commands.length);
-      $("time").textContent = `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} s`;
+      $("time").textContent = seconds === null ? "Waits for controller Idle" : `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} s`;
       const record = readResume();
       if (!busy && record) {
         status(`An earlier plot of this drawing stopped after stroke ${record.done} of ${compiled.draws}. Park the carriage at home again and resume, or plot from the start.`);
@@ -209,7 +227,7 @@ export function mountPen(container, options) {
       }
     } catch (error) {
       compiled = null;
-      try { drawBed($("bed"), getPlot().plan(), offset, placed()); } catch { /* the bed can wait */ }
+      try { drawBed($("bed"), getPlot().plan(), offset, placed(), travel()); } catch { /* the bed can wait */ }
       $("commands").textContent = "—";
       $("time").textContent = "—";
       status(`Not plottable as it is: ${error.message}`);
@@ -218,6 +236,11 @@ export function mountPen(container, options) {
   }
 
   async function dryRun() {
+    if (isDrawCore()) {
+      log(`Dry run: ${compiled.commands.length} DrawCore commands, nothing was sent.`);
+      log(`${compiled.commands.slice(0, 6).join("  ")}  …  ${compiled.commands.slice(-3).join("  ")}`);
+      return;
+    }
     const dry = createLogTransport();
     const result = await new EbbDriver({ transport: dry, profile }).run(compiled, {
       confirmed: true,
@@ -229,14 +252,24 @@ export function mountPen(container, options) {
 
   async function connect() {
     status("Waiting for you to pick the plotter in the browser's list…");
+    let candidate = null;
     try {
       const granted = navigator.serial ? await navigator.serial.getPorts() : [];
-      const candidate = createWebSerialTransport(granted[0] ?? null, { filters: [] });
+      candidate = createAutoSerialTransport(granted[0] ?? null);
       await candidate.open();
+      const detected = await detectDriver(candidate, { profile, drawcore: DRAWCORE_A3_H });
+      if (detected.identity.protocol !== $("machine").value) {
+        throw new Error(`Detected ${detected.identity.protocol}. Select the matching machine and reconnect.`);
+      }
       transport = candidate;
-      driver = new EbbDriver({ transport, profile });
-      log(`Connected: ${await transport.send("V")}`);
+      driver = detected;
+      log(`Connected: ${driver.identity.response}`);
+      if (isDrawCore()) log("A3 H: 420 × 297 mm; pen up Z0.5, down Z5. Set XY work origin before plotting. Stop holds motion and may leave the pen down.");
+      refresh();
     } catch (error) {
+      if (candidate) { try { await candidate.close(); } catch {} }
+      transport = null;
+      driver = null;
       log(/No port selected/i.test(error.message)
         ? "No plotter was chosen. If no list appeared at all, open this page in Chrome or Edge itself."
         : `Connect failed: ${error.message}`);
@@ -249,7 +282,7 @@ export function mountPen(container, options) {
   async function run(skipDraws = 0) {
     const ok = window.confirm(
       (skipDraws > 0 ? `Resume at stroke ${skipDraws + 1} of ${compiled.draws}?\n\n` : "Plot now?\n\n") +
-      "• The carriage is parked in the home corner (next to the board)" + (skipDraws > 0 ? ", again, by hand" : "") + ".\n" +
+      (isDrawCore() ? "• XY work origin is set at the parked carriage" : "• The carriage is parked in the home corner (next to the board)") + (skipDraws > 0 ? ", again, by hand" : "") + ".\n" +
       "• Paper is in place and no magnet lies on the drawing or on the way to it.\n" +
       "• Hands are clear of the arm."
     );
@@ -259,7 +292,7 @@ export function mountPen(container, options) {
     lockLinks(container, true);
     const started = performance.now();
     try {
-      const job = skipDraws > 0 ? compileEbbPlan(placed(), { profile, skipDraws }) : compiled;
+      const job = isDrawCore() ? placed() : skipDraws > 0 ? compileEbbPlan(placed(), { profile, skipDraws }) : compiled;
       const result = await driver.run(job, {
         confirmed: true,
         onProgress: (index, total, entry) => {
@@ -282,6 +315,7 @@ export function mountPen(container, options) {
     refresh();
   }
 
+  $("machine").addEventListener("change", refresh);
   $("x").addEventListener("input", refresh);
   $("y").addEventListener("input", refresh);
   $("turn").addEventListener("change", refresh);
@@ -289,12 +323,12 @@ export function mountPen(container, options) {
   $("center").addEventListener("click", () => {
     const plan = getPlot().plan();
     const sheet = describePaper(preparePlacement(plan, { x: 0, y: 0 }, turn, $("format").value).page, plan.units);
-    if (sheet.width > profile.travel.width || sheet.height > profile.travel.height) {
+    if (sheet.width > travel().width || sheet.height > travel().height) {
       status("Paper is larger than the bed in this orientation. Turn it or choose a smaller sheet.");
       return;
     }
-    $("x").value = String(Number(((profile.travel.width - sheet.width) / 2).toFixed(3)));
-    $("y").value = String(Number(((profile.travel.height - sheet.height) / 2).toFixed(3)));
+    $("x").value = String(Number(((travel().width - sheet.width) / 2).toFixed(3)));
+    $("y").value = String(Number(((travel().height - sheet.height) / 2).toFixed(3)));
     refresh();
   });
   $("dry").addEventListener("click", dryRun);
@@ -303,17 +337,17 @@ export function mountPen(container, options) {
   $("resume").addEventListener("click", () => { const record = readResume(); if (record) run(record.done); });
   $("stop").addEventListener("click", () => {
     if (driver) driver.abort();
-    log("Stop requested: pen up, motors off.");
+    log(isDrawCore() ? "Feed-hold requested. The pen may remain down; queued moves may remain paused." : "Stop requested: pen up, motors off.");
   });
   $("svg").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.svg`, getPlot().exportSVG(), "image/svg+xml"); });
   $("hpgl").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.hpgl`, getPlot().exportHPGL(), "text/plain"); });
   $("gcode").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.gcode`, getPlot().exportGCode(), "text/plain"); });
-  // Leaving the page mid-plot: the browser asks first, and if the page goes
-  // anyway the machine gets stop, pen up, motors off in one last write.
+  // Leaving mid-plot requests the connected driver's emergency stop.
+  // DrawCore uses feed-hold; EBB stops, lifts the pen and disables motors.
   window.addEventListener("beforeunload", (event) => {
     if (!busy) return;
     event.preventDefault();
-    event.returnValue = "A plot is running. Leaving stops it with the pen up; you can resume later.";
+    event.returnValue = isDrawCore() ? "A plot is running. Leaving requests feed-hold; the pen may remain down." : "A plot is running. Leaving stops it with the pen up; you can resume later.";
   });
   window.addEventListener("pagehide", () => {
     if (busy && driver) driver.emergencyStop();
