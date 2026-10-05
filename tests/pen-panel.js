@@ -97,3 +97,13 @@ for (const [name, build] of Object.entries(builders)) {
   assert.equal(fields.get('dry').disabled, false, `${name}: ${fields.get('status').textContent}`);
 }
 console.log('Six example compositions and the SVG default bounds fit A4 at the work origin; SVG DOM parsing requires a browser.');
+
+fields.clear(); defaults.x = '0'; defaults.y = '0';
+mountPen(container, { getPlot: () => a4 });
+fields.get('center').handlers.click();
+assert.equal(fields.get('y').value, '67.5', 'centred on the initial EBB bed');
+fields.get('machine').value = 'drawcore'; fields.get('machine').handlers.change();
+assert.equal(fields.get('x').value, '105');
+assert.equal(fields.get('y').value, '0');
+assert.equal(fields.get('dry').disabled, false, fields.get('status').textContent);
+console.log('Paper centred before connection is re-centred on the detected machine bed.');
