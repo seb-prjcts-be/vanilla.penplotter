@@ -454,6 +454,10 @@ export class EbbDriver {
   }
 
   async safeStop() {
+    if (this.transport.faulted && this.transport.stop) {
+      try { await this.transport.stop(); } catch { /* delivery is not guaranteed */ }
+      return;
+    }
     for (const cmd of ["ES", "SP,1", "EM,0,0"]) {
       try {
         await this.transport.send(cmd, { timeoutMs: 2000 });

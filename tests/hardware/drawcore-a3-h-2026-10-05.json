@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-05",
+  "machine": "iDraw / UUNA TEK A3 H (user identified)",
+  "controllerGreeting": "Grbl 1.1h DrawCore V2.09 ['$' for help]",
+  "bundleMetadata": {
+    "version": "0.2.5",
+    "development": true,
+    "coreVersion": "0.3.1",
+    "coreCommit": "c72ba7fb8ea60c0ea2d84f7e36dd03d161fbd7c8"
+  },
+  "evidence": {
+    "log": "drawcore-a3-h-2026-10-05.log",
+    "sha256": "213d612fbfcaf18fafd88b9496f1ab9d83a48448dd80be85555e2637a4121682",
+    "physicalObservation": "User reports all performed tests work. The log records controller responses, not independently measured dimensions.",
+    "sourceIdentity": "Development working-tree changes are not identified by the core commit alone; no tested bundle checksum was supplied."
+  },
+  "settings": {
+    "travel": {
+      "width": 420,
+      "height": 297
+    },
+    "controllerTravel": {
+      "x": 297,
+      "y": 420,
+      "z": 10
+    },
+    "axes": {
+      "swapXY": true,
+      "xDirection": -1,
+      "yDirection": -1
+    },
+    "penUp": 0.5,
+    "penDown": 5,
+    "penFeed": 1000,
+    "drawFeed": 600,
+    "travelFeed": 900
+  },
+  "passed": [
+    {
+      "check": "automatic controller detection",
+      "evidence": "protocol drawcore and reported greeting"
+    },
+    {
+      "check": "10 mm square",
+      "evidence": "four drawing moves; complete commands=16; final Idle at MPos 0,0,0.501"
+    },
+    {
+      "check": "10 mm line",
+      "evidence": "drawing move from X-12 Y-12 to X-12 Y-22; complete commands=13; final Idle at MPos 0,0,0.501"
+    },
+    {
+      "check": "pen lift and lower",
+      "evidence": "Z0.5 and Z5 commands acknowledged; observed Z movement in status reports; user reports working pen operation"
+    },
+    {
+      "check": "explicit XY origin",
+      "evidence": "G92 X0 Y0 acknowledged and subsequent work position zero"
+    },
+    {
+      "check": "1 mm drawing-X pen-up direction test",
+      "evidence": "G1 X0 Y-1 F60 and return; complete commands=8"
+    },
+    {
+      "check": "read-only controller settings",
+      "evidence": "$$ returned configuration including $130=297,$131=420,$132=10"
+    }
+  ],
+  "notEstablishedByLog": [
+    "1 mm drawing-Y direction test as a separate operation",
+    "feed-hold during an active physical move",
+    "behavior after a disconnect, alarm, timeout or restart on hardware",
+    "full-bed travel and independently measured scale accuracy",
+    "large drawings, sessions and automatic resume",
+    "support for other mechanical models or firmware revisions"
+  ]
+}

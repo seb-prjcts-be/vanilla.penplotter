@@ -1,4 +1,6 @@
 export * from "./ebb.js";
+export * from "./grbl.js";
+export * from "./auto.js";
 
 export const MACHINE_PROFILES = Object.freeze({
   "generic-grbl": {
@@ -37,7 +39,7 @@ export const MACHINE_PROFILES = Object.freeze({
     drawSpeed: 35,
     travelSpeed: 80,
     direct: false,
-    note: "Protocol support varies by model. The iDraw HSE / A2 has its own profile; iDraw 2.0 uses a different board and is not supported."
+    note: "Protocol varies by controller. HSE/A2 uses EBB; DrawCore uses its own driver with explicit machine settings."
   },
   "idraw-hse-a2": {
     id: "idraw-hse-a2",

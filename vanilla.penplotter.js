@@ -17,7 +17,7 @@ import {
 import { PluginHost } from "./src/plugins/index.js";
 
 // Adapters such as p5.penplotter read this to refuse a core that is too old.
-export const VERSION = "0.4.0";
+export const VERSION = "0.5.0";
 
 export class PlotterEngine {
   static version = VERSION;

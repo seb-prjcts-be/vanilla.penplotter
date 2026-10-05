@@ -46,7 +46,7 @@ The shared example panel can choose an A-format sheet without scaling the geomet
 
 `EbbDriver` from `src/driver/ebb.js` compiles a complete plan into commands, checks units and bed bounds, and sends commands through a transport with acknowledgement handling. Motion uses acceleration ramps and corner speeds. Pen-up travel uses timed `SM` slices; drawing uses `LM` on supported firmware and timed slices on older firmware.
 
-Physical tests cover one profile: **iDraw HSE / A2, EBB firmware 3.0.2**. Other profile entries and the generic text transport do not establish support for other machines. A log transport is available for a dry run without hardware.
+Physical EBB tests cover one profile: **iDraw HSE / A2, EBB firmware 3.0.2**. Other profile entries and the generic text transport do not establish support for other machines. A log transport is available for a dry run without hardware.
 
 `driver.run()` executes one complete plan and returns home. `driver.session(prepare, options)` keeps carriage position and motor steps between complete plans. Await each `session.run(plan)` before preparing the next object. It supports one pen and returns home once, after the callback finishes. A stopped or failed session ends without an uncertain return-home move. Simulated tests and the three-line hardware run on 2026-10-03 cover this implementation; see `tests/hardware/session-2026-10-03.json`.
 
@@ -62,13 +62,56 @@ The profile records those values under `manufacturerDefaults`. Operating default
 
 Optional `penLift` configuration translates standard-servo height and rate percentages into `SC,4`, `SC,5`, `SC,11` and `SC,12` before the first pen command. Omit it to retain existing controller calibration. A brushless or narrow-band pen lift needs a different calibration; firmware version alone does not identify the installed servo.
 
-| Machine | Evidence and current status |
-|---|---|
-| HSE/A2 | iDraw: physically used here with firmware 3.0.2; the only implemented machine profile. |
-| HSE/A3 | iDraw: likely, since the same vendor extension lists this model. Its bed bounds need a separate profile; no hardware test here. |
-| AxiDraw | V2, V3, V3/A3, SE/A3, SE/A2 and MiniKit with standard pen lift: likely. Their [official configuration](https://github.com/evil-mad/axidraw/blob/master/inkscape%20driver/axidraw_conf.py) uses EBB and the same motor resolution. Each needs its own bounds and pen calibration; no hardware test here. |
-| NextDraw | EBB-based candidate, not ready to use with the iDraw profile. The [migration guide](https://bantam.tools/nd_migrate/) requires model-specific pen lift and homing configuration. |
-| Other EBB | EggBot and WaterColorBot share the [protocol](https://evil-mad.github.io/EggBot/ebb.html), but different mechanics prevent reuse of this CoreXY profile. |
+### Plotters and controller protocols
+
+Paper size and brand do not identify the controller protocol. In particular, an iDraw A3 H with DrawCore is different from an iDraw HSE/A3. The list below records protocol evidence separately from direct plotting support in this library.
+
+| Plotter or controller | Protocol | Evidence and current support |
+|---|---|---|
+| iDraw HSE / A2 | EBB | Physically tested with EBB firmware 3.0.2; implemented profile `idraw-hse-a2`. |
+| iDraw HSE / A3 | EBB candidate | Listed by the same AxiDraw-based vendor extension. Needs confirmed controller identity, separate bed bounds and pen calibration; not physically tested here. |
+| iDraw / UUNA TEK A3 H with DrawCore V2.09 | GRBL / DrawCore | Greeting `Grbl 1.1h DrawCore V2.09`; user-reported physical line, square and pen-up direction tests passed on 2026-10-05. Experimental `DrawCoreDriver`; evidence covers this connected machine, not every A3 H revision. |
+| Other iDraw / UUNA TEK models with a DrawCore controller | GRBL / DrawCore | The [DrawCore utilities](https://github.com/cfloutier/drawcore_plotink/blob/03196436008d3e7c07b78d0ee638420228e1167a/drawcore_motion.py) contain GRBL movement and Z-axis pen commands. Experimental driver requires explicit bounds, pen positions and axis mapping. Confirm the installed controller; do not infer it from the brand. |
+| AxiDraw V2, V3, V3/A3, SE/A3, SE/A2 and MiniKit | EBB | Their [official configuration](https://github.com/evil-mad/axidraw/blob/master/inkscape%20driver/axidraw_conf.py) uses EBB. Each needs its own bounds and pen calibration; not physically tested here. |
+| NextDraw | EBB-based | The [migration guide](https://bantam.tools/nd_migrate/) requires model-specific pen lift and homing configuration. Not ready to use with the iDraw profile. |
+| EggBot and WaterColorBot | EBB | Share the [EBB protocol](https://evil-mad.github.io/EggBot/ebb.html), but different mechanics prevent reuse of this CoreXY profile. Not supported by that profile. |
+| Other GRBL-based plotters | GRBL, with machine-specific pen control | Generic G-code export is available. The `generic-grbl` entry and experimental text sender do not provide a complete acknowledgement-aware GRBL driver. Confirm pen commands, bed bounds and coordinate setup separately. |
+
+The DrawCore utilities by [cfloutier](https://github.com/cfloutier/drawcore_plotink) show pen movement through `G1 G90 Z… F…`, followed by restoration of the XY feed rate. The [extracted iDraw extension configuration](https://github.com/cfloutier/idraw2_internal/blob/ed8bb84f9b34c2cfc6749661f921d25493dfa128/idraw2_0internal/idraw2_0_conf.py) uses Z positions 0.5 for up and 5 for down. These are source defaults, not calibrated values for every machine. These repositories are community extractions of the extension code, not manufacturer confirmation for every model or firmware revision. The generic exporter defaults `M5` and `M3 S1000` are not a verified substitute for DrawCore pen control.
+
+### Controller recognition
+
+`detectDriver()` from `src/driver/auto.js` selects a driver from a read-only identity probe or a startup greeting. An EBB version response identifies the EBB protocol; a DrawCore version response or a greeting containing `Grbl` and `DrawCore` identifies the DrawCore variant. Plain GRBL is recognized but rejected for direct plotting because its pen mechanism is unknown. Unknown responses also fail before movement. No automatic homing, unlock or coordinate reset is performed.
+
+The p5.penplotter 0.3.0 browser bundle uses this selection. Older bundles keep their original drivers.
+
+Protocol recognition alone cannot establish an exact mechanical model, travel bounds, pen heights or homing procedure. Read those from supported controller queries where available, otherwise require an explicit machine configuration. `paper: "A3"` selects paper size, not a controller or plotter model.
+
+### DrawCore
+
+`DrawCoreDriver` compiles physical plans into GRBL commands, validates the entire geometry before sending it, and requires explicit travel bounds, Z pen positions and axis mapping. It supports one pen and `run()`; sessions and automatic resume are not implemented. Drawing and travel feed rates are in mm/min. It queues one acknowledged command at a time and waits for a physical `Idle` report before returning `complete`. Initial status must be `Idle` with a known work position at X0 Y0. The driver never sets that origin itself.
+
+The researched extension maps drawing X to negative GRBL Y and drawing Y to negative GRBL X at its high-resolution setting. Express that as `axes: { swapXY: true, xDirection: -1, yDirection: -1 }`; it remains a machine configuration to verify physically. Bounds are checked in drawing coordinates before this mapping. Source pen defaults and axis directions are not calibration evidence for a particular installed machine.
+
+For p5.penplotter 0.3.0, supply the settings when creating the plot:
+
+```js
+const plot = createPlot({
+  paper: "A3", paperX: 0, paperY: 0, margin: 12,
+  drawcore: {
+    travel: { width: 420, height: 297 },
+    penUp: 0.5, penDown: 5, penFeed: 1000,
+    drawFeed: 600, travelFeed: 900,
+    axes: { swapXY: true, xDirection: -1, yDirection: -1 }
+  }
+});
+```
+
+These settings were used in the user-reported A3 H hardware test on 2026-10-05. The [test record](../tests/hardware/drawcore-a3-h-2026-10-05.json) and [serial log](../tests/hardware/drawcore-a3-h-2026-10-05.log) cover automatic recognition, a 10 mm square and line, Z pen operation, explicit XY-origin setting, a 1 mm pen-up drawing-X test and return to the work origin. The controller reports `Run` during movement and `Idle` before completion; no controller errors appear in the supplied log. The user reports that the performed tests work. Dimensions were not independently measured, and full-bed travel, a separate drawing-Y jog, feed-hold during motion and hardware failure recovery are not established by this log. Controller settings report X travel 297 mm, Y travel 420 mm and Z travel 10 mm; swapping axes gives the 420 × 297 mm drawing bounds above.
+
+Use the existing p5 checkout: `node tools/build-hardware-test.js` produces an isolated development bundle and a local test page in `node_modules/.drawcore-test`. The page provides identity and status checks, a pen-up test, an explicit XY-origin button, 1 mm pen-up direction tests, a 10 mm line/square, feed-hold and downloadable command logs. It includes a single-file HTML variant and local-server instructions; Inkscape is not needed. Development builds are marked in metadata and cannot overwrite the release `dist` directory. A release build still requires the pinned, unchanged core source.
+
+Stopping or an error requests GRBL feed-hold (`!`). Delivery can fail when the connection is lost. Feed-hold may leave the pen down and queued moves suspended; it is not a queue flush or a confirmed pen lift. The driver does not reset, unlock or resume automatically. A timeout or controller restart invalidates the transport; reconnect and inspect the machine before another job.
 
 `EBB_COMPATIBILITY` exposes this research list. It does not create profiles, detect the mechanical model, or grant plotting support. A serial acknowledgement means a command was accepted; it does not confirm physical position. Step counters cannot detect a manually moved carriage or missed steps.
 

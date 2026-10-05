@@ -6,7 +6,7 @@ The current source records polylines in layers, generates simple fills, imports 
 
 Direct plotting uses the EBB driver. Physical tests cover the iDraw HSE / A2 with firmware 3.0.2: axes and scale on 2026-09-21, acceleration and queued low-level moves on 2026-10-01. The examples' pen panel places the sheet, offers a dry run and remembers completed strokes for resuming the same drawing. A driver session can plot successive objects without returning home between them. Three successive lines were physically tested on 2026-10-03.
 
-Core 0.4.0 includes sessions, paper placement, `pen()` and `drawRoute()` aliases, bed preview and the motion-queue timeout fix. The published p5 adapter is 0.2.5; its browser bundle retains the earlier pinned core commit.
+Core 0.5.0 adds DrawCore plotting and automatic controller recognition. Small physical tests on an A3 H with DrawCore V2.09 passed on 2026-10-05. The p5 adapter 0.3.0 includes this core in its browser bundle. DrawCore sessions, automatic resume and physical stop tests remain to be done.
 
 ## Proposed next work
 

@@ -24,7 +24,7 @@
       <li><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">GitHub</a></li>
     </ul>
   </nav>
-<main class="page"><header class="page-header"><div class="section-tag">JavaScript plotter engine · v0.4.0</div><h1>Setup</h1></header>
+<main class="page"><header class="page-header"><div class="section-tag">JavaScript plotter engine · v0.5.0</div><h1>Setup</h1></header>
 <h2 id="install">1. Draw a line on screen</h2>
 <p>Save this as <code>index.html</code> and open it through localhost or HTTPS.</p>
 <h3>index.html</h3><pre><code class="language-markup">&lt;!DOCTYPE html&gt;
@@ -33,7 +33,7 @@
 &lt;body&gt;
   &lt;canvas id="preview" width="600" height="400"&gt;&lt;/canvas&gt;
   &lt;script type="module"&gt;
-    import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.4.0/vanilla.penplotter.js";
+    import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.5.0/vanilla.penplotter.js";
 
     const plot = new PlotterEngine({
       units: "mm", page: { width: 120, height: 80 }
@@ -67,11 +67,14 @@
 <li>No port list: open the page in Chrome or Edge on HTTPS or localhost.</li>
 <li>The panel refuses the placement: check the paper format, turn and X/Y values against the bed preview.</li>
 </ul>
+<h2>A3 H with DrawCore</h2>
+<p>The A3 H tested here uses DrawCore V2.09. Start with the <a href="https://seb-prjcts-be.github.io/p5.penplotter/docs/drawcore-test.html">A3 H test page</a>: connect, read the status and controller settings, then test the pen and the 1 mm moves. It also has a button to set the XY work origin at the carriage's current position.</p>
+<p>The <a href="guide.html#drawcore">DrawCore section in the Guide</a> shows how to use that connection in your own page. The repository example panels use EBB.</p>
 <p><a href="guide.html">Continue with the Guide</a>.</p>
 </main>
   <footer>
     <p><a href="https://github.com/seb-prjcts-be/vanilla.penplotter" target="_blank">vanilla.penplotter</a> &middot; Sebastien Vanblaere &middot; <a href="https://seb-prjcts-be.github.io/p5.penplotter/">p5.penplotter</a> for p5.js</p>
-    <p class="footer-sub">MIT License &middot; v0.4.0</p>
+    <p class="footer-sub">MIT License &middot; v0.5.0</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>

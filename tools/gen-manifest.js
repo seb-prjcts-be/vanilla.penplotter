@@ -16,9 +16,9 @@ const manifest = {
   stages: ["Geometry", "Optimizer", "Planner", "Renderer", "Driver"],
   exports: ["SVG", "HPGL", "G-code", "JSON"],
   examples,
-  drivers: ["SimulationDriver", "WebSerialTextDriver", "EbbDriver"],
-  tested_machines: ["idraw-hse-a2"],
-  hardware_status: "one-tested-ebb-profile-otherwise-simulation-and-export"
+  drivers: ["SimulationDriver", "WebSerialTextDriver", "EbbDriver", "DrawCoreDriver"],
+  tested_machines: ["idraw-hse-a2", "idraw-a3-h-drawcore-v2.09-small-plots"],
+  hardware_status: "ebb-hse-a2-tested-and-drawcore-a3-h-small-plots-tested"
 };
 fs.writeFileSync(
   path.join(root, "docs", "vanilla.penplotter.manifest.json"),

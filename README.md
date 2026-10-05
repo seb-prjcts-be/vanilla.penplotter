@@ -6,7 +6,7 @@
 
 You supply polylines in physical units. This engine can clean up paths, plan the pen’s route, preview it and export files.
 
-Its EBB driver can also plot a complete plan from the browser on the tested iDraw HSE / A2.
+Its drivers can also send a complete plan to an iDraw HSE / A2 with EBB or an A3 H with DrawCore.
 
 ## Two ways to work
 
@@ -20,17 +20,17 @@ Draw everything and run one plan with `driver.run()`. Or use `driver.session()` 
 
 Each object is prepared before plotting. Sending new geometry during a moving job is not implemented; [live drawing notes](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/live.html) describe the proposed direction.
 
-**Direct plotting is physically tested on one profile:** iDraw HSE / A2, EBB firmware 3.0.2, over Web Serial in Chrome or Edge. SVG, HPGL and G-code exports need software and settings suited to the receiving machine.
+**Tested on paper:** iDraw HSE / A2 with EBB firmware 3.0.2, and small drawings on an A3 H with DrawCore V2.09. Use Web Serial in Chrome or Edge. SVG, HPGL and G-code exports need software and settings suited to the receiving machine.
 
-The current release is **0.4.0**. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) describes the current implementation. Proposed work is on the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html).
+The current release is **0.5.0**. The [architecture](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/architecture.html) describes the current implementation. Proposed work is on the [roadmap](https://seb-prjcts-be.github.io/vanilla.penplotter/docs/roadmap.html).
 
 ## Install
 
-The examples use the repository source. The import below pins release `v0.4.0`, including driver sessions, paper placement, bed preview and the motion-queue timeout fix.
+The examples use the repository source. The import below pins release `v0.5.0`, which adds DrawCore plotting and controller recognition.
 
 ```html
 <script type="module">
-  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.4.0/vanilla.penplotter.js";
+  import { PlotterEngine } from "https://cdn.jsdelivr.net/gh/seb-prjcts-be/vanilla.penplotter@v0.5.0/vanilla.penplotter.js";
 </script>
 ```
 
@@ -79,9 +79,17 @@ On firmware 3.x the driver also opens the board's motion queue to its full depth
 
 The planner's estimate uses the same speeds, the same ramps and the same pen delays, so the seconds in `plan.stats` are the seconds the pen panel shows and, on the iDraw, close to the measured time in the wave hatch test: 681 seconds estimated, 680 plotted.
 
-**We test on one machine only: the iDraw HSE / A2 with EBB firmware 3.0.2.** Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted on 2026-10-01. The iDraw HSE/A3 and standard-servo AxiDraw models are likely candidates, not tested profiles. NextDraw needs its own pen-lift and homing configuration. See the [machine notes](docs/architecture.html).
+**EBB tests:** iDraw HSE / A2 with firmware 3.0.2. Axes and scale were measured on paper on 2026-09-21; the acceleration planning, the `LM` moves and the deep motion queue were plotted on 2026-10-01. The iDraw HSE/A3 and standard-servo AxiDraw models are likely candidates, not tested profiles. NextDraw needs its own pen-lift and homing configuration. See the [machine notes](docs/architecture.html).
 
 `EBB_PROFILES["idraw-hse-a2"]` keeps the manufacturer's defaults separately from the operating settings. Pen heights and lift rates remain unchanged unless you pass `penLift: { up: 60, down: 30, raiseRate: 75, lowerRate: 50 }` to `compileEbbPlan()` or `driver.run()`. These are percentages for the profile's standard servo, not millimetres; check the installed pen lift and mounting first. `EBB_COMPATIBILITY` lists the researched candidates and source links, without selecting a machine automatically.
+
+## DrawCore
+
+An A3 H with DrawCore speaks GRBL. Its pen moves along Z. `detectDriver()` reads the controller's version and selects EBB or DrawCore before sending movement commands. You still supply the machine bounds, pen heights and axis directions; a version response does not tell us which frame surrounds the board.
+
+Small tests on one A3 H with DrawCore V2.09 worked on 2026-10-05: a 10 mm line and square, pen up/down, a 1 mm pen-up move and return to the work origin. The [test record](tests/hardware/drawcore-a3-h-2026-10-05.json) preserves the settings and serial log. Stopping during movement and larger drawings still need a physical test.
+
+`DrawCoreDriver.run()` supports one pen. It waits until the controller reports `Idle` before finishing. Stop requests GRBL feed-hold; the pen may remain down and queued moves may remain paused. Sessions and automatic resume are not implemented for DrawCore. The [Guide](docs/guide.html#drawcore) shows the connection and settings.
 
 ## Requirements
 
@@ -92,10 +100,10 @@ The planner's estimate uses the same speeds, the same ramps and the same pen del
 | `p5.penplotter` | vanilla.penplotter ≥ 0.2.0 | the adapter contains no plotting or machine code; with a driver attached it refuses an older core with a clear message |
 | `p5.penplotter` | p5.js ≥ 2.2.2 | tested with 2.2.2, in global and instance mode |
 | direct plotting | Chrome or Edge, on `localhost` or https | Web Serial; the browser shows its port list only after a click or keypress |
-| direct plotting | iDraw HSE / A2 with EBB firmware 3.0.2 | the only physically tested profile (`idraw-hse-a2`) |
+| direct plotting | iDraw HSE / A2 (EBB 3.0.2), A3 H (DrawCore V2.09) | HSE/A2 profile tested; A3 H small plots tested with explicit settings |
 | examples | wave formulas, vanilla.waves (pinned commit) | examples only; neither library depends on them |
 
-The standalone core is version 0.4.0. The published `p5.penplotter` 0.2.5 bundle retains its own pinned core: commit `c72ba7fb8ea60c0ea2d84f7e36dd03d161fbd7c8`, labelled 0.3.1. This release does not change that bundle.
+The standalone core is version 0.5.0. The `p5.penplotter` 0.3.0 bundle includes this core and both drivers. Older bundles keep the core they were built with.
 
 The standalone browser imports above use the fixed core release tag. The p5 browser bundle contains its core and driver; it does not fetch the latest standalone core at startup.
 <!-- vereisten:end -->
@@ -157,7 +165,7 @@ Every stage accepts and returns plain, JSON-serialisable snapshots: `vanilla.pen
 - `src/optimizer/`: merging, deduplication, simplification and resampling
 - `src/planner/`: drawing order, pen moves, statistics and time
 - `src/renderer/`: canvas preview, and SVG, HPGL, G-code and JSON for other machines
-- `src/driver/`: machine profiles, simulation, a text transport and the EBB driver that plots directly
+- `src/driver/`: machine profiles, simulation, serial connections, and the EBB and DrawCore drivers
 - `src/plugins/`: extension points for effects, optimizers, renderers and drivers
 - `index.html`, `docs/`, `examples/`: the GitHub Pages site; `examples/pen.js` is the shared "to the pen" panel every example uses
 
@@ -183,7 +191,7 @@ Measured: about 5 ms at 11 000 points, 20 ms at 50 000, 230 ms at 500 000. Negli
 
 **Geometry.** SVG import and the geometric effects are good for experiments, not yet for every SVG/CSS, compound-path and self-intersection case.
 
-**Hardware.** `WebSerialTextDriver` is a low-level transport for text protocols, not a machine driver. `EbbDriver` is one, but only for the profile it has been tested on; every other profile stays experimental until there are hardware tests. Direct plotting always requires an explicit confirmation.
+**Hardware.** `WebSerialTextDriver` sends text without following the machine's replies. Use `EbbDriver` or `DrawCoreDriver` for the controllers described above. Other machine configurations need their own physical tests. Direct plotting always requires an explicit confirmation.
 
 ## Related work
 

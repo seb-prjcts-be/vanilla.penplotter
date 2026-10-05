@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "schema": "vanilla.penplotter/document@1",
   "plan_schema": "vanilla.penplotter/plan@1",
   "stages": [
@@ -28,10 +28,12 @@
   "drivers": [
     "SimulationDriver",
     "WebSerialTextDriver",
-    "EbbDriver"
+    "EbbDriver",
+    "DrawCoreDriver"
   ],
   "tested_machines": [
-    "idraw-hse-a2"
+    "idraw-hse-a2",
+    "idraw-a3-h-drawcore-v2.09-small-plots"
   ],
-  "hardware_status": "one-tested-ebb-profile-otherwise-simulation-and-export"
+  "hardware_status": "ebb-hse-a2-tested-and-drawcore-a3-h-small-plots-tested"
 }

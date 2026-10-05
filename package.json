@@ -1,6 +1,6 @@
 {
   "name": "vanilla.penplotter",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A modular JavaScript planning engine for generative art and pen plotters.",
   "type": "module",
   "main": "vanilla.penplotter.js",
@@ -13,7 +13,9 @@
     "./renderer": "./src/renderer/index.js",
     "./driver": "./src/driver/index.js",
     "./driver/ebb": "./src/driver/ebb.js",
-    "./plugins": "./src/plugins/index.js"
+    "./plugins": "./src/plugins/index.js",
+    "./driver/grbl": "./src/driver/grbl.js",
+    "./driver/auto": "./src/driver/auto.js"
   },
   "files": [
     "vanilla.penplotter.js",
@@ -22,7 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node tests/snapshot.js && node tests/ebb.js && node tests/ebb-queue.js && node tests/regressions.js && node tests/version.js",
+    "test": "node tests/snapshot.js && node tests/ebb.js && node tests/ebb-queue.js && node tests/grbl.js && node tests/regressions.js && node tests/version.js",
     "docs": "node tools/build-docs.js",
     "manifest": "node tools/gen-manifest.js",
     "test:waves": "node tests/waves-integration.js tests/fixtures/vanilla-waves-core.js"
