@@ -136,6 +136,8 @@ export function mountPen(container, options) {
   let transport = null;
   let driver = null;
   let busy = false;
+  let placementTouched = false;
+  let placementMachine = "ebb";
   const isDrawCore = () => $("machine").value === "drawcore";
   const travel = () => isDrawCore() ? DRAWCORE_A3_H.travel : profile.travel;
 
@@ -189,6 +191,14 @@ export function mountPen(container, options) {
     offset.y = $("y").value.trim() === "" ? NaN : Number($("y").value);
     turn = Number($("turn").value);
     try {
+      if (placementMachine !== $("machine").value && !placementTouched) {
+        const sheet = describePaper(preparePlacement(getPlot().plan(), { x: 0, y: 0 }, turn, $("format").value).page, getPlot().plan().units);
+        offset.x = Math.max(0, Math.min(offset.x, travel().width - sheet.width));
+        offset.y = Math.max(0, Math.min(offset.y, travel().height - sheet.height));
+        $("x").value = String(offset.x);
+        $("y").value = String(offset.y);
+      }
+      placementMachine = $("machine").value;
       $("bed-size").textContent = `${travel().width} × ${travel().height} mm`;
       $("x").max = String(travel().width);
       $("y").max = String(travel().height);
@@ -316,11 +326,12 @@ export function mountPen(container, options) {
   }
 
   $("machine").addEventListener("change", refresh);
-  $("x").addEventListener("input", refresh);
-  $("y").addEventListener("input", refresh);
+  $("x").addEventListener("input", () => { placementTouched = true; refresh(); });
+  $("y").addEventListener("input", () => { placementTouched = true; refresh(); });
   $("turn").addEventListener("change", refresh);
   $("format").addEventListener("change", refresh);
   $("center").addEventListener("click", () => {
+    placementTouched = true;
     const plan = getPlot().plan();
     const sheet = describePaper(preparePlacement(plan, { x: 0, y: 0 }, turn, $("format").value).page, plan.units);
     if (sheet.width > travel().width || sheet.height > travel().height) {

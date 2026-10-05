@@ -51,3 +51,23 @@ assert(!sent.some(command => /^(?:SP|EM|LM|SM),/.test(command)), 'example sends 
 assert.match(fields.get('log').textContent, /Plot complete/);
 assert.equal(fields.get('resume').hidden, true);
 console.log('Example panel: DrawCore detection, dry run, bounds and complete serial plot verified; no hardware used.');
+
+// The A4 examples start 60 mm below home on the larger EBB bed.
+// Switching to the A3 H must fit untouched defaults without scaling strokes.
+fields.clear();
+defaults.x = '100'; defaults.y = '60';
+const a4 = new PlotterEngine({ units: 'mm', page: { width: 210, height: 297 } });
+a4.line(12, 12, 22, 12);
+mountPen(container, { getPlot: () => a4, offset: { x: 100, y: 60 } });
+fields.get('machine').value = 'drawcore';
+fields.get('machine').handlers.change();
+assert.equal(fields.get('x').value, '100');
+assert.equal(fields.get('y').value, '0');
+assert.equal(fields.get('dry').disabled, false, fields.get('status').textContent);
+assert.equal(fields.get('sheet-size').textContent, '210 × 297 mm (X × Y)');
+fields.get('machine').value = 'ebb'; fields.get('machine').handlers.change();
+fields.get('y').value = '60'; fields.get('y').handlers.input();
+fields.get('machine').value = 'drawcore'; fields.get('machine').handlers.change();
+assert.equal(fields.get('y').value, '60', 'preserve a manually entered placement');
+assert.equal(fields.get('dry').disabled, true, 'manual out-of-bounds placement stays blocked');
+console.log('Example placement: A4 default fits A3 H; manual offsets are preserved.');
