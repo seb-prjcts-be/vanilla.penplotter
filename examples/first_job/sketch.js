@@ -22,5 +22,5 @@ document.querySelector("#travel-toggle").addEventListener("click", function togg
 });
 
 render();
-// An A4 sheet, its top-left corner 100 mm right and 60 mm down from home.
-mountPen(document.querySelector("#pen"), { getPlot: () => plot, name: "first-job", offset: { x: 100, y: 60 } });
+// A4 paper starts at the machine work origin; the panel keeps stroke sizes.
+mountPen(document.querySelector("#pen"), { getPlot: () => plot, name: "first-job" });

@@ -3,7 +3,7 @@ import { PlotterEngine } from '../vanilla.penplotter.js';
 import { mountPen } from '../examples/pen.js';
 
 const fields = new Map();
-const defaults = { x: '0', y: '0', turn: '0', format: 'drawing', machine: 'ebb' };
+const defaults = { x: '0', y: '0', turn: '0', format: 'A4', machine: 'ebb' };
 const context = new Proxy({ canvas: { width: 594, height: 432 } }, { get: (target, key) => target[key] ?? (() => {}) });
 const container = {
   classList: { add() {} }, contains: () => false,
@@ -71,3 +71,20 @@ fields.get('machine').value = 'drawcore'; fields.get('machine').handlers.change(
 assert.equal(fields.get('y').value, '60', 'preserve a manually entered placement');
 assert.equal(fields.get('dry').disabled, true, 'manual out-of-bounds placement stays blocked');
 console.log('Example placement: A4 default fits A3 H; manual offsets are preserved.');
+
+// Every shared-panel composition uses A4 without changing its geometry.
+await import('./fixtures/vanilla-waves-core.js');
+const { builders } = await import('../docs/examples-builders.js');
+for (const [name, build] of Object.entries(builders)) {
+  fields.clear(); defaults.x = '0'; defaults.y = '0';
+  // SVG parsing needs a browser DOMParser; exercise its fitted default bounds here.
+  const example = name === 'svg_to_pen'
+    ? new PlotterEngine({ units: 'mm', page: { width: 120, height: 90 } })
+    : build(globalThis.VanillaWaves);
+  if (name === 'svg_to_pen') example.rect(0, 0, 120, 90);
+  mountPen(container, { getPlot: () => example, name });
+  assert.equal(fields.get('sheet-size').textContent, '210 × 297 mm (X × Y)', name);
+  assert.equal(fields.get('sheet-fit').textContent, 'Inside the bed', name);
+  assert.equal(fields.get('dry').disabled, false, `${name}: ${fields.get('status').textContent}`);
+}
+console.log('Six example compositions and the SVG default bounds fit A4 at the work origin; SVG DOM parsing requires a browser.');

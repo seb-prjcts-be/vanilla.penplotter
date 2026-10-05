@@ -12,8 +12,8 @@ try {
   $("#travel").textContent = `${(plan.stats.travelDistance / 1000).toFixed(1)} m`;
   $("#time").textContent = `${Math.round(plan.stats.estimatedSeconds / 60)} min`;
   $("#status").textContent = "Sampled at t = 0. Same waves, same sheet, every time.";
-  // An A4 sheet, its top-left corner 100 mm right and 60 mm down from home.
-  mountPen($("#pen"), { getPlot: () => plot, name: "wave-hatch", offset: { x: 100, y: 60 } });
+  // A4 paper starts at the machine work origin; the panel keeps stroke sizes.
+  mountPen($("#pen"), { getPlot: () => plot, name: "wave-hatch" });
 } catch (error) {
   $("#status").textContent = error.message;
 }

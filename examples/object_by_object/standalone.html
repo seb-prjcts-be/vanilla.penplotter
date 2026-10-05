@@ -5,8 +5,8 @@
 <canvas id="preview" width="600" height="400" style="max-width:100%;height:auto"></canvas>
 <button id="demo">Run screen demo</button>
 <p>Paper corner's distance from the machine origin:</p>
-<label>X (mm) <input id="paper-x" type="number" value="0" min="0" max="570"></label>
-<label>Y (mm) <input id="paper-y" type="number" value="0" min="0" max="405"></label>
+<label>X (mm) <input id="paper-x" type="number" value="0" min="0" max="384"></label>
+<label>Y (mm) <input id="paper-y" type="number" value="0" min="0" max="135"></label>
 <p id="status" role="status">Ready for the screen demo.</p>
 <button id="connect">Connect plotter</button>
 <button id="plot" disabled>Plot three lines</button>
@@ -38,12 +38,12 @@ async function drawOneAtATime(activeDriver, demo) {
   const paperX = Number($("#paper-x").value);
   const paperY = Number($("#paper-y").value);
   if (!Number.isFinite(paperX) || !Number.isFinite(paperY) ||
-      paperX < 0 || paperY < 0 || paperX > 570 || paperY > 405) {
-    throw new Error("Enter a paper corner that leaves room for the three lines.");
+      paperX < 0 || paperY < 0 || paperX > 384 || paperY > 135) {
+    throw new Error("Enter a paper corner that leaves room for an A4 sheet.");
   }
   busy = true;
   controls();
-  const screen = new PlotterEngine({ units: "mm", page: { width: 30, height: 35 } });
+  const screen = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } });
   screen.drawRoute($("#preview").getContext("2d"));
   $("#status").textContent = "Starting...";
   try {

@@ -66,4 +66,4 @@ $("#file").addEventListener("change", async (event) => {
 });
 
 build();
-pen = mountPen($("#pen"), { getPlot: () => plot, name: "from-svg", offset: { x: 80, y: 110 } });
+pen = mountPen($("#pen"), { getPlot: () => plot, name: "from-svg" });

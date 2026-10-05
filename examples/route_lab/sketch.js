@@ -42,5 +42,5 @@ function render() {
 let pen = null;
 for (const control of document.querySelectorAll(".controls input, .controls select")) control.addEventListener("change", render);
 render();
-// An A4 sheet, its top-left corner 100 mm right and 60 mm down from home.
-pen = mountPen($("#pen"), { getPlot: () => plot, name: "route-lab", offset: { x: 100, y: 60 } });
+// A4 paper starts at the machine work origin; the panel keeps stroke sizes.
+pen = mountPen($("#pen"), { getPlot: () => plot, name: "route-lab" });

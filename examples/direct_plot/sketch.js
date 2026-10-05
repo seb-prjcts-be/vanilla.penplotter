@@ -18,4 +18,4 @@ plot.drawRoute($("#preview").getContext("2d"), { showTravel: true, padding: 40, 
 $("#paths").textContent = String(plan.stats.paths);
 $("#draw").textContent = `${plan.stats.drawDistance.toFixed(0)} mm`;
 
-mountPen($("#pen"), { getPlot: () => plot, name: "direct-plot", offset: { x: 80, y: 110 } });
+mountPen($("#pen"), { getPlot: () => plot, name: "direct-plot" });

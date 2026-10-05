@@ -98,7 +98,7 @@ export function mountPen(container, options) {
       </select></label>
       <label>Paper size<select data-pen="format">
         <option value="drawing">Use the drawing's page</option>
-        ${["A0", "A1", "A2", "A3", "A4", "A5", "A6"].map((format) => `<option value="${format}">${format}</option>`).join("")}
+        ${["A0", "A1", "A2", "A3", "A4", "A5", "A6"].map((format) => `<option value="${format}"${format === "A4" ? " selected" : ""}>${format}</option>`).join("")}
       </select></label>
       <label>Sheet position from the corner, X (mm)<input data-pen="x" type="number" value="${offset.x}" min="0" max="590" step="5"></label>
       <label>Sheet position from the corner, Y (mm)<input data-pen="y" type="number" value="${offset.y}" min="0" max="430" step="5"></label>

@@ -12,5 +12,5 @@ $("#changes").textContent = String(plan.stats.penChanges);
 $("#draw").textContent = `${plan.stats.drawDistance.toFixed(0)} mm`;
 $("#time").textContent = `${Math.floor(plan.stats.estimatedSeconds / 60)}m ${Math.round(plan.stats.estimatedSeconds % 60)}s`;
 
-// An A4 sheet, its top-left corner 100 mm right and 60 mm down from home.
-mountPen($("#pen"), { getPlot: () => plot, name: "two-pens", offset: { x: 100, y: 60 } });
+// A4 paper starts at the machine work origin; the panel keeps stroke sizes.
+mountPen($("#pen"), { getPlot: () => plot, name: "two-pens" });

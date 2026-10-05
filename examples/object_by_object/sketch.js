@@ -20,12 +20,12 @@ async function drawOneAtATime(activeDriver, demo) {
   const paperX = Number($("#paper-x").value);
   const paperY = Number($("#paper-y").value);
   if (!Number.isFinite(paperX) || !Number.isFinite(paperY) ||
-      paperX < 0 || paperY < 0 || paperX > 570 || paperY > 405) {
-    throw new Error("Enter a paper corner that leaves room for the three lines.");
+      paperX < 0 || paperY < 0 || paperX > 384 || paperY > 135) {
+    throw new Error("Enter a paper corner that leaves room for an A4 sheet.");
   }
   busy = true;
   controls();
-  const screen = new PlotterEngine({ units: "mm", page: { width: 30, height: 35 } });
+  const screen = new PlotterEngine({ units: "mm", page: { width: 210, height: 297 } });
   screen.drawRoute($("#preview").getContext("2d"));
   $("#status").textContent = "Starting...";
   try {
