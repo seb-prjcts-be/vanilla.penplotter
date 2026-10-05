@@ -276,7 +276,7 @@ export function mountPen(container, options) {
       transport = candidate;
       driver = detected;
       log(`Connected: ${driver.identity.response}`);
-      if (isDrawCore()) log("A3 H: 420 × 297 mm; pen up Z0.5, down Z5. Set XY work origin before plotting. Stop holds motion and may leave the pen down.");
+      if (isDrawCore()) log("A3 H: 420 × 297 mm; pen up Z0.5, down Z5. Set XY work origin before plotting. Stop finishes queued movement, then raises the pen.");
       refresh();
     } catch (error) {
       if (candidate) { try { await candidate.close(); } catch {} }
@@ -318,6 +318,7 @@ export function mountPen(container, options) {
         }
       });
       if (result.status === "complete") clearResume();
+      if (result.penRaised) log("Stopped with the pen up.");
       log(`Plot ${result.status} after ${((performance.now() - started) / 1000).toFixed(0)} s.`);
     } catch (error) {
       log(`Plot stopped: ${error.message}`);
@@ -360,7 +361,7 @@ export function mountPen(container, options) {
   $("resume").addEventListener("click", () => { const record = readResume(); if (record) run(record.done); });
   $("stop").addEventListener("click", () => {
     if (driver) driver.abort();
-    log(isDrawCore() ? "Feed-hold requested. The pen may remain down; queued moves may remain paused." : "Stop requested: pen up, motors off.");
+    log(isDrawCore() ? "Stop requested: finishing queued movement, then pen up." : "Stop requested: pen up, motors off.");
   });
   $("svg").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.svg`, getPlot().exportSVG(), "image/svg+xml"); });
   $("hpgl").addEventListener("click", (event) => { event.preventDefault(); download(`${name}.hpgl`, getPlot().exportHPGL(), "text/plain"); });

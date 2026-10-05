@@ -73,24 +73,36 @@ export class DrawCoreDriver {
     this.stopPromise = null;
   }
   abort() {
+    // The active run owns the serial request. Let it settle before querying
+    // Idle and lifting Z; feed-hold would also prevent the lift from running.
     this.aborted = true;
-    this.stopPromise = this.transport.writeRealtime("!").then(() => true, () => false);
   }
   async safeStop() {
-    this.abort();
-    await this.stopPromise;
+    this.aborted = true;
+    return this.transport.writeRealtime("!").then(() => true, () => false);
   }
-  async emergencyStop() { await this.safeStop(); }
+  async emergencyStop() { return this.safeStop(); }
+  async finishAbort(settings) {
+    if (!this.stopPromise) this.stopPromise = (async () => {
+      await this.waitIdle(settings.idleTimeoutMs ?? 120000, true);
+      await this.transport.send(`G1 Z${Number(settings.penUp.toFixed(4))} F${settings.penFeed ?? 1000}`, {
+        timeoutMs: settings.commandTimeoutMs ?? 120000
+      });
+      await this.waitIdle(settings.idleTimeoutMs ?? 120000, true);
+      return { status: "aborted", penRaised: true };
+    })();
+    return this.stopPromise;
+  }
   async status() {
     const status = parseGrblStatus(await this.transport.send("?"));
     if (status.offset) this.offset = status.offset;
     if (!status.position && status.machinePosition && this.offset) status.position = status.machinePosition.map((n, i) => n - this.offset[i]);
     return status;
   }
-  async waitIdle(timeoutMs) {
+  async waitIdle(timeoutMs, stopping = false) {
     const until = Date.now() + timeoutMs;
     while (Date.now() < until) {
-      if (this.aborted) return;
+      if (this.aborted && !stopping) return;
       const status = await this.status();
       if (status.state === "Idle") return;
       if (status.state !== "Run") throw new Error(`Controller is ${status.state}; job cannot continue.`);
@@ -108,12 +120,13 @@ export class DrawCoreDriver {
     const commandTimeoutMs = positive(settings.commandTimeoutMs ?? 120000, "Command timeout");
     this.busy = true;
     this.aborted = false;
+    this.stopPromise = null;
     this.offset = null;
     try {
       let initial = await this.status();
       // GRBL reports WCO intermittently, not necessarily on the first query.
       for (let attempt = 0; initial.state === "Idle" && !initial.position && attempt < 12; attempt++) {
-        if (this.aborted) return { status: "aborted", holdRequested: await this.stopPromise };
+        if (this.aborted) return await this.finishAbort(settings);
         await delay(100);
         initial = await this.status();
       }
@@ -127,7 +140,7 @@ export class DrawCoreDriver {
       }
       if (!this.aborted) await this.waitIdle(settings.idleTimeoutMs ?? 120000);
       if (this.aborted) {
-        return { status: "aborted", holdRequested: await this.stopPromise };
+        return await this.finishAbort(settings);
       }
       return { status: "complete", commands: compiled.commands.length };
     } catch (error) {

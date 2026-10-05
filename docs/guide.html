@@ -100,7 +100,7 @@ document.querySelector("#plot-drawcore").onclick = async function () {
   await driver.run(plot.plan(), { confirmed: true });
 };</code></pre>
 <p>The drawing must fit inside the configured travel bounds, and the controller must report an idle work position at X0 Y0. The driver checks those before moving. It leaves the machine's origin unchanged. These pen heights and directions belong to the tested setup; check them on yours.</p>
-<p>DrawCore supports one pen and one complete drawing at a time. <code>driver.abort()</code> requests feed-hold. The pen may remain down and queued moves may remain paused. Sessions and automatic resume are not implemented for this driver.</p>
+<p>DrawCore supports one pen and one complete drawing at a time. <code>driver.abort()</code> stops submitting drawing commands, waits for accepted movement to finish, then raises the pen. Buffered moves may still run before it stops. Errors and emergency stop request feed-hold; pen lift cannot be guaranteed in those cases. Sessions and automatic resume are not implemented for this driver.</p>
 <h2 id="werkwijzen">4. Two ways to work</h2>
 <div class="workflow-pair">
 <figure><h3>Draw everything, then plot</h3><img src="images/animations/workflow-draw-then-plot-home-norm.gif" width="600" height="400" alt="All shapes are prepared before the pen draws them."><figcaption>Add the shapes to one engine and plot its plan with <code>driver.run()</code>. Use <code>strategy: "drawn"</code> to keep their drawing order.</figcaption></figure>

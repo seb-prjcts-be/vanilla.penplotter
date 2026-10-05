@@ -122,11 +122,12 @@ statuses = ["<Alarm|WPos:0,0,0>"];
 log.length = 0;
 await assert.rejects(driver.run(plan, { confirmed: true }), /must be Idle/);
 assert.deepEqual(log, ["?", "!"]);
-statuses = ["<Idle|WPos:0,0,0>"];
+statuses = ["<Idle|WPos:0,0,0>", "<Run|WPos:0,0,0>", "<Idle|WPos:0,0,0>", "<Idle|WPos:0,0,0>"];
 log.length = 0;
-mock.send = async command => { log.push(command); if (command === "?") return statuses.shift(); driver.abort(); return ""; };
-assert.deepEqual(await driver.run(plan, { confirmed: true }), { status: "aborted", holdRequested: true });
-assert.deepEqual(log, ["?", "G21", "!"]);
+mock.send = async command => { log.push(command); if (command === "?") return statuses.shift(); if (command === "G21") driver.abort(); return ""; };
+assert.deepEqual(await driver.run(plan, { confirmed: true }), { status: "aborted", penRaised: true });
+assert.deepEqual(log, ["?", "G21", "?", "?", "G1 Z0.5 F1000", "?"]);
+assert(!log.includes("!"), "normal Stop must not hold the pen-lift command");
 statuses = ["<Idle|WPos:0,0,0>"];
 log.length = 0;
 mock.send = async command => { log.push(command); if (command === "?") return statuses.shift(); throw new Error("GRBL error: error:2"); };
@@ -154,3 +155,48 @@ assert.equal(slowTransport.faulted, false);
 await slowTransport.close();
 await assert.rejects(slowDriver.run(plan, { confirmed: true, commandTimeoutMs: 0 }), /Command timeout/);
 console.log('DrawCore: delayed motion acknowledgements use a separate bounded deadline.');
+
+// Stop while a movement acknowledgement is outstanding. The pen lift must
+// wait for that acknowledgement and actual Idle, without submitting more XY.
+let stopDriver;
+let movementSettled = false;
+let liftSubmitted = false;
+const stopDevice = serial(async (text, emit) => {
+  if (text === 'V\r') emit('DrawCore V2.09\r\n');
+  else if (text === '?') {
+    emit('<Idle|WPos:0,0,0>\r\n');
+  } else {
+    if (/^G1 X/.test(text) && !movementSettled) {
+      stopDriver.abort();
+      await delayForStop();
+      movementSettled = true;
+    } else if (movementSettled && /^G1 Z0.5 /.test(text)) liftSubmitted = true;
+    emit('ok\r\n');
+  }
+});
+function delayForStop() { return new Promise(resolve => setTimeout(resolve, 15)); }
+const stopTransport = createAutoSerialTransport(stopDevice.port);
+await stopTransport.open();
+stopDriver = await detectDriver(stopTransport, { drawcore: settings });
+assert.deepEqual(await stopDriver.run(plan, { confirmed: true }), { status: 'aborted', penRaised: true });
+assert.equal(liftSubmitted, true);
+assert.equal(stopDevice.sent.filter(text => /^G1 X/.test(text)).length, 1);
+assert.equal(stopDevice.sent.at(-1), '?');
+assert(!stopDevice.sent.includes('!'));
+await stopTransport.close();
+
+const liftFailureLog = [];
+let failedLiftDriver;
+const failedLiftTransport = {
+  async send(command) {
+    liftFailureLog.push(command);
+    if (command === '?') return '<Idle|WPos:0,0,0>';
+    if (command === 'G21') { failedLiftDriver.abort(); return ''; }
+    throw new Error('Pen lift acknowledgement missing');
+  },
+  async writeRealtime(text) { liftFailureLog.push(text); }
+};
+failedLiftDriver = new DrawCoreDriver({ ...settings, transport: failedLiftTransport });
+await assert.rejects(failedLiftDriver.run(plan, { confirmed: true }), /Pen lift acknowledgement missing/);
+assert.equal(liftFailureLog.at(-1), '!');
+console.log('DrawCore Stop: waits for queued movement, raises pen, verifies Idle; lift failure requests hold. No hardware used.');
