@@ -70,6 +70,15 @@ fields.get('y').value = '60'; fields.get('y').handlers.input();
 fields.get('machine').value = 'drawcore'; fields.get('machine').handlers.change();
 assert.equal(fields.get('y').value, '60', 'preserve a manually entered placement');
 assert.equal(fields.get('dry').disabled, true, 'manual out-of-bounds placement stays blocked');
+assert.match(fields.get('status').textContent, /210 × 297 mm at X=100, Y=60 exceeds the 420 × 297 mm bed/);
+const beforeReset = sent.length;
+fields.get('a4-origin').handlers.click();
+assert.equal(fields.get('x').value, '0');
+assert.equal(fields.get('y').value, '0');
+assert.equal(fields.get('turn').value, '0');
+assert.equal(fields.get('format').value, 'A4');
+assert.equal(fields.get('dry').disabled, false);
+assert.equal(sent.length, beforeReset, 'paper reset never moves the plotter');
 console.log('Example placement: A4 default fits A3 H; manual offsets are preserved.');
 
 // Every shared-panel composition uses A4 without changing its geometry.

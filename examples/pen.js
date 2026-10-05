@@ -110,6 +110,7 @@ export function mountPen(container, options) {
       </select></label>
     </div>
     <p class="pen-side">Paper size keeps the strokes at their original scale. A formats start in portrait; a 90° or 270° turn places them in landscape. X and Y locate the paper corner nearest home.</p>
+    <button type="button" class="secondary" data-pen="a4-origin">A4 at work origin</button>
     <button type="button" class="secondary" data-pen="center">Centre paper on the bed</button>
     <canvas data-pen="bed" width="594" height="432" style="display:block;width:100%;height:auto;margin:0 0 12px;border:1px solid rgba(0,0,0,.15);background:#fff" aria-label="The bed: where the sheet and the drawing lie"></canvas>
     <dl class="pen-stats">
@@ -169,7 +170,7 @@ export function mountPen(container, options) {
     box.scrollTop = box.scrollHeight;
   };
   const buttons = () => {
-    for (const key of ["x", "y", "turn", "format", "center", "machine"]) $(key).disabled = busy;
+    for (const key of ["x", "y", "turn", "format", "center", "a4-origin", "machine"]) $(key).disabled = busy;
     $("machine").disabled = busy || Boolean(transport);
     const record = readResume();
     $("plot").disabled = !driver || !compiled || busy;
@@ -220,7 +221,7 @@ export function mountPen(container, options) {
       $("drawing-size").textContent = Number.isFinite(minX) ? `${size((maxX - minX) * mm)} × ${size((maxY - minY) * mm)} mm` : "No strokes";
       drawBed($("bed"), getPlot().plan(), offset, onBed, travel());
       if (offset.x < 0 || offset.y < 0 || offset.x + sheet.width > travel().width || offset.y + sheet.height > travel().height) {
-        throw new RangeError("Paper extends beyond the bed. Turn it, move it or choose a smaller sheet.");
+        throw new RangeError(`Paper ${size(sheet.width)} × ${size(sheet.height)} mm at X=${size(offset.x)}, Y=${size(offset.y)} exceeds the ${travel().width} × ${travel().height} mm bed. Use A4 at work origin or adjust the placement.`);
       }
       if (Number.isFinite(minX) && (minX * mm < offset.x - 1e-6 || minY * mm < offset.y - 1e-6 || maxX * mm > offset.x + sheet.width + 1e-6 || maxY * mm > offset.y + sheet.height + 1e-6)) {
         throw new RangeError("Drawing extends beyond the paper. Choose a larger sheet or reduce the drawing in the sketch.");
@@ -330,6 +331,14 @@ export function mountPen(container, options) {
   $("y").addEventListener("input", () => { placementTouched = true; refresh(); });
   $("turn").addEventListener("change", refresh);
   $("format").addEventListener("change", refresh);
+  $("a4-origin").addEventListener("click", () => {
+    placementTouched = true;
+    $("format").value = "A4";
+    $("x").value = "0";
+    $("y").value = "0";
+    $("turn").value = "0";
+    refresh();
+  });
   $("center").addEventListener("click", () => {
     placementTouched = true;
     const plan = getPlot().plan();
