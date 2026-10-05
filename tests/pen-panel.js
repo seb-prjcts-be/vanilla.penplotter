@@ -38,7 +38,12 @@ assert.equal(fields.get('resume').hidden, true);
 await fields.get('dry').handlers.click();
 assert.equal(sent.length, 0, 'dry run never touches the device');
 assert.match(fields.get('log').textContent, /G21.*G90.*G94/);
+// Connecting from the default EBB selection must select the DrawCore preset.
+fields.get('machine').value = 'ebb';
+fields.get('machine').handlers.change();
 await fields.get('connect').handlers.click();
+assert.equal(fields.get('machine').value, 'drawcore');
+assert.equal(fields.get('bed-size').textContent, '420 × 297 mm');
 assert.equal(fields.get('plot').disabled, false, fields.get('log').textContent);
 await fields.get('plot').handlers.click();
 assert(sent.includes('G1 X-12 Y-22 F600\r'), 'example uses DrawCore axis mapping and feed');

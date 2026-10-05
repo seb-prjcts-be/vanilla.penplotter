@@ -258,9 +258,9 @@ export function mountPen(container, options) {
       candidate = createAutoSerialTransport(granted[0] ?? null);
       await candidate.open();
       const detected = await detectDriver(candidate, { profile, drawcore: DRAWCORE_A3_H });
-      if (detected.identity.protocol !== $("machine").value) {
-        throw new Error(`Detected ${detected.identity.protocol}. Select the matching machine and reconnect.`);
-      }
+      // These example panels support the two named, configured machines.
+      // Match the panel to the detected controller before validating placement.
+      $("machine").value = detected.identity.protocol;
       transport = candidate;
       driver = detected;
       log(`Connected: ${driver.identity.response}`);
