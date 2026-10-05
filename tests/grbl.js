@@ -137,3 +137,20 @@ mock.send = async command => command === "?" ? statuses.shift() : "";
 assert.equal((await driver.run(plan, { confirmed: true })).status, "complete");
 assert.equal(statuses.length, 0, "intermittent WCO is fetched and reused within the job");
 console.log("DrawCore: bounds, pen calibration, units, detection, serial acknowledgements, FIFO, timeout, reset, origin, idle, abort and errors verified; no hardware used.");
+
+// Model planner backpressure: movement acknowledgements arrive after the
+// transport's short probe deadline, while version/status replies remain fast.
+const slowMotion = serial((text, emit) => {
+  if (text === 'V\r') emit('DrawCore V2.09.20230318\r\n');
+  else if (text === '?') emit('<Idle|WPos:0,0,0>\r\n');
+  else if (text.startsWith('G1 ')) return new Promise(resolve => setTimeout(() => { emit('ok\r\n'); resolve(); }, 25));
+  else emit('ok\r\n');
+});
+const slowTransport = createAutoSerialTransport(slowMotion.port, { timeoutMs: 10 });
+await slowTransport.open();
+const slowDriver = await detectDriver(slowTransport, { drawcore: settings });
+assert.equal((await slowDriver.run(plan, { confirmed: true, commandTimeoutMs: 100 })).status, 'complete');
+assert.equal(slowTransport.faulted, false);
+await slowTransport.close();
+await assert.rejects(slowDriver.run(plan, { confirmed: true, commandTimeoutMs: 0 }), /Command timeout/);
+console.log('DrawCore: delayed motion acknowledgements use a separate bounded deadline.');

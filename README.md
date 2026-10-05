@@ -89,7 +89,7 @@ An A3 H with DrawCore speaks GRBL. Its pen moves along Z. `detectDriver()` reads
 
 Small tests on one A3 H with DrawCore V2.09 worked on 2026-10-05: a 10 mm line and square, pen up/down, a 1 mm pen-up move and return to the work origin. The [test record](tests/hardware/drawcore-a3-h-2026-10-05.json) preserves the settings and serial log. Stopping during movement and larger drawings still need a physical test.
 
-`DrawCoreDriver.run()` supports one pen. It waits until the controller reports `Idle` before finishing. Stop requests GRBL feed-hold; the pen may remain down and queued moves may remain paused. Sessions and automatic resume are not implemented for DrawCore. The [Guide](docs/guide.html#drawcore) shows the connection and settings.
+`DrawCoreDriver.run()` supports one pen. Plot commands allow up to 120 seconds for acknowledgement when the motion buffer is full; `commandTimeoutMs` overrides this deadline. Connection and status requests retain their short transport timeout. A missing acknowledgement stops the job without resending the command. It waits until the controller reports `Idle` before finishing. Stop requests GRBL feed-hold; the pen may remain down and queued moves may remain paused. Sessions and automatic resume are not implemented for DrawCore. The [Guide](docs/guide.html#drawcore) shows the connection and settings.
 
 ## Requirements
 

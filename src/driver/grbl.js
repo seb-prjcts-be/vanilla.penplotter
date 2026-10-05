@@ -103,6 +103,9 @@ export class DrawCoreDriver {
     if (this.busy) throw new Error("The DrawCore driver is already running.");
     const settings = { ...this.options, ...options };
     const compiled = compileDrawCorePlan(plan, settings);
+    // A full motion planner can defer acknowledgement beyond the short
+    // connection/status timeout. Keep a bounded deadline without resending.
+    const commandTimeoutMs = positive(settings.commandTimeoutMs ?? 120000, "Command timeout");
     this.busy = true;
     this.aborted = false;
     this.offset = null;
@@ -120,7 +123,7 @@ export class DrawCoreDriver {
       }
       for (const command of compiled.commands) {
         if (this.aborted) break;
-        await this.transport.send(command);
+        await this.transport.send(command, { timeoutMs: commandTimeoutMs });
       }
       if (!this.aborted) await this.waitIdle(settings.idleTimeoutMs ?? 120000);
       if (this.aborted) {
