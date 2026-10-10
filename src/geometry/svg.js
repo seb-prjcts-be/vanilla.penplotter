@@ -1,4 +1,4 @@
-import { addLayer, addPath, createDocument, point } from "../core/model.js";
+import { addLayer, addPath, createDocument, createTool, point } from "../core/model.js";
 import { Matrix, transformPoint } from "./transform.js";
 
 const ARG_COUNTS = { M: 2, L: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, T: 2, A: 7, Z: 0 };
@@ -212,9 +212,57 @@ function numberAttribute(node, name, fallback = 0) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+// Containers and descriptions that are never drawn. A clipPath's rectangle,
+// a gradient stop or a symbol definition is not geometry for the pen.
+const NOT_RENDERED = new Set([
+  "defs", "clippath", "mask", "symbol", "marker", "pattern", "metadata", "title", "desc",
+  "style", "script", "lineargradient", "radialgradient", "filter", "foreignobject"
+]);
+
+function isInkscapeLayer(node) {
+  return node.getAttribute("inkscape:groupmode") === "layer";
+}
+
+// The first stroke colour below a node, so the pen can wear the ink it draws.
+function firstStroke(node) {
+  const own = node.getAttribute("stroke");
+  if (own && own !== "none" && !own.startsWith("url(")) return own;
+  for (const child of node.children || []) {
+    if (child.nodeType !== 1) continue;
+    const found = firstStroke(child);
+    if (found) return found;
+  }
+  return null;
+}
+
+// An Inkscape layer is a pen. The number the layer starts with (data-pen, or
+// a label such as "2 red") names a shared pen, so layers with the same number
+// use the same physical pen; a layer without a number gets a pen of its own.
+function penForLayer(document, node, layerId) {
+  const label = node.getAttribute("inkscape:label") || "";
+  const number = /^\s*(\d+)(?!\d)/.exec(node.getAttribute("data-pen") || label);
+  const id = number ? `pen-${Number(number[1])}` : `pen-${layerId}`;
+  if (!document.tools.some((tool) => tool.id === id)) {
+    const color = firstStroke(node);
+    document.tools.push(createTool({
+      id,
+      name: number ? `Pen ${Number(number[1])}` : (label || layerId),
+      ...(color ? { color } : {})
+    }));
+  }
+  return id;
+}
+
+// options.layers: "auto" (default) turns every Inkscape layer into a layer with
+// its own pen and keeps loose geometry in one "svg" layer; "single" puts
+// everything in that one layer, as before.
 export function importSVG(svgText, options = {}) {
   const Parser = options.DOMParser || globalThis.DOMParser;
   if (!Parser) throw new Error("SVG import needs DOMParser. In Node, pass { DOMParser } from an XML package.");
+  if (options.layers !== undefined && !["auto", "single"].includes(options.layers)) {
+    throw new RangeError('SVG import layers must be "auto" or "single".');
+  }
+  const splitLayers = options.layers !== "single";
   const xml = new Parser().parseFromString(String(svgText), "image/svg+xml");
   if (xml.querySelector("parsererror")) throw new Error("Invalid SVG input.");
   const root = xml.documentElement;
@@ -228,11 +276,24 @@ export function importSVG(svgText, options = {}) {
     },
     metadata: { importedFrom: "svg" }
   });
-  const layer = addLayer(document, { id: options.layerId || "svg", name: options.layerName || "SVG import" });
-  function visit(node, parentMatrix) {
+  const loose = addLayer(document, { id: options.layerId || "svg", name: options.layerName || "SVG import" });
+  let inkscapeLayers = 0;
+  function visit(node, parentMatrix, layer) {
     if (node.nodeType !== 1) return;
-    const matrix = Matrix.multiply(parentMatrix, parseTransform(node.getAttribute("transform")));
     const tag = node.tagName.toLowerCase();
+    if (NOT_RENDERED.has(tag)) return;
+    const matrix = Matrix.multiply(parentMatrix, parseTransform(node.getAttribute("transform")));
+    let target = layer;
+    if (splitLayers && tag === "g" && isInkscapeLayer(node)) {
+      inkscapeLayers += 1;
+      const id = node.getAttribute("id") || `layer-${inkscapeLayers}`;
+      target = addLayer(document, {
+        id: document.layers.some((value) => value.id === id) ? `${id}-${inkscapeLayers}` : id,
+        name: node.getAttribute("inkscape:label") || id,
+        toolId: penForLayer(document, node, id),
+        metadata: { source: "inkscape-layer" }
+      });
+    }
     const paths = [];
     if (tag === "path") paths.push(...parseSVGPath(node.getAttribute("d") || "", options));
     else if (tag === "line") paths.push({ points: [point(numberAttribute(node, "x1"), numberAttribute(node, "y1")), point(numberAttribute(node, "x2"), numberAttribute(node, "y2"))], closed: false });
@@ -258,13 +319,17 @@ export function importSVG(svgText, options = {}) {
     }
     for (const path of paths) {
       if (path.points.length === 0) continue;
-      addPath(layer, path.points.map((value) => transformPoint(value, matrix)), {
+      addPath(target, path.points.map((value) => transformPoint(value, matrix)), {
         closed: path.closed,
         metadata: { source: "svg", sourceTag: tag, sourceId: node.id || null }
       });
     }
-    for (const child of node.children || []) visit(child, matrix);
+    for (const child of node.children || []) visit(child, matrix, target);
   }
-  visit(root, Matrix.identity());
+  visit(root, Matrix.identity(), loose);
+  // A layered file whose geometry all sits in layers has no use for the empty catch-all.
+  if (inkscapeLayers > 0 && loose.paths.length === 0) {
+    document.layers.splice(document.layers.indexOf(loose), 1);
+  }
   return document;
 }

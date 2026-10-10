@@ -197,7 +197,7 @@ Measured: about 5 ms at 11 000 points, 20 ms at 50 000, 230 ms at 500 000. Negli
 
 [p5.plotSvg](https://github.com/golanlevin/p5.plotSvg) by Golan Levin is the usual way to export a plotter-friendly SVG from p5.js. It deliberately does not optimise and drives no machine; for that it points to [vpype](https://vpype.readthedocs.io/). You can try importing its supported SVG paths here, inspect the plan and plot it with the `svg_to_pen` example.
 
-[p5.gysin](https://github.com/seb-prjcts-be/p5.gysin) writes plotter-safe SVG with one Inkscape layer per pen; this engine can read it. Wave samplers and [vanilla.waves](https://github.com/seb-prjcts-be/vanilla.waves) supply the numbers several examples draw with.
+[p5.gysin](https://github.com/seb-prjcts-be/p5.gysin) writes plotter-safe SVG with one Inkscape layer per pen; this engine reads each layer as a layer with that pen. Wave samplers and [vanilla.waves](https://github.com/seb-prjcts-be/vanilla.waves) supply the numbers several examples draw with.
 
 ## Test
 

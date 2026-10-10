@@ -39,7 +39,8 @@ function build() {
     const fitted = Geometry.transformDocument(imported, matrix);
 
     plot = new PlotterEngine({ units: "mm", page: { width, height, margin: 0 } });
-    for (const layer of fitted.layers) plot.layer(layer.id).paths = layer.paths;
+    for (const tool of fitted.tools) plot.tool(tool);
+    for (const layer of fitted.layers) plot.layer(layer.id, { name: layer.name, toolId: layer.toolId }).paths = layer.paths;
     plot.optimize({ mergeTolerance: 0.05, duplicateTolerance: 0.01, simplifyTolerance: 0.03 });
     const plan = plot.plan();
 

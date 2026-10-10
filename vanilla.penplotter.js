@@ -117,6 +117,10 @@ export class PlotterEngine {
 
   importSVG(svg, options = {}) {
     const imported = Geometry.importSVG(svg, options);
+    // Imported layers keep their pens: add the ones this document does not have yet.
+    for (const tool of imported.tools) {
+      if (!this.document.tools.some((value) => value.id === tool.id)) this.document.tools.push(tool);
+    }
     for (const layer of imported.layers) {
       const target = addLayer(this.document, {
         ...layer,

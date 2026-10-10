@@ -171,6 +171,111 @@ function testSVGParser() {
   assert.deepEqual(paths[0].points[0], paths[0].points[paths[0].points.length - 1]);
 }
 
+// A very small XML reader for the SVG fixtures below: tags, attributes and
+// nesting, nothing else. It stands in for the browser's DOMParser.
+class MiniXmlParser {
+  parseFromString(text) {
+    const root = { nodeType: 1, tagName: "#root", attrs: {}, children: [] };
+    const stack = [root];
+    for (const match of String(text).matchAll(/<(\/?)([A-Za-z][\w:.-]*)((?:\s+[\w:.-]+="[^"]*")*)\s*(\/?)>/g)) {
+      const [, closing, name, attributes, selfClosing] = match;
+      if (closing) {
+        stack.pop();
+        continue;
+      }
+      const attrs = {};
+      for (const attribute of attributes.matchAll(/([\w:.-]+)="([^"]*)"/g)) attrs[attribute[1]] = attribute[2];
+      const node = {
+        nodeType: 1,
+        tagName: name,
+        attrs,
+        id: attrs.id || "",
+        children: [],
+        getAttribute: (key) => (key in attrs ? attrs[key] : null)
+      };
+      stack[stack.length - 1].children.push(node);
+      if (!selfClosing) stack.push(node);
+    }
+    return { querySelector: () => null, documentElement: root.children[0] };
+  }
+}
+
+// What p5.gysin's plotter SVG looks like: a clipPath, one Inkscape layer per
+// pen, and a data-pen number on each layer.
+const LAYERED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="148mm" height="210mm" viewBox="0 0 148 210">
+  <title>layered</title>
+  <metadata>{}</metadata>
+  <clipPath id="page"><rect x="10" y="10" width="128" height="190" /></clipPath>
+  <g id="layer-1-black" data-pen="1" inkscape:groupmode="layer" inkscape:label="1 black" clip-path="url(#page)">
+    <path d="M 20 20 L 60 20" stroke="#111111" />
+    <path d="M 20 30 L 60 30" stroke="#111111" />
+  </g>
+  <g id="layer-2-red" data-pen="2" inkscape:groupmode="layer" inkscape:label="2 red" clip-path="url(#page)">
+    <path d="M 20 40 L 60 40" stroke="#cc0000" />
+  </g>
+</svg>`;
+
+function testSVGLayers() {
+  const imported = Geometry.importSVG(LAYERED_SVG, { DOMParser: MiniXmlParser });
+  assert.deepEqual(imported.layers.map((layer) => layer.id), ["layer-1-black", "layer-2-red"], "each Inkscape layer is a layer; the empty catch-all is dropped");
+  assert.deepEqual(imported.layers.map((layer) => layer.paths.length), [2, 1], "the clipPath rectangle is not geometry");
+  assert.deepEqual(imported.layers.map((layer) => layer.toolId), ["pen-1", "pen-2"]);
+  assert.equal(imported.layers[0].name, "1 black");
+  const pens = Object.fromEntries(imported.tools.map((tool) => [tool.id, tool]));
+  assert.equal(pens["pen-1"].id, "pen-1", "pen 1 is the default pen, not a second one");
+  assert.equal(imported.tools.filter((tool) => tool.id === "pen-1").length, 1);
+  assert.equal(pens["pen-2"].name, "Pen 2");
+  assert.equal(pens["pen-2"].color, "#cc0000", "the pen wears the ink it draws");
+  assert.deepEqual(imported.page, { width: 148, height: 210, margin: 0, origin: "top-left" });
+
+  // Through the engine: both pens survive into the plan, in layer order.
+  const plot = new PlotterEngine({ units: "mm", page: { width: 148, height: 210, margin: 0 } });
+  plot.importSVG(LAYERED_SVG, { DOMParser: MiniXmlParser });
+  assert.ok(plot.document.tools.some((tool) => tool.id === "pen-2"), "the engine receives the imported pens");
+  const plan = plot.plan({ strategy: "drawn" });
+  assert.equal(plan.stats.paths, 3);
+  assert.equal(plan.stats.toolChanges, 2);
+  assert.deepEqual(plan.moves.filter((move) => move.type === "tool-change").map((move) => move.toolId), ["pen-1", "pen-2"]);
+
+  // Layers that open with the same number share one physical pen.
+  const shared = Geometry.importSVG(
+    `<svg xmlns:inkscape="x" width="100" height="100"><g id="a" inkscape:groupmode="layer" inkscape:label="1 outline"><line x1="0" y1="0" x2="5" y2="0"/></g><g id="b" inkscape:groupmode="layer" inkscape:label="1 detail"><line x1="0" y1="2" x2="5" y2="2"/></g></svg>`,
+    { DOMParser: MiniXmlParser }
+  );
+  assert.deepEqual(shared.layers.map((layer) => layer.toolId), ["pen-1", "pen-1"]);
+  assert.equal(shared.tools.length, 1);
+
+  // A layer without a number is a pen of its own, named by its label.
+  const named = Geometry.importSVG(
+    `<svg xmlns:inkscape="x" width="100" height="100"><g id="blue" inkscape:groupmode="layer" inkscape:label="Blue"><line x1="0" y1="0" x2="5" y2="0" stroke="#0000ff"/></g></svg>`,
+    { DOMParser: MiniXmlParser }
+  );
+  assert.equal(named.layers[0].toolId, "pen-blue");
+  const bluePen = named.tools.find((tool) => tool.id === "pen-blue");
+  assert.equal(bluePen.name, "Blue");
+  assert.equal(bluePen.color, "#0000ff");
+
+  // Loose geometry next to layers keeps its own layer.
+  const mixed = Geometry.importSVG(
+    `<svg xmlns:inkscape="x" width="100" height="100"><line x1="0" y1="0" x2="9" y2="0"/><g id="p" inkscape:groupmode="layer" inkscape:label="2 red"><line x1="0" y1="2" x2="5" y2="2"/></g></svg>`,
+    { DOMParser: MiniXmlParser }
+  );
+  assert.deepEqual(mixed.layers.map((layer) => layer.id), ["svg", "p"]);
+
+  // layers: "single" is the old behaviour, with the same clean geometry.
+  const single = Geometry.importSVG(LAYERED_SVG, { DOMParser: MiniXmlParser, layers: "single" });
+  assert.deepEqual(single.layers.map((layer) => [layer.id, layer.paths.length]), [["svg", 3]]);
+  assert.throws(() => Geometry.importSVG(LAYERED_SVG, { DOMParser: MiniXmlParser, layers: "pens" }), /auto" or "single/);
+
+  // A plain SVG is unchanged: one layer, and definitions are not drawn.
+  const plain = Geometry.importSVG(
+    `<svg width="50" height="50"><defs><path d="M 0 0 L 9 9"/></defs><line x1="0" y1="0" x2="5" y2="0"/></svg>`,
+    { DOMParser: MiniXmlParser }
+  );
+  assert.deepEqual(plain.layers.map((layer) => [layer.id, layer.paths.length]), [["svg", 1]]);
+  assert.equal(plain.tools.length, 1);
+}
+
 function testPlugin() {
   const host = new PluginHost();
   host.use({
@@ -290,6 +395,7 @@ testPlanConsumersAfterEditing();
 testImportAfterPlanning();
 testPatterns();
 testSVGParser();
+testSVGLayers();
 testPlugin();
 testRenderer();
 testStaticLinks();
